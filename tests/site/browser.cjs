@@ -2,9 +2,10 @@
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const assert = require('node:assert/strict');
 (async () => {
+  const base = (process.env.SITE_URL || 'http://127.0.0.1:8765/crewsync/').replace(/\/?$/, '/');
   const deadline = Date.now() + 10000;
   while (true) {
-    try { const response = await fetch('http://127.0.0.1:8765/crewsync/'); if (response.ok) break; } catch {}
+    try { const response = await fetch(base); if (response.ok) break; } catch {}
     if (Date.now() > deadline) throw new Error('Servidor de preview indisponível');
     await new Promise(resolve => setTimeout(resolve, 100));
   }
@@ -15,7 +16,7 @@ const assert = require('node:assert/strict');
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       for (const name of ['', 'manual.html']) {
-        const response = await page.goto(`http://127.0.0.1:8765/crewsync/${name}`);
+        const response = await page.goto(`${base}${name}`);
         assert.equal(response.status(), 200);
         assert.equal(await page.locator('h1').count(), 1);
         assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), true, `overflow: ${width}/${name}`);
@@ -24,11 +25,11 @@ const assert = require('node:assert/strict');
           assert.equal(await page.locator(href).count(), 1);
         }
       }
-      await page.goto('http://127.0.0.1:8765/crewsync/');
+      await page.goto(base);
       await page.getByRole('link', { name: 'Começar o piloto' }).click();
       assert.match(page.url(), /manual.html$/);
       assert.deepEqual(errors, []);
-      await page.goto('http://127.0.0.1:8765/crewsync/');
+      await page.goto(base);
       await page.screenshot({ path: `target/site-${width}.png`, fullPage: true });
       await page.close();
     }

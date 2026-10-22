@@ -40,6 +40,8 @@ Dados sintéticos e temporários, sem alterar serviço, instalação ou dados re
 - `scripts/check-pilot.sh`: build, fmt, Clippy, **72 Rust passaram**, 6 ignorados
   por padrão; **5 HTTPS passaram** explicitamente, **3 TLS/certificados passaram**,
   2 páginas verificadas e 1 regressão do renderizador do manual passou.
+- Regressão adicional do gerador de certificados: rejeita endereços inválidos,
+  inclusive entrada multilinha, antes de criar diretórios ou chaves.
 - HTTPS cobre dois clientes, conflitos, exclusões offline, revogação, TLS inválido,
   reinício, restauração de duas versões e upload truncado com recuperação do worker.
 - Retenção/coleta: quantidade, idade, lixeira, prazo de graça, dados atuais,
@@ -61,9 +63,12 @@ Dados sintéticos e temporários, sem alterar serviço, instalação ou dados re
 
 ## Publicação e pendências externas
 
-Site preparado para https://goncalvesl.github.io/crewsync/; estado de implantação
-será registrado após verificar a execução remota. Workflows e fontes prontos.
-Artefatos CI não equivalem a release publicada. ARM64 requer execução da matriz.
+Site publicado: https://goncalvesl.github.io/crewsync/. Pages passou na execução
+39804090471; QA Chromium no endereço público também passou em 390/768/1440px.
+A matriz Packages já passou build/testes/HTTPS/ENOSPC em x86_64 e ARM64, mas a
+primeira tentativa de empacotar pediu uma dependência macOS ausente no cache:
+metadata offline não filtrava plataforma. Corrigido para --filter-platform do
+alvo, e a matriz será repetida. Artefatos CI não equivalem a release publicada.
 
 Faltam escolha da licença e matriz física ampliada/medições entre computadores.
 Esses dados não foram inventados; docs/reports/physical-acceptance.json conserva

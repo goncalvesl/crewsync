@@ -38,7 +38,7 @@ def main():
             with source.open('rb') as data:
                 tar.addfile(info, data)
         # Manter avisos completos das dependências, inclusive alternativas SPDX.
-        metadata_graph = json.loads(subprocess.check_output(['cargo', 'metadata', '--format-version', '1', '--locked', '--offline'], cwd=ROOT))
+        metadata_graph = json.loads(subprocess.check_output(['cargo', 'metadata', '--format-version', '1', '--locked', '--offline', '--filter-platform', args.target], cwd=ROOT))
         notices = []
         for package in sorted(metadata_graph['packages'], key=lambda p: (p['name'], p['version'])):
             if package['source'] is None:

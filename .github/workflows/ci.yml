@@ -26,7 +26,9 @@ jobs:
       - run: cargo clippy --workspace --all-targets --locked -- -D warnings
       - run: cargo test --workspace --locked
       - name: TLS without sockets
-        run: /usr/bin/python3 -I tests/e2e/tls_memory.py
+        run: |
+          /usr/bin/python3 -I tests/e2e/tls_memory.py
+          /usr/bin/python3 -I tests/e2e/cert_input.py
       - name: HTTPS pilot with server and two clients
         timeout-minutes: 3
         run: cargo test -p crewsync-server --test pilot --locked -- --ignored

@@ -15,14 +15,18 @@ sha256sum -c crewsync-VERSAO-ALVO.tar.gz.sha256
 tar -xzf crewsync-VERSAO-ALVO.tar.gz
 cd crewsync-VERSAO-ALVO
 ./install.sh
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 O instalador coloca os binários em `$HOME/.local/bin` por padrão. Ajuste `PREFIX` se necessário. Não altera sua configuração ou inicia serviços. Para compilar do código, instale Rust stable e um compilador C, clone o repositório e execute:
 
 ```bash
+git clone https://github.com/goncalvesl/crewsync.git
+cd crewsync
 cargo build --release --workspace --locked
 mkdir -p "$HOME/.local/bin"
 install -m 755 target/release/crewsync-server target/release/crewsync-client "$HOME/.local/bin/"
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
 ## Configurar
