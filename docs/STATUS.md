@@ -1,5 +1,18 @@
 # Estado e retomada
 
+## Alterações locais após a alpha.9
+
+O trabalho atual prepara um deploy Docker Compose/Coolify a partir do repositório:
+backend HTTP privado na porta 8080, TLS terminado pelo proxy Coolify e dados em
+bind mount explícito no host (UID/GID 10001, modo 0700). O volume de configuração
+é persistente. O primeiro deploy começa sem usuários e compartilhamentos; o painel
+faz o cadastro inicial. As alterações nos instaladores por pacote/tar seguem essa
+mesma regra. Passaram o smoke Docker Compose (bind mount, bootstrap vazio e
+reinício), os 11 cenários do assistente, painel HTTP/HTTPS, cinco testes HTTPS de
+rede, build/fmt/Clippy/testes Rust e build/check do site. O proxy Caddy e um deploy
+real no Coolify não foram executados neste ambiente. Essas alterações não fazem
+parte da release alpha.9 já publicada.
+
 ## Versão pública atual — 0.1.0-alpha.9
 
 Release alpha para testes: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.9.

@@ -27,10 +27,6 @@ ask 'Modo' 1; mode=$answer; case "$mode" in 1|2) ;; *) fail 'Escolha 1 ou 2.' ;;
 ask 'Domínio ou IPv4 usado pelos clientes (sem esquema/porta)' sync.example.com; host=$answer
 printf '%s\n' "$host" | grep -Eq '^[A-Za-z0-9.-]+$' || fail 'Endereço inválido.'
 sh "$share_dir/pilot-cert.sh" --check-address "$host"
-ask 'Primeiro usuário' usuario; user=$answer
-printf '%s\n' "$user" | grep -Eq '^[A-Za-z0-9_-]{1,64}$' || fail 'Usuário inválido.'
-ask 'Primeira pasta compartilhada' Obras; share=$answer
-printf '%s\n' "$share" | grep -Eq '^[A-Za-z0-9_-]{1,64}$' || fail 'Nome inválido.'
 mkdir -p "$etc_dir/tls" "$var_dir"
 chmod 2770 "$etc_dir"
 chmod 750 "$etc_dir/tls"
@@ -41,10 +37,6 @@ cat > "$etc_dir/server.toml" <<EOF
 version = 1
 [server]
 storage_root = "$var_dir"
-[users.$user]
-enabled = true
-[shares.$share.permissions]
-$user = "write"
 EOF
 chmod 660 "$etc_dir/server.toml"; chown root:crewsync "$etc_dir/server.toml"
 "$server_bin" check-config "$etc_dir/server.toml"
@@ -73,7 +65,5 @@ systemctl enable --now crewsync-server.service
 admin_key=$(runuser -u crewsync -- "$server_bin" admin-key "$etc_dir/server.toml" "$public_url")
 printf '\nServidor iniciado: %s\nPainel: %s/\nChave administrativa (guarde em local seguro):\n%s\n' "$public_url" "$public_url" "$admin_key"
 unset admin_key
-printf 'Convite de uso único (válido por 1 hora):\n'
-runuser -u crewsync -- "$server_bin" invite "$etc_dir/server.toml" "$user" 3600
-printf '\nConfiguração: %s/server.toml\nDados: %s\nLogs: journalctl -u crewsync-server\n' "$etc_dir" "$var_dir"
+printf '\nAcesse o painel para criar usuários, compartilhamentos e permissões; depois gere um convite para cada dispositivo.\nConfiguração: %s/server.toml\nRaiz de dados: %s\nLogs: journalctl -u crewsync-server\n' "$etc_dir" "$var_dir"
 if [ "$mode" = 2 ]; then printf 'Exemplo Caddy: %s/Caddyfile. O proxy deve encaminhar HTTPS para 127.0.0.1:8080.\n' "$etc_dir"; else printf 'CA para os clientes: %s/tls/ca.crt. Libere TCP 8443 no firewall e na nuvem.\n' "$etc_dir"; fi

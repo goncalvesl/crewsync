@@ -20,11 +20,19 @@ Nos outros computadores, execute:
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-A alpha.8 mantém os três modos abaixo e o painel administrativo e acrescenta pacotes de sistema para o servidor Linux. Atualize programas anteriores pelo pacote alpha.8 antes de configurar HTTP ou proxy.
+A alpha.9 mantém os três modos de conexão, o painel administrativo e os pacotes de sistema para o servidor Linux. Atualize programas anteriores antes de configurar HTTP ou proxy.
 
-O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o modo de conexão, domínio ou IPv4 e configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No modo direto pode gerar CA privada ou usar certificado existente; no modo proxy gera um exemplo Caddy. No cliente, ativa o computador e inicia a sincronização.
+O procedimento de Docker/Coolify e o bootstrap vazio descritos abaixo estão no
+código atual do repositório. Os pacotes alpha.9 já publicados ainda criam o primeiro
+usuário e compartilhamento durante o setup; a mudança chegará aos pacotes numa
+próxima release. Enquanto isso, `setup-online.sh` continua usando o assistente
+incluído na alpha.9; use o Compose do repositório para instalar pelo Coolify.
+
+O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o modo de conexão e o domínio ou IPv4, prepara a raiz de dados, inicia o serviço e mostra a chave administrativa. No painel, crie usuários e compartilhamentos, configure permissões e gere convites para os dispositivos. No modo direto pode gerar CA privada ou usar certificado existente; no modo proxy gera um exemplo Caddy. No cliente, ativa o computador e inicia a sincronização.
 
 Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não precisa de Rust, Cargo ou Python. Os comandos funcionam no terminal de uma sessão Linux, sem sudo. Os diretórios sugeridos podem ser alterados. Escolha diretórios novos para a configuração e os dados internos do servidor; instalações existentes são preservadas.
+
+Se usa Coolify, siga o [deploy Docker com HTTPS e dados no host](DISTRIBUTION.md#docker-e-coolify). Ele compila a versão do repositório e não exige copiar certificados para os clientes.
 
 Se preferir baixar e conferir o pacote manualmente:
 
@@ -45,9 +53,9 @@ Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta e
 
 Para operar o servidor como serviço Linux, instale o `.pkg.tar.zst` no Arch, o
 `.deb` no Debian/Ubuntu ou o `.rpm` no Fedora, e execute `sudo
-crewsync-server-setup`. O assistente cria uma conta de serviço sem login, configura
-o primeiro usuário e compartilhamento, instala o serviço systemd e mostra a chave
-administrativa e o convite. Os arquivos ficam em `/usr/bin`, `/etc/crewsync` e
+crewsync-server-setup`. O assistente cria uma conta de serviço sem login,
+configura a raiz de armazenamento, instala o serviço systemd e mostra a chave
+administrativa. Cadastre usuários e compartilhamentos no painel. Os arquivos ficam em `/usr/bin`, `/etc/crewsync` e
 `/var/lib/crewsync`; a instalação do pacote não inicia o servidor antes desse
 passo.
 
@@ -63,8 +71,8 @@ sudo -u crewsync /usr/bin/crewsync-server admin-key /etc/crewsync/server.toml ht
 sudo -u crewsync /usr/bin/crewsync-server invite /etc/crewsync/server.toml usuario 3600
 ```
 
-Guarde a chave administrativa e o convite exibidos. Use a URL pública escolhida
-na instalação e substitua `usuario` pelo primeiro usuário. Para tar.gz, use
+Guarde a chave administrativa exibida e use a URL pública escolhida na
+instalação. Para tar.gz, use
 `/var/opt/crewsync`, `/etc/opt/crewsync/server.toml` e
 `/opt/crewsync/bin/crewsync-server`. A alpha.9 aplica `0700` automaticamente
 durante instalação e atualização.

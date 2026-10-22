@@ -67,10 +67,6 @@ if [ "$role" = server ]; then
         ask 'Para habilitar HTTP sem criptografia, digite HTTP' nao
         [ "$answer" = HTTP ] || fail 'HTTP não habilitado.'
     fi
-    ask 'Primeiro usuário (letras, números, _ ou -)' usuario; user=$answer
-    printf '%s\n' "$user" | LC_ALL=C grep -Eq '^[a-zA-Z0-9_-]{1,64}$' || fail 'Nome de usuário inválido.'
-    ask 'Nome da pasta compartilhada (letras, números, _ ou -)' Obras; share=$answer
-    printf '%s\n' "$share" | LC_ALL=C grep -Eq '^[a-zA-Z0-9_-]{1,64}$' || fail 'Nome da pasta inválido.'
 else
     ask 'Raiz local para as pastas compartilhadas' "$HOME/CrewSync"; [ ! -L "$answer" ] || fail 'A pasta local não pode ser um link simbólico.'; data=$(canonical "$answer"); separate "$config" "$data"
     [ ! -L "$data" ] || fail 'A pasta local não pode ser um link simbólico.'
@@ -101,10 +97,6 @@ if [ "$role" = server ]; then
 version = 1
 [server]
 storage_root = "$(toml "$data")"
-[users.$user]
-enabled = true
-[shares.$share.permissions]
-$user = "write"
 CONFIG
     "$prefix/bin/crewsync-server" check-config "$config/server.toml"
     if [ "$mode" = 1 ]; then
@@ -194,10 +186,7 @@ if [ "$role" = server ]; then
     admin_key=$("$prefix/bin/crewsync-server" admin-key "$config/server.toml" "$public_url")
     printf 'Painel de administração: %s/\nChave administrativa (guarde em local seguro):\n%s\n' "$public_url" "$admin_key"
     unset admin_key
-    printf 'Convite para o primeiro cliente (válido por 1 hora):\n'
-    printf 'Pasta compartilhada: %s\n' "$share"
-    "$prefix/bin/crewsync-server" invite "$config/server.toml" "$user" 3600
-    printf 'Outro convite: "%s/bin/crewsync-server" invite "%s/server.toml" "%s" 3600\n' "$prefix" "$config" "$user"
+    printf 'No painel, crie os usuários e compartilhamentos, defina as permissões e gere um convite para cada dispositivo.\n'
     if [ "$mode" = 2 ]; then
         printf 'Configure o proxy HTTPS; libere somente TCP 80/443 para ele. Mantenha a porta interna privada.\n'
     elif [ "$mode" = 1 ] || [ "$bind" != 127.0.0.1 ]; then

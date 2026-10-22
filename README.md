@@ -21,13 +21,18 @@ Cliente:
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-O assistente baixa a última release, pergunta os diretórios e inicia o serviço.
-No servidor Linux, escolhe HTTPS direto, HTTPS por proxy ou HTTP para teste, cria
-configuração e mostra a chave do painel e o primeiro convite. No cliente, pede endereço,
+O assistente baixa a última release e pergunta os diretórios. No servidor Linux,
+escolhe HTTPS direto, HTTPS por proxy ou HTTP para teste, inicia o serviço e mostra
+a chave do painel. Cadastre usuários e compartilhamentos no painel e gere um convite
+para cada dispositivo. No cliente, pede endereço,
 certificado ou CAs do sistema, convite e uma raiz local para ativar e sincronizar todas as pastas
 autorizadas, cada uma em sua subpasta. Requer curl/tar/sha256sum e,
 no servidor, OpenSSL; dispensa Rust/Cargo/Python. Veja o manual para firewall,
 início sem login, atualização e instalações existentes.
+
+Os pacotes alpha.9 atualmente publicados ainda solicitam o primeiro usuário e
+compartilhamento. O bootstrap sem esses prompts e o Compose/Coolify estão no código
+atual e chegarão aos pacotes na próxima release.
 
 Escolha uma raiz local: cada pasta autorizada aparece dentro dela automaticamente.
 Cada computador precisa de um convite próprio, mesmo quando pertence ao mesmo
@@ -37,6 +42,10 @@ usuário. Veja como [gerenciar pastas e permissões](docs/MANUAL.md#configurar) 
 Para o servidor em Linux, a release também fornece pacotes Arch, Debian e Fedora
 com serviço systemd e usuário dedicado, além de tar.gz instalável em `/opt`.
 Consulte [os formatos e comandos de instalação](docs/DISTRIBUTION.md#servidor-em-pacote-de-sistema).
+
+Para instalar com Coolify, use o `compose.yaml` deste repositório. O Coolify compila
+o servidor e publica HTTPS pelo proxy; os dados ficam em um diretório persistente
+no host. Veja [Docker e Coolify](docs/DISTRIBUTION.md#docker-e-coolify).
 
 ## Downloads
 

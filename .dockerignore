@@ -1,0 +1,12 @@
+.git
+.github
+.codex
+.agents
+target
+.env
+.env.*
+!.env.example
+crewsync-pilot
+**/.crewsync
+*.key
+session*.json

@@ -33,7 +33,7 @@ class Proxy(fixture.Setup):
         backend_port, frontend_port = port(), port()
         while frontend_port == backend_port:
             frontend_port = port()
-        result = self.setup('server', [prefix, config, self.root / 'store', 'localhost', backend_port, 'ana', 'Obras'], mode='2')
+        result = self.setup('server', [prefix, config, self.root / 'store', 'localhost', backend_port], mode='2')
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         tls = self.root / 'tls'
         subprocess.run(['sh', str(ROOT / 'scripts/pilot-cert.sh'), str(tls), 'localhost'], check=True, capture_output=True)

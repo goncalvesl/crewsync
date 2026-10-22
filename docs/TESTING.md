@@ -182,3 +182,11 @@ Seis testes Rust do módulo admin cobrem hash/permissões/rotação da chave, se
 CSRF, origem/expiração, escape HTML, limites, TOML inline/comentários, revisão e
 publicação privada. O teste Caddy também verifica login e cadastro pelo proxy,
 com cookie Secure derivado da origem pública HTTPS.
+
+## Docker Compose
+
+`sh scripts/test-docker-compose.sh` constrói a imagem, confere que a porta não é
+publicada no host e que `/var/lib/crewsync` é bind mount, inicia como UID 10001
+com configuração vazia, cria a chave administrativa, simula cadastro de usuário
+e compartilhamento, emite convite, reinicia e verifica que o estado persiste. A
+CI executa esse smoke test com Docker Compose.

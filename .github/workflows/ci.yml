@@ -8,6 +8,13 @@ permissions:
   contents: read
 
 jobs:
+  docker-compose:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Docker Compose deployment smoke
+        timeout-minutes: 8
+        run: sh scripts/test-docker-compose.sh
   check:
     runs-on: ubuntu-24.04
     steps:

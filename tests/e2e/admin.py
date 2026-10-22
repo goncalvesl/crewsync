@@ -75,7 +75,7 @@ class Admin(fixture.Setup):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        result = self.setup('server', [prefix, config, self.root / 'store', '127.0.0.1', port, 'ana', 'Obras'], mode=mode)
+        result = self.setup('server', [prefix, config, self.root / 'store', '127.0.0.1', port], mode=mode, provision=False)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         key = re.search(r'Chave administrativa \(guarde em local seguro\):\s*\n([0-9a-f]{64})', result.stdout).group(1)
         url = f'{"https" if mode == "1" else "http"}://127.0.0.1:{port}'

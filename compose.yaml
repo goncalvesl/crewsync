@@ -1,0 +1,34 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    init: true
+    read_only: true
+    tmpfs:
+      - /tmp:rw,noexec,nosuid,size=16m
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    pids_limit: 128
+    stop_grace_period: 30s
+    expose:
+      - "8080"
+    volumes:
+      - crewsync_config:/etc/crewsync
+      - type: bind
+        source: ${CREWSYNC_DATA_DIR:-/opt/crewsync/data}
+        target: /var/lib/crewsync
+        bind:
+          create_host_path: false
+    healthcheck:
+      test: ["CMD", "curl", "--silent", "--show-error", "--max-time", "3", "http://127.0.0.1:8080/"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  crewsync_config:

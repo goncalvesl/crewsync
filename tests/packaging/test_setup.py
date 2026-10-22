@@ -111,12 +111,23 @@ class Setup(unittest.TestCase):
         path.write_text(text)
         path.chmod(0o755)
 
-    def setup(self, role, answers, mode='1', tls_answers=None, http_answers=None):
+    def setup(self, role, answers, mode='1', tls_answers=None, http_answers=None, provision=True):
         answers = list(answers)
         if role == 'server' and len(answers) >= 4:
             extra = (tls_answers or ['gerar']) if mode == '1' else (http_answers or ['127.0.0.1', 'HTTP']) if mode == '3' else []
             answers = answers[:3] + [mode] + answers[3:5] + extra + answers[5:]
-        return subprocess.run(['sh', str(self.package / 'setup.sh'), role], input='\n'.join(map(str, answers)) + '\n', text=True, capture_output=True, env=self.env, timeout=45)
+        result = subprocess.run(['sh', str(self.package / 'setup.sh'), role], input='\n'.join(map(str, answers)) + '\n', text=True, capture_output=True, env=self.env, timeout=45)
+        if role == 'server' and result.returncode == 0 and provision:
+            config = Path(answers[1])
+            settings = config / 'server.toml'
+            original = settings.read_text()
+            self.assertNotIn('[users.', original)
+            self.assertNotIn('[shares.', original)
+            with settings.open('a') as stream:
+                stream.write("\n[users.ana]\nenabled=true\n[shares.Obras.permissions]\nana='write'\n")
+            checked = subprocess.run([str(self.package / 'bin/crewsync-server'), 'check-config', str(settings)], capture_output=True, text=True)
+            self.assertEqual(checked.returncode, 0, checked.stdout + checked.stderr)
+        return result
 
     def setup_terminal(self, role, answers, invite):
         pid, fd = pty.fork()
@@ -156,7 +167,7 @@ class Setup(unittest.TestCase):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        answers = [prefix, config, data, '127.0.0.1', port, 'ana', 'Obras']
+        answers = [prefix, config, data, '127.0.0.1', port]
         result = self.setup('server', answers)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn('Servidor pronto:', result.stdout)
@@ -216,7 +227,7 @@ class Setup(unittest.TestCase):
             with socket.socket() as sock:
                 sock.bind(('127.0.0.1', 0))
                 port = sock.getsockname()[1]
-            result = self.setup('server', [prefix, config, self.root / ('store-' + mode), '127.0.0.1', port, 'ana', 'Obras'], mode=mode)
+            result = self.setup('server', [prefix, config, self.root / ('store-' + mode), '127.0.0.1', port], mode=mode)
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertFalse((config / 'tls').exists())
             self.assertIn("'127.0.0.1'", (config / 'start.sh').read_text())
@@ -253,7 +264,7 @@ class Setup(unittest.TestCase):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        result = self.setup('server', [prefix, config, self.root / 'store-existing', '127.0.0.1', port, 'ana', 'Obras'], tls_answers=[tls / 'server.crt', tls / 'server.key'])
+        result = self.setup('server', [prefix, config, self.root / 'store-existing', '127.0.0.1', port], tls_answers=[tls / 'server.crt', tls / 'server.key'])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertFalse((config / 'tls').exists())
         invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
@@ -285,14 +296,14 @@ class Setup(unittest.TestCase):
         with socket.socket() as sock:
             sock.bind(('127.0.0.2', 0))
             port = sock.getsockname()[1]
-        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.2', port, 'ana', 'Obras'], mode='3', http_answers=['127.0.0.2', 'HTTP'])
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.2', port], mode='3', http_answers=['127.0.0.2', 'HTTP'])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         response = subprocess.run(['curl', '--noproxy', '*', '--max-time', '5', '-sS', f'http://127.0.0.2:{port}/'], capture_output=True)
         self.assertEqual(response.returncode, 0, response.stderr)
 
     def test_http_refusal_leaves_server_untouched(self):
         config = self.root / 'server-refused'
-        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', 8080, 'ana', 'Obras'], mode='3', http_answers=['127.0.0.1', 'nao'])
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', 8080], mode='3', http_answers=['127.0.0.1', 'nao'])
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(config.exists())
         self.assertFalse((self.root / 'prefix').exists())
@@ -308,7 +319,7 @@ class Setup(unittest.TestCase):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', port, 'ana', 'Obras'])
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', port])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         os.kill(int((config / 'service.pid').read_text()), 0)
 
@@ -318,7 +329,7 @@ class Setup(unittest.TestCase):
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', 'sync.example.test', port, 'ana', 'Obras'])
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', 'sync.example.test', port])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn(f'https://sync.example.test:{port}', result.stdout)
         tls = config / 'tls'
@@ -349,7 +360,7 @@ sys.exit(0)
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]
-        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', port, 'ana', 'Obras'])
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', port])
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         unit = Path(self.env['XDG_CONFIG_HOME']) / 'systemd/user/crewsync-server.service'
         self.assertIn('%%', unit.read_text())

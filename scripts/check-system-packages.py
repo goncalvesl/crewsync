@@ -31,6 +31,8 @@ def main():
     require('chmod 2770 "$etc_dir"' in setup and 'chmod 660 "$etc_dir/server.toml"' in setup,'Permissões de configuração incompatíveis com o painel')
     require('runuser -u crewsync' in setup,'Convites e chave administrativa devem pertencer à conta de serviço')
     require('chmod 700 "$var_dir"' in setup,'Raiz de armazenamento deve ser privada (0700)')
+    require("'Primeiro usuário'" not in setup and "'Primeira pasta compartilhada'" not in setup,'O instalador deve deixar o cadastro inicial para o painel')
+    require('[users.$user]' not in setup and '[shares.$share.permissions]' not in setup,'O instalador não deve criar usuário ou compartilhamento padrão')
     require('chmod 0700 /var/lib/crewsync' in (ROOT/'scripts/package_system.py').read_text(),'Pós-instalação deve corrigir a permissão da raiz de armazenamento')
     require('chmod 0700 /var/opt/crewsync' in (ROOT/'scripts/install-system-tar.sh').read_text(),'Atualização tar.gz deve corrigir a permissão da raiz de armazenamento')
     deb_arch='amd64' if args.arch=='x86_64' else 'arm64'

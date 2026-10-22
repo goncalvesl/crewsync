@@ -48,9 +48,13 @@ Instale o arquivo correspondente (`pacman -U`, `apt install ./arquivo.deb` ou
 sudo crewsync-server-setup
 ```
 
-O assistente cria a primeira conta e pasta compartilhada, configura HTTPS direto
-com CA privada ou backend HTTP em loopback para um proxy HTTPS, habilita
-`crewsync-server.service` e mostra a chave administrativa e o convite inicial.
+O assistente prepara a raiz de dados, configura HTTPS direto com CA privada ou
+backend HTTP em loopback para um proxy HTTPS, habilita `crewsync-server.service`
+e mostra a chave administrativa. Não pede usuário nem nome de compartilhamento:
+cadastre ambos no painel depois de iniciar o servidor e gere os convites por lá.
+Os pacotes alpha.9 já publicados ainda usam o assistente anterior; esse fluxo novo
+será incluído na próxima release. O deploy Compose construído do repositório já
+inicia sem usuários e compartilhamentos.
 No tar.gz, extraia o arquivo e execute `sudo ./install-system.sh` na pasta
 extraída. A instalação por tar.gz precisa de systemd e OpenSSL; pacotes nativos
 declaram essas dependências para o gerenciador.
@@ -62,6 +66,63 @@ Remover o pacote não apaga
 não remove automaticamente configuração ou dados. Os artefatos são arquivos
 instaláveis diretamente, com checksum SHA-256; ainda não há repositórios apt,
 pacman ou dnf.
+
+## Docker e Coolify
+
+O repositório inclui `Dockerfile` e `compose.yaml`. O Coolify pode clonar o
+repositório público e construir a imagem diretamente; não é necessário publicar
+uma imagem num registry. O Compose mantém o backend acessível somente pela rede
+Docker e expõe internamente a porta 8080 para o proxy do Coolify. HTTPS público
+fica a cargo do proxy, que obtém/renova o certificado ACME. Também funciona com
+outro host Linux público que rode Docker Compose e um proxy TLS.
+
+Antes de criar o recurso no Coolify, prepare no host o diretório persistente dos
+dados (substitua o caminho se preferir outro):
+
+```sh
+sudo install -d -o 10001 -g 10001 -m 0700 /opt/crewsync/data
+```
+
+No Coolify, crie uma aplicação usando o repositório
+`https://github.com/goncalvesl/crewsync`, tipo Docker Compose e o arquivo
+`compose.yaml` na raiz. Defina a variável de ambiente `CREWSYNC_DATA_DIR` com o
+caminho absoluto criado no host, por exemplo `/opt/crewsync/data`. Essa pasta é
+bind-mounted em `/var/lib/crewsync`; arquivos, índices e credenciais ficam no
+filesystem do host, fora da camada gravável do container. O volume `crewsync_config`
+guarda a configuração do servidor. O processo roda sem root e exige que o diretório
+de dados pertença ao UID/GID 10001 com modo `0700`.
+
+No campo Domains do Coolify, associe o serviço `server` à URL pública e à porta
+interna 8080. Se a interface pedir a porta junto do endereço, use o formato
+`https://sync.exemplo.com:8080`: 8080 seleciona o destino dentro da rede Coolify;
+os clientes acessam `https://sync.exemplo.com` pela porta HTTPS 443. Aponte o DNS
+`A` do domínio para o IPv4 público do host e permita entrada TCP 80 e 443 para o
+proxy. Não publique 8080/8443 na Internet nem adicione `ports:` ao Compose.
+
+Depois do primeiro deploy, abra o terminal do container `server` no Coolify e
+gere a chave de acesso ao painel, substituindo a URL:
+
+```sh
+crewsync-server admin-key /etc/crewsync/server.toml https://sync.exemplo.com
+```
+
+Guarde a chave exibida. Acesse `https://sync.exemplo.com/`, cadastre usuários e
+compartilhamentos, defina as permissões e gere um convite por dispositivo. Clientes
+usam a URL HTTPS pública e a CA nativa do sistema; não precisam copiar `ca.crt`.
+Execute `admin-key` novamente somente se quiser invalidar as sessões atuais e
+gerar uma chave administrativa nova.
+
+Execute uma réplica do servidor. Faça backup consistente tanto do caminho definido
+em `CREWSYNC_DATA_DIR` quanto do volume `crewsync_config`, e teste uma restauração;
+persistência em disco não substitui backup. A atualização da imagem mantém ambos.
+Para migrar de uma instalação systemd, pare o serviço antigo e planeje uma cópia
+de configuração e dados com permissões corretas antes de ativar o container. Não
+execute os dois servidores simultaneamente sobre o mesmo armazenamento.
+
+O repositório público é o ponto de distribuição do código-fonte para o Coolify
+construir a aplicação. Para distribuir uma imagem pré-compilada publicamente,
+será necessário adicionar um workflow que publique tags versionadas no GHCR; essa
+publicação não faz parte do Compose atual.
 
 ## Automação
 
