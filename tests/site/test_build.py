@@ -24,5 +24,11 @@ class Manual(unittest.TestCase):
         self.assertNotIn('Arquitetura', toc)
         self.assertLess(content.index('Passos simples.'), content.index('id="detalhes-tecnicos"'))
 
+    def test_release_markers_are_hidden_but_downloads_remain_visible(self):
+        content, _ = build.render('# Manual\n\n## Instalar\n\n<!-- downloads:start -->\nBaixar o pacote.\n<!-- downloads:end -->\n')
+        self.assertIn('Baixar o pacote.', content)
+        self.assertNotIn('downloads:start', content)
+        self.assertNotIn('&lt;!--', content)
+
 if __name__ == '__main__':
     unittest.main()

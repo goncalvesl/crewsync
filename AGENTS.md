@@ -36,3 +36,14 @@ Testar permissões, revogação, conflitos, exclusões, transferências interrom
 ## Commits e revisão
 
 Sem histórico Git disponível para inferir convenções. Usar mensagens curtas e descritivas. PRs devem explicar comportamento, validação e mudanças de configuração; nunca incluir credenciais ou arquivos reais da construtora.
+
+## Publicação recorrente de versões
+
+Quando o usuário pedir para publicar uma release, executar o procedimento de
+`docs/RELEASING.md` até a release estar pública e a documentação atualizada.
+A tarefa inclui incrementar a versão, validar e publicar pacotes de cada
+arquitetura, checksums e fontes, atualizar os downloads da última versão no
+manual/README/site e verificar os links publicados. Não encerrar apenas com
+commit, tag ou workflow iniciado. Usar `scripts/prepare-release.py` para manter
+versões e downloads sincronizados. Durante o piloto, publicar como alpha sem
+inventar aceite físico; versão estável exige o aceite registrado.

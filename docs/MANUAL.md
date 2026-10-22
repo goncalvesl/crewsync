@@ -8,7 +8,16 @@ Esta é uma versão de teste para Linux em rede privada. Use primeiro arquivos d
 
 ## Instalar
 
-Baixe o pacote para seu computador: `x86_64` para Intel/AMD ou `aarch64` para ARM64. Consulte [versões publicadas](https://github.com/goncalvesl/crewsync/releases). Enquanto não houver release, os [pacotes de teste](https://github.com/goncalvesl/crewsync/actions/workflows/release.yml) ficam nos artefatos das execuções concluídas do GitHub.
+Escolha o pacote para seu computador:
+
+<!-- downloads:start -->
+Versão atual: 0.1.0-alpha.1 (alpha, para testes).
+
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz.sha256)
+
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.1) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-source.tar.gz)
+<!-- downloads:end -->
 
 Extraia o pacote e, dentro da pasta extraída, execute:
 

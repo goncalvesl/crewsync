@@ -1,17 +1,43 @@
-# CrewSync — candidato de desenvolvimento
+# CrewSync 0.1.0-alpha.1
 
-Linux, HTTPS nativo em Rust, ativação por dispositivo, ACLs, sincronização manual
-ou por eventos com reconciliação periódica, histórico e restauração individual.
-Retenção configurável e coleta administrativa offline, backup e restauração em
-destino novo. Pacotes musl estáticos e manual no GitHub Pages.
+Primeira release pública para testes em Linux, sob GPL-3.0-only.
 
-Configuração e sessões do piloto continuam válidas. Faça backup com servidor
-parado antes de atualizar. Histórico formato 2 adiciona datas de arquivamento;
-legado recebe prazo de graça. Não rebaixar servidor após a atualização.
+## Download e instalação
 
-Limitações: rede privada, servidor serial, Linux kernel >=5.6 com `/proc`,
-filesystem local, sem quotas totais/retomada parcial/limpeza das cópias locais.
-Windows/Android/interface gráfica são posteriores. O aceite dos ensaios físicos ampliados
-ainda é condição de lançamento; esta nota não declara uma release
-publicada. Licença GPL-3.0-only definida. Instalação por função com --client/--server,
-manual simples e aprofundamento técnico na seção final. Consulte STATUS.md e os relatórios.
+Escolha o pacote x86_64 (Intel/AMD) ou aarch64 (ARM64), extraia e execute:
+
+```sh
+./install.sh --client
+```
+
+No servidor, use `./install.sh --server`; sem opção, instala os dois. Não exige
+Rust/Cargo/Python no uso diário nem ajustes no PATH. Manual simples no pacote e em
+https://goncalvesl.github.io/crewsync/manual.html. Cada pacote tem checksum SHA-256.
+A fonte correspondente, scripts de build e dependências estão em `crewsync-0.1.0-alpha.1-source.tar.gz`.
+
+## Funcionalidades
+
+- Servidor HTTPS nativo Rust com CA e endereço verificados.
+- Convite de uso único, token por dispositivo, revogação e permissões read/write.
+- Sincronização manual ou por eventos com reconciliação periódica, exclusões
+  persistentes, diretórios vazios e conflitos preservados.
+- Histórico/restauração, retenção configurável e coleta segura com servidor parado.
+- Backup verificável e restauração em destino novo.
+
+## Compatibilidade e validação
+
+Linux kernel >=5.6 com /proc e filesystem local. Pacotes estáticos musl x86_64 e
+ARM64, sem dependência de glibc. Configuração e sessões do piloto são preservadas;
+faça backup com serviço parado antes de atualizar. Não rebaixar após histórico v2.
+
+Testes locais: 72 Rust, 5 HTTPS, 3 TLS, gerador de certificados, instalador, geração
+do manual e preparação/gates de release. A publicação é condicionada à matriz
+nativa x86_64/ARM64, ENOSPC real isolado, smoke dos pacotes e build offline das fontes.
+
+## Limitações da alpha
+
+Rede privada, servidor serializado, sem quotas totais, retomada parcial,
+compactação ou limpeza automática de cópias locais. Windows/GUI/Android são futuros.
+O piloto básico foi confirmado pelo mantenedor; matriz física ampliada e medições
+entre máquinas continuam pendentes. Esta é uma alpha para teste, não uma versão
+estável nem substituto de backup.

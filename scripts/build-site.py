@@ -22,6 +22,8 @@ def render(source):
             output.append('<p>' + inline(' '.join(paragraph)) + '</p>')
             paragraph.clear()
     for line in source.splitlines():
+        if code is None and line.startswith('<!-- ') and line.endswith(' -->'):
+            continue
         if line.startswith('```'):
             flush()
             if code is None:

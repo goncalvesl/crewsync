@@ -55,7 +55,7 @@ def main():
         info.mode = 0o644
         info.size = len(data)
         tar.addfile(info, io.BytesIO(data))
-        metadata = json.dumps(dict(version=version, license='GPL-3.0-only', target=args.target, kernel_minimum='5.6', runtime='Rust nativo; sem Python/Cargo; /proc e filesystem local necessários'), ensure_ascii=False).encode()
+        metadata = json.dumps(dict(version=version, source_url=f'https://github.com/goncalvesl/crewsync/releases/download/v{version}/crewsync-{version}-source.tar.gz', license='GPL-3.0-only', target=args.target, kernel_minimum='5.6', runtime='Rust nativo; sem Python/Cargo; /proc e filesystem local necessários'), ensure_ascii=False).encode()
         info = tarfile.TarInfo(name + '/package.json')
         info.mode = 0o644
         info.size = len(metadata)

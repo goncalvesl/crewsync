@@ -36,9 +36,20 @@ jobs:
         with:
           name: ${{ matrix.target }}
           path: target/packages/*
+  source:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: rustup toolchain install stable --profile minimal && rustup default stable
+      - run: python3 scripts/package-source.py
+      - run: python3 scripts/check-source.py target/packages/*-source.tar.gz
+      - uses: actions/upload-artifact@v4
+        with:
+          name: source
+          path: target/packages/*
   publish:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: package
+    needs: [package, source]
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -58,4 +69,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
-        run: gh release create "$TAG" target/packages/* --verify-tag --prerelease --latest=false --notes-file docs/RELEASE-NOTES.md
+        run: |
+          flags=(--latest)
+          if [[ "$TAG" == *-alpha.* ]]; then flags=(--prerelease --latest=false); fi
+          gh release create "$TAG" target/packages/* --verify-tag "${flags[@]}" --notes-file docs/RELEASE-NOTES.md

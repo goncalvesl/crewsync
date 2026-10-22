@@ -7,6 +7,17 @@ a integridade dos arquivos. Instalação com o mínimo de passos e dependências
 manual direto, com aprofundamento técnico apenas na seção final.
 Armazenamento raw, sem banco de dados externo. Windows e Android são posteriores.
 
+## Downloads
+
+<!-- downloads:start -->
+Versão atual: 0.1.0-alpha.1 (alpha, para testes).
+
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz.sha256)
+
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.1) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-source.tar.gz)
+<!-- downloads:end -->
+
 ## Usar
 
 - [Manual completo](docs/MANUAL.md): instalação, início, usuários/dispositivos,
@@ -16,8 +27,8 @@ Armazenamento raw, sem banco de dados externo. Windows e Android são posteriore
 - [Operação](docs/OPERATIONS.md) e [recuperação de versões](docs/HISTORY.md).
 
 O piloto básico em duas máquinas foi confirmado pelo usuário. A matriz ampliada
-física continua pendente antes da release pública; não há versão
-estável anunciada. Site publicado em https://goncalvesl.github.io/crewsync/.
+física continua pendente. A publicação alpha é autorizada para testes; não há
+versão estável anunciada. Site publicado em https://goncalvesl.github.io/crewsync/.
 Consulte [STATUS.md](docs/STATUS.md) para publicação e resultados efetivos.
 
 ## Implementado

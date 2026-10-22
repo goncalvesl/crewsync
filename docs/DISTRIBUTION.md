@@ -27,7 +27,7 @@ ficam em share/crewsync. Não há sudo, ajustes de PATH ou inicialização autom
 - Packages, workflow_dispatch: compila/testa x86_64 e ARM64 musl, executa HTTPS
   com esses binários, empacota e testa instalação. Artefatos ficam na execução.
 - Packages, tag vVERSAO: só publica prerelease se o número corresponder ao Cargo,
-  não terminar em -dev, existir LICENSE e o aceite físico ampliado estiver
+  não terminar em -dev e existir LICENSE; versão estável exige aceite físico ampliado
   registrado em docs/reports/physical-acceptance.json. Não editar esse aceite
   com base apenas no benchmark localhost. Nunca fabricar resultado físico.
 - Pages: gera manual e publica site em https://goncalvesl.github.io/crewsync/.
@@ -37,7 +37,9 @@ A matriz de desenvolvimento foi validada em x86_64 e ARM64 na execução
 com artefatos disponíveis na execução. Site publicado e verificado em
 https://goncalvesl.github.io/crewsync/.
 
-Licença GPL-3.0-only definida; publicação de release ainda depende do aceite físico ampliado. Não há
+Licença GPL-3.0-only definida; o mantenedor autorizou alpha pública para teste.
+Versão estável ainda depende do aceite físico ampliado. Publicações recorrentes:
+[RELEASING.md](RELEASING.md). Não há
 binário fictício ligado no site. Notas devem indicar versão, testes, compatibilidade
 e limites. Não declarar versão estável com o piloto incompleto.
 

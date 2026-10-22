@@ -23,6 +23,14 @@ deve ter o mínimo de passos; o manual deve ser direto, com detalhes técnicos n
   certificado, 2 testes de geração do manual e 4 testes de instalação; build,
   formatação, Clippy e links do site passaram. QA local 390/768/1440px passou.
 
+## Publicação 0.1.0-alpha.1 em preparação
+
+Solicitação atual autoriza release alpha pública, downloads por arquitetura no
+manual e procedimento recorrente em AGENTS/RELEASING. Versão e links centralizados
+em docs/release.json e prepare-release.py. O gate físico permanece para estável;
+alpha explicitamente identificada, sem falsificar aceite. A fonte da release
+inclui dependências vendorizadas e deve compilar offline antes de publicar.
+
 ## Implementado
 
 - Armazenamento raw SHA-256 deduplicado, revisões/tombstones, streaming, temporários,
@@ -95,7 +103,8 @@ teve checksum e instalação verificados novamente. Não equivalem a release pú
 Falta a matriz física ampliada/medições entre computadores; GPL-3.0-only já definida.
 Esses dados não foram inventados; docs/reports/physical-acceptance.json conserva
 basic_pilot_accepted=true e extended_matrix_accepted=false. A automação impede
-publicar uma tag -dev ou release sem esses aceites. Não há versão estável.
+publicar uma tag -dev ou versão estável sem esses aceites. O mantenedor autorizou
+alpha pública para teste sem alterar o registro físico. Não há versão estável.
 
 Limites: servidor serial para rede privada, kernel >=5.6 com /proc/filesystem local;
 sem quotas totais, retomada parcial, compressão ou limpeza das cópias locais.

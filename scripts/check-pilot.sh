@@ -15,3 +15,6 @@ python3 tests/site/check.py target/site
 python3 tests/site/test_build.py
 
 python3 tests/packaging/test_install.py
+
+python3 -m unittest discover -s tests/release
+python3 scripts/prepare-release.py --check

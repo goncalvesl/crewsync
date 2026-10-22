@@ -3,7 +3,8 @@
 O usuário autorizou executar sequencialmente todas as etapas restantes. Implementação
 Linux, operação, site e automação avançaram; aceites externos continuam explícitos.
 Veja STATUS.md para evidências atuais. Não considerar release pública concluída
-sem aceite físico ampliado. Licença GPL-3.0-only escolhida pelo mantenedor.
+a partir apenas de CI. O mantenedor autorizou alpha pública para teste; versão
+estável exige aceite físico ampliado. Licença GPL-3.0-only definida.
 
 ## 1. Fundação e decisões
 
@@ -51,7 +52,8 @@ Pendente externo: matriz ampliada e medições entre máquinas físicas (interru
 de rede/processo, conflitos, exclusões, revogação, disco cheio e energia), com
 hardware, kernel, volume e resultados. Não usar localhost como substituto. Registrar
 aceite em docs/reports/physical-acceptance.json somente após executar. Release
-0.1.0-alpha permanece condicionada a esses critérios.
+0.1.0-alpha.1 foi autorizada para teste; esses critérios continuam obrigatórios
+para a versão estável.
 
 ## 7. Manual e site
 
@@ -68,10 +70,10 @@ Workflow Pages publica o site. Estado real da publicação em STATUS.md.
 Automação Packages implementada: musl x86_64/ARM64, testes, HTTPS, ENOSPC isolado,
 pacote permitido, checksum, avisos de dependências e smoke de instalação. Execução
 manual gera artefatos para ensaio. Tag correspondente publica prerelease somente
-com LICENSE e aceite físico ampliado. Pacote x86_64 validado localmente sem Python
+com LICENSE e metadados/downloads consistentes; estável exige aceite físico ampliado. Pacote x86_64 validado localmente sem Python
 no container mínimo; ARM64 passou pela matriz CI, incluindo execução nativa de testes e instalação.
 
-Pendente de lançamento: aceite externo, número publicável e tag. Nenhuma
+Publicação alpha em preparação por solicitação expressa; estável depende do aceite externo. Nenhuma
 versão estável anunciada. Disponibilidade dos artefatos/CI em STATUS.md.
 
 ## Evolução posterior (fora da versão Linux atual)

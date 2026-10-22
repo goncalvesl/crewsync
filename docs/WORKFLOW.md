@@ -21,3 +21,9 @@ Ler README.md, AGENTS.md, PROJECT.md, STATUS.md, PLAN.md, QUALITY.md e TESTING.m
 5. Atualizar o plano caso o escopo mude e registrar a motivação.
 
 O status deve ser curto e suficiente para outra sessão continuar sem reconstruir toda a conversa. A documentação é parte da entrega, não uma tarefa opcional posterior.
+
+## Quando o usuário pedir uma publicação
+
+Essa solicitação inclui publicar a release e atualizar a versão e os downloads
+por arquitetura na documentação e no site. Seguir [RELEASING.md](RELEASING.md),
+verificando os assets efetivamente publicados antes de anunciar conclusão.
