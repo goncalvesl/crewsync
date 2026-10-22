@@ -2,7 +2,7 @@
 
 ## Ao retomar com o Codex
 
-Ler README.md, AGENTS.md, PROJECT.md, STATUS.md, PLAN.md e TESTING.md. Respeitar as decisões mais recentes em PROJECT.md quando divergirem das propostas antigas do guia original. Inspecionar os arquivos atuais antes de assumir que uma etapa está implementada.
+Ler README.md, AGENTS.md, PROJECT.md, STATUS.md, PLAN.md, QUALITY.md e TESTING.md. Respeitar as decisões mais recentes em PROJECT.md quando divergirem das propostas antigas do guia original. Inspecionar os arquivos atuais antes de assumir que uma etapa está implementada.
 
 ## Durante a implementação
 

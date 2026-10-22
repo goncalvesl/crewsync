@@ -15,3 +15,11 @@
 *~
 .DS_Store
 Thumbs.db
+
+# CrewSync pilot credentials, keys and local synchronization metadata
+**/.crewsync/
+/crewsync-pilot/
+*.key
+session*.json
+__pycache__/
+*.pyc

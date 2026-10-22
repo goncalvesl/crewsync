@@ -21,9 +21,9 @@ Para persistência e operação, cobrir reinício após interrupção, transfer�
 
 Testes não devem acessar dados reais, portas fixas ou serviços externos obrigatórios. Usar fixtures sintéticas, limites de tempo e espera por condições; evitar sleeps arbitrários. Testes devem funcionar em CI Linux desde a fundação do código.
 
-## Comandos previstos
+## Comandos do workspace
 
-Após criação do workspace:
+Executar na raiz:
 
 ```bash
 cargo build --workspace
@@ -32,7 +32,53 @@ cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 ```
 
-Esses comandos ainda não funcionam: não existe Cargo.toml. Quando o runner de ponta a ponta e o site forem criados, registrar seus comandos aqui e executá-los na CI. Diretórios de testes fora das crates não são descobertos automaticamente pelo Cargo; conectar explicitamente o runner.
+O workflow `.github/workflows/ci.yml` executa build, fmt, Clippy e testes com
+`--locked`. Também verifica dependências do sistema e roda os testes TLS e de rede.
+
+Nesta entrega há 55 testes Rust locais (incluindo integração de autenticação,
+worker em processo separado, cliente+armazenamento e falhas simuladas), além de
+dois testes HTTPS marcados `ignored` por exigirem sockets. O motivo é explícito:
+o ambiente de implementação retorna `Operation not permitted` ao criar sockets,
+inclusive localhost. Não suprimir esses dois testes na validação real/CI:
+
+```bash
+cargo build --workspace --locked
+cargo test -p crewsync-server --test pilot --locked -- --ignored
+```
+
+O runner `tests/e2e/pilot.rs` está ligado ao Cargo do servidor por `[[test]]`.
+Ele executa servidor e dois clientes em processos separados, cria certificados
+sintéticos, usa porta efêmera e verifica convergência, conflitos, exclusões,
+rename/deduplicação, reinício, permissões, revogação, symlinks e recusa de TLS
+incorreto. Os binários de ambos os pacotes precisam estar compilados no mesmo
+perfil/target; por isso o build do workspace antecede o teste. A CI limita a etapa
+a três minutos. `scripts/check-pilot.sh` executa a sequência completa, com timeout
+na etapa de rede.
+
+Os testes `reconciliation.rs` usam o reconciliador real e o armazenamento real
+com transporte determinístico sem sockets, cobrindo também resposta perdida,
+editar durante envio, corrupção de download, mudanças arquivo/diretório e
+conflitos entre exclusão de diretório e edição concorrente de filhos. Não são
+substitutos do teste HTTPS. `worker.rs` exercita framing e autenticação em um
+processo servidor separado, inclusive EOF prematuro sem publicação.
+
+TLS real pode ser testado sem sockets, via OpenSSL MemoryBIO:
+
+```bash
+/usr/bin/python3 -I tests/e2e/tls_memory.py
+```
+
+São três testes: CA confiável/hostname válido, CA não confiável e hostname
+incorreto. O setup usa o gerador real `scripts/pilot-cert.sh`, validando também a
+cadeia e permissões da chave. Esta verificação não testa TCP, firewall ou HTTP.
+
+Pré-requisitos: `/usr/bin/sha256sum` (coreutils), `/usr/bin/python3` >= 3.11 com
+`tomllib`/`ssl`, OpenSSL CLI. O cliente exige Linux >= 5.6 com `/proc` montado para
+operações relativas a descritores com `openat2` e recusa de symlinks.
+
+Falhas de publicação/disco são simuladas; não foi executado ensaio físico de
+disco cheio, queda de energia ou piloto em duas máquinas nesta sessão. Não há
+testes de retenção/histórico/restauração/coleta, pois ainda não estão implementados.
 
 ## Evidências
 

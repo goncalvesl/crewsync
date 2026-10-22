@@ -1,0 +1,24 @@
+# Exemplo sintético, sem credenciais. Requer Python >= 3.11 com tomllib.
+# Validar: cargo run -p crewsync-server -- check-config config/server.example.toml
+version = 1
+
+[server]
+storage_root = "/var/lib/crewsync"
+max_upload_bytes = 1_073_741_824 # 1 GiB por envio; não é quota total
+
+[users.ana]
+enabled = true
+
+[users.bruno]
+enabled = true
+
+[users.carla]
+enabled = false
+
+[shares.Obras.permissions]
+ana = "write"
+bruno = "read"
+carla = "read" # Usuário desativado continua sem acesso.
+
+[shares.Administrativo.permissions]
+ana = "write"

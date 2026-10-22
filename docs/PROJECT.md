@@ -4,6 +4,8 @@ Este documento registra o escopo mais recente acordado. O `AGENTS.md` original p
 
 ## Requisitos definidos
 
+Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
+
 - Implementação em Rust, simples de operar, rápida e com integridade dos arquivos.
 - Servidor central e clientes; piloto inicial Linux em dois computadores, com aproximadamente cinco usuários no uso previsto.
 - Windows depois; Android no futuro, com acesso online sem exigir operação offline.
@@ -24,7 +26,7 @@ Histórico com versões completas e deduplicação por hash. Proposta de retenç
 
 ## Decisões ainda abertas
 
-Nome público, licença, bibliotecas, algoritmo de hash, formatos persistentes, protocolo, estratégia de TLS, distribuições/arquiteturas Linux suportadas e política exata de retenção. Documentar escolhas antes de estabilizar contratos. Compactação na transmissão é apenas uma otimização futura a avaliar; não é requisito da primeira versão.
+Licença, distribuição/arquiteturas Linux suportadas, retenção e migração das dependências temporárias para Rust. Protocolo v1 e ponte HTTPS do piloto definidos em [0004-pilot.md](decisions/0004-pilot.md). SHA-256 e persistência local JSON estão definidos em [0002-storage.md](decisions/0002-storage.md). Configuração TOML e ACLs locais estão definidos em [0003-config-authorization.md](decisions/0003-config-authorization.md); a autenticação por dispositivo e a ponte HTTPS foram adicionadas para o piloto (decisão 0004). Documentar escolhas antes de estabilizar contratos. A fundação Cargo, edição Rust e alvo inicial de CI estão registrados em [0001-foundation.md](decisions/0001-foundation.md). Compactação na transmissão é apenas uma otimização futura a avaliar; não é requisito da primeira versão.
 
 ## Limites de hospedagem
 
