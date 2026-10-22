@@ -51,7 +51,12 @@ renovação documentada. Diretórios com espaços/aspas/%/$ testados.
 README/manual/site oferecem comandos únicos de servidor/cliente e downloads
 versionados da alpha.3. Detalhes técnicos na seção final do manual.
 https://goncalvesl.github.io/crewsync/manual.html#instalar.
-Assets verificados antes de enviar main; conferir o deploy Pages após esse push.
+Assets verificados antes de enviar main. Pages passou na execução 39824036351:
+https://github.com/goncalvesl/crewsync/actions/runs/39824036351.
+Início/manual públicos retornaram HTTP 200 com alpha.3, downloads por arquitetura
+e comandos de servidor/cliente. Chromium no site público passou em 390/768/1440px
+(navegação, âncoras, overflow e console). O bootstrap em main foi baixado e conferido
+byte a byte com o publicado/testado na release.
 
 ## Publicar novamente
 
