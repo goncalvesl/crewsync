@@ -1,110 +1,75 @@
 # Estado e retomada
 
-## Release em publicação — 0.1.0-alpha.6
-
-Raiz local automática: sync-root/watch-root consultam os compartilhamentos
-permitidos a cada ciclo e sincronizam RAIZ/NOME. Assistente pergunta somente a raiz.
-Comandos individuais preservados; cópias sem acesso ficam locais, arquivos avulsos
-não são enviados. Migração do layout antigo é explícita. Decisão 0010, manual,
-README, notas e exemplo systemd atualizados; protocolo compatível com alpha.4.
-
-Alpha.5 permanece tag imutável em 8a2808f, sem release publicada. Packages
-39847893884: x86_64 e fonte passaram; ARM64 detectou corrida no tearDown do teste
-(removia diretório antes do worker encerrar). Rust 39847893883 passou. Corrigida
-limpeza com pidfd: sinaliza serviço e filhos e espera encerramento; regressão nova.
-Repetições detectaram também corrida nohup/HUP: o processo podia morrer antes de
-nohup executar ao fechar o PTY. setup agora herda HUP ignorado antes de iniciar;
-regressão força o sinal antes do exec e falha contra o script anterior. Sete
-cenários do assistente passam. A próxima publicação é alpha.6. Não enviar main
-antes de verificar os assets.
-
-Validação anterior local: check-pilot completo, 74 Rust, cinco HTTPS, seis TLS,
-instalação/site/assistente/gates e Chromium 390/768/1440px passaram. O assistente
-verifica descoberta de novo compartilhamento sem reconfiguração. Compatibilidade
-com servidor alpha.4 passou com dois clientes após timeout na primeira tentativa.
-Alpha.6: check-pilot completo passou novamente, com sete testes do assistente.
-Três repetições adicionais com dois clientes passaram após corrigir HUP. A
-regressão HUP falhou contra o script anterior e passou no novo. Pacotes das duas
-arquiteturas e fonte offline serão conferidos na CI antes de publicar.
-
 ## Versão pública atual
 
-**0.1.0-alpha.4**, para testes, GPL-3.0-only:
-https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.4.
-Tag imutável no commit `3942c05`. Pacotes linux-x86_64/linux-arm64, fonte vendorizado,
-bootstrap install.sh e checksums: oito URLs públicos HTTP 200, quatro hashes
-conferidos. ARM64 executado nativamente na CI. Não mover tags ou sobrescrever
-assets de versões publicadas.
+**0.1.0-alpha.6**, para testes, GPL-3.0-only:
+https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.6.
+Tag imutável em `1a48023`. Oito assets públicos HTTP 200: pacotes musl x86_64 e
+ARM64, checksums, fonte vendorizado, bootstrap install.sh e checksum. Quatro
+hashes conferidos após download. Não mover tags ou sobrescrever assets publicados.
+Alpha.5 permanece tag em `8a2808f`, sem release: a CI ARM64 detectou uma corrida
+na limpeza de processos dos testes; correção incluída na alpha.6.
 
-## Pedido e implementação
+## Comportamento novo do cliente
 
-O mantenedor quer instalação simples em servidor remoto por domínio ou IPv4
-público/VPN, além de rede local. Decisão 0009 atualiza o escopo. setup.sh pergunta
-endereço de acesso, sem esquema/porta, valida antes de instalar e gera SAN DNS/IP.
-A inicialização verifica HTTPS por loopback, sem exigir DNS público resolvido ou
-acesso ao IP público por dentro da VPS. Exibe URL, pasta, ca.crt e convite. Cliente
-pede URL real, sem sugerir IP LAN arbitrário. Bootstrap consulta a última release,
-inclusive alpha, identifica CPU, baixa e confere o pacote.
+O assistente pergunta somente a raiz local, como `/home/voce/Terna`. sync-root e
+watch-root consultam os compartilhamentos permitidos a cada ciclo e sincronizam
+RAIZ/NOME (por exemplo, Terna/Obras). A descoberta de novas permissões é automática;
+pastas sem acesso permanecem locais, sem sincronizar. Arquivos avulsos da raiz não
+são enviados. Layout antigo exige migração explícita com serviço parado, incluindo
+.crewsync; comandos individuais sync/watch continuam disponíveis. Decisão 0010,
+manual, README, notas e exemplo systemd atualizados. Protocolo compatível com
+servidor alpha.4, conferido com dois clientes; não é necessário reinstalar o servidor.
 
-CA privada automática e HTTPS validado, sem ACME/CA pública automática. Só ca.crt
-é transferido aos clientes por meio confiável. Certificado de servidor vale 90 dias.
-URLs/portas/curingas/IPv6/nomes inválidos e injeções são recusados antes de gravar.
-Configurações existentes preservadas; atualização usa install.sh, com serviço
-parado/backup. Troca de endereço já instalado exige novo certificado, ajuste dos
-caminhos do serviço e distribuição do novo ca.crt; procedimento técnico no manual.
+Fallback nohup herda HUP ignorado antes do exec, evitando morte ao fechar o terminal
+imediatamente após instalar. Testes encerram e aguardam serviço e workers via pidfd
+antes de remover fixtures. Regressões para HUP antes do exec e encerramento dos filhos.
+
+## Validação da alpha.6
+
+- scripts/check-pilot.sh passou: build/fmt/Clippy, 74 Rust, cinco HTTPS, seis TLS
+  reais sem sockets, dois testes de entrada de certificado, site, instalação,
+  sete cenários do assistente e quatro gates de release.
+- Assistente cobre dois clientes HTTPS, convite oculto em PTY, subpastas por
+  compartilhamento e nova permissão descoberta durante watch. Três repetições
+  adicionais passaram após corrigir HUP. Regressão HUP falhou contra o script
+  anterior e passou no novo.
+- Chromium local 390/768/1440px: navegação, âncoras, overflow e console passaram.
+- Packages passou: https://github.com/goncalvesl/crewsync/actions/runs/39848766589.
+  x86_64/ARM64 nativos: build/testes/HTTPS/ENOSPC e instalação/setup de cada pacote;
+  fonte correspondente compilou offline com CARGO_HOME vazio.
+- Pacote x86_64 efetivamente baixado da release passou checksum, check-package,
+  --version e sete testes de setup. ARM64 foi executado nativamente na CI.
+- Bootstrap público em PTY baixou alpha.6, conferiu checksum, instalou cliente e
+  sincronizou com outro cliente, descobrindo novo compartilhamento sem reconfigurar.
+  Servidor e dados sintéticos isolados; nenhum serviço ou dado real foi alterado.
+- Compatibilidade com servidor alpha.4 passou após corrigir HUP do assistente;
+  o timeout visto antes da correção vinha do processo encerrado junto ao terminal.
+
+## Operação e limites
+
+Servidor remoto por domínio/IPv4 público ou VPN, além de LAN (decisão 0009).
+CA privada automática e HTTPS validado; só ca.crt vai aos clientes por meio
+confiável. Certificado do servidor: 90 dias; renovação no manual técnico.
+DNS A deve apontar ao IPv4 público e firewall Linux/provedor permitir a porta TCP.
+O operador confirmou acesso externo DNS/HTTPS em VPS Oracle após liberar a porta.
+Isso não substitui a matriz física ampliada de sincronização.
 
 systemd de usuário quando disponível; sem login SSH exige enable-linger explícito.
-Fallback nohup informa PID/log/start.sh, sem autostart no reboot. DNS A deve apontar
-para o IPv4 público; firewall Linux/provedor e NAT precisam permitir a porta TCP
-escolhida para os clientes. Não há instalação automática de regras de firewall.
+Fallback nohup sem autostart no reboot. Configurações existentes preservadas;
+atualização por install.sh com serviço parado e backup. Não rebaixar após histórico
+v2. Não há configuração automática de firewall nem limpeza das cópias locais.
 
-## Validação
+Piloto básico em duas máquinas confirmado; matriz ampliada e medições entre máquinas
+pendentes, extended_matrix_accepted=false. Alpha para testes; estável exige aceite
+físico real. Linux >=5.6 com /proc e disco local, servidor serializado, sem quotas
+totais/retomada parcial/compactação. Windows, GUI e Android futuros. Manter backup.
 
-- scripts/check-pilot.sh passou: build/fmt/Clippy, 72 Rust, 5 HTTPS, 6 TLS reais
-  (IPv4/DNS, nome e CA incorretos), 2 testes de entrada de certificado, site,
-  instalação e gates. Nenhum serviço ou dado real foi alterado.
-- Cinco testes do assistente: dois clientes Rust em URL DNS localhost com watch,
-  convite oculto em PTY, configuração preservada, entradas inválidas sem gravar,
-  caminhos especiais, systemd-analyze, nohup e checksum incorreto.
-- Novo cenário instala sync.example.test sem DNS externo, verifica SAN/hostname
-  correto/incorreto e HTTPS/SNI por curl --resolve em loopback.
-- Packages passou: https://github.com/goncalvesl/crewsync/actions/runs/39828480398.
-  x86_64/ARM64 nativos: build/testes/HTTPS/ENOSPC isolado, instalação/setup do
-  pacote; fonte correspondente compilou offline com CARGO_HOME vazio.
-- Rust da tag: https://github.com/goncalvesl/crewsync/actions/runs/39828480327.
-- Pacote x86_64 efetivamente baixado da release passou checksum, instalação,
-  --version e cinco testes de setup. Bootstrap público instalou servidor com
-  domínio e dois clientes em PTYs isolados; SAN/SNI/HTTPS e watch passaram,
-  sem eco de convite. Testes não alteram DNS público ou /etc/hosts.
-- Chromium local passou em 390/768/1440px, navegação/âncoras/overflow/console.
-  Validação externa em VPS/Internet real continua a cargo do operador; testes
-  loopback não são apresentados como acesso remoto físico validado.
+## Manual, site e próxima publicação
 
-## Manual e site
+README/manual/site preparados com downloads versionados da alpha.6. Assets já
+conferidos antes de enviar main; falta conferir a publicação Pages e os links no
+site público: https://goncalvesl.github.io/crewsync/manual.html#instalar.
 
-README/manual/site têm comandos únicos e downloads versionados da alpha.4.
-Manual explica domínio/IPv4, DNS A, firewall/provedor, funcionamento sem SSH,
-certificado privado e renovação; detalhes técnicos ficam na última seção.
-https://goncalvesl.github.io/crewsync/manual.html#instalar.
-Assets conferidos antes de enviar main. Pages passou na execução 39828921228:
-https://github.com/goncalvesl/crewsync/actions/runs/39828921228.
-Início/manual públicos retornaram HTTP 200 com alpha.4, downloads por arquitetura
-e instruções de domínio/DNS/firewall/linger. Chromium no site público passou em
-390/768/1440px (navegação, âncoras, overflow e console).
-
-## Publicar novamente
-
-Tarefa recorrente em AGENTS.md e RELEASING.md: incrementar, testar, publicar e
-verificar release/downloads por arquitetura, manual/README/site. Não encerrar no
-commit/tag. prepare-release.py mantém versão/URLs sincronizados. Enviar tag antes
-de main; verificar assets antes de expor os links. Incluir bootstrap/checksum e
-testar terminal real. Alpha.2 foi preservada e substituída pela alpha.3, que
-corrigiu eco de convite em resposta imediata; regressão permanece nesta versão.
-
-## Pendências externas
-
-Piloto básico em duas máquinas confirmado. Matriz física ampliada e medições
-pendentes; extended_matrix_accepted=false. Alpha autorizada para testes; estável
-exige aceite físico real. Linux >=5.6 com /proc e disco local, servidor serializado,
-sem quotas totais/retomada parcial/compactação/limpeza de cópias locais. Windows,
-GUI e Android futuros. Não rebaixar após histórico v2; manter backup independente.
+Seguir docs/RELEASING.md até a release e documentação estarem públicas. Usar
+prepare-release.py; enviar tag antes de main. Não encerrar em commit/tag/workflow.
