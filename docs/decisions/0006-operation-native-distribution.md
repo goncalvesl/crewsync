@@ -58,7 +58,7 @@ mantêm backoff, sem permitir que eventos provoquem repetição acelerada.
 Pacotes musl estáticos x86_64 e aarch64, kernel >=5.6 com `/proc`; sem dependência
 runtime Python/OpenSSL/glibc. Certificados usam OpenSSL CLI para geração, não para
 servir/sincronizar. x86_64 foi construído em rust:alpine e testado no Arch; ARM64
-precisa da execução de sua matriz CI. Pacote contém somente binários, exemplos,
+foi depois validado nativamente na matriz CI 39804690647. Pacote contém somente binários, exemplos,
 manual e avisos de licença. Instalador usa PREFIX, default ~/.local, sem iniciar
 serviços nem alterar dados. Checksums e smoke de extração/instalação são obrigatórios.
 

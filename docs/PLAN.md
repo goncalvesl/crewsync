@@ -68,7 +68,7 @@ Automação Packages implementada: musl x86_64/ARM64, testes, HTTPS, ENOSPC isol
 pacote permitido, checksum, avisos de dependências e smoke de instalação. Execução
 manual gera artefatos para ensaio. Tag correspondente publica prerelease somente
 com LICENSE e aceite físico ampliado. Pacote x86_64 validado localmente sem Python
-no container mínimo; ARM64 deve passar pela matriz CI.
+no container mínimo; ARM64 passou pela matriz CI, incluindo execução nativa de testes e instalação.
 
 Pendente de lançamento: licença, aceite externo, número publicável e tag. Nenhuma
 versão estável anunciada. Disponibilidade dos artefatos/CI em STATUS.md.

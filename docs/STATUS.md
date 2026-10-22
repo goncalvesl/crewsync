@@ -64,11 +64,18 @@ Dados sintéticos e temporários, sem alterar serviço, instalação ou dados re
 ## Publicação e pendências externas
 
 Site publicado: https://goncalvesl.github.io/crewsync/. Pages passou na execução
-39804090471; QA Chromium no endereço público também passou em 390/768/1440px.
-A matriz Packages já passou build/testes/HTTPS/ENOSPC em x86_64 e ARM64, mas a
-primeira tentativa de empacotar pediu uma dependência macOS ausente no cache:
-metadata offline não filtrava plataforma. Corrigido para --filter-platform do
-alvo, e a matriz será repetida. Artefatos CI não equivalem a release publicada.
+[39804635227](https://github.com/goncalvesl/crewsync/actions/runs/39804635227);
+QA Chromium no endereço público também passou em 390/768/1440px.
+
+CI Rust (incluindo navegador) passou para o código 0f74d82:
+[39804635277](https://github.com/goncalvesl/crewsync/actions/runs/39804635277).
+Matriz Packages passou integralmente em x86_64 e ARM64, incluindo build, testes,
+HTTPS, ENOSPC, empacotamento, instalação e upload dos dois artefatos:
+[39804690647](https://github.com/goncalvesl/crewsync/actions/runs/39804690647).
+O primeiro empacotamento revelou dependência macOS ausente em cache Linux limpo;
+filtrar metadata pelo alvo corrigiu o erro, e a nova execução limpa comprova a
+regressão. Artefatos foram baixados para target/ci-packages/; o pacote x86_64 baixado
+teve checksum e instalação verificados novamente. Não equivalem a release pública.
 
 Faltam escolha da licença e matriz física ampliada/medições entre computadores.
 Esses dados não foram inventados; docs/reports/physical-acceptance.json conserva

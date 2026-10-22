@@ -30,6 +30,11 @@ instalação; default ~/.local. Não há sudo nem inicialização automática.
   com base apenas no benchmark localhost. Nunca fabricar resultado físico.
 - Pages: gera manual e publica site em https://goncalvesl.github.io/crewsync/.
 
+A matriz de desenvolvimento foi validada em x86_64 e ARM64 na execução
+[39804690647](https://github.com/goncalvesl/crewsync/actions/runs/39804690647),
+com artefatos disponíveis na execução. Site publicado e verificado em
+https://goncalvesl.github.io/crewsync/.
+
 Publicação de release ainda depende de licença e aceite físico ampliado. Não há
 binário fictício ligado no site. Notas devem indicar versão, testes, compatibilidade
 e limites. Não declarar versão estável com o piloto incompleto.
