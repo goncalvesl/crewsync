@@ -9,8 +9,10 @@ ARM64, tar.gz x86_64 e ARM64, fonte e install.sh, com nove sidecars SHA-256.
 Os nove sidecars foram baixados e conferidos; `check-package.py` e
 `check-arch-package.py` passaram nos pacotes públicos x86_64. A CI validou os
 pacotes Debian/RPM nas duas arquiteturas, e o checker Debian/RPM local também
-passou em Ubuntu 24.04. `install.sh` passou `sh -n` e checksum. Links públicos
-do site serão conferidos após o deploy Pages.
+passou em Ubuntu 24.04. `install.sh` passou `sh -n` e checksum. Pages 39870599990
+publicou README/manual/site; 14 links de pacotes/checksums responderam HTTP 200.
+O manual público contém o procedimento para recuperar instalações interrompidas
+pela permissão antiga da alpha.8.
 
 A versão inclui painel administrativo Rust no mesmo listener, HTTP explícito para
 testes, HTTPS por proxy e HTTPS direto. Painel gerencia usuários, pastas virtuais,
