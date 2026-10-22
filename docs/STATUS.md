@@ -7,7 +7,7 @@ Tag v0.1.0-alpha.7 aponta ao commit 732c0d7. A CI 39860997484 passou nos jobs
 de fonte offline, pacote musl x86_64 e ARM64 e publicação. Release não draft e
 prerelease, com oito assets. Pacotes, checksums, fonte e install.sh foram baixados;
 quatro checksums conferidos. check-package passou no tar.gz x86_64; ambos binários
-reportam 0.1.0-alpha.7. O site e README estão atualizados para alpha.7 neste commit.
+reportam 0.1.0-alpha.7. README e documentação de origem estão em main (commit bd7441d). O workflow Pages\n39861395282 passou build/testes, mas expirou após 10 minutos em updating_pages.\nUma nova execução limpa 39862776775 também expirou após 10 minutos no mesmo estado.\nNa verificação, a URL pública ainda servia alpha.6. O build local do site passou;\nrepetir o deploy quando o serviço Pages aceitar uma nova implantação.
 
 A versão inclui painel administrativo Rust no mesmo listener, HTTP explícito para
 testes, HTTPS por proxy e HTTPS direto. Painel gerencia usuários, pastas virtuais,
