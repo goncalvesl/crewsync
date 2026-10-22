@@ -71,8 +71,8 @@ TLS real pode ser testado sem sockets, via OpenSSL MemoryBIO:
 /usr/bin/python3 -I tests/e2e/tls_memory.py
 ```
 
-São três testes: CA confiável/hostname válido, CA não confiável e hostname
-incorreto. O setup usa o gerador real `scripts/pilot-cert.sh`, validando também a
+São seis testes, para IPv4 e domínio DNS: CA confiável/hostname válido,
+CA não confiável e hostname incorreto. O setup usa o gerador real `scripts/pilot-cert.sh`, validando também a
 cadeia e permissões da chave. Esta verificação não testa TCP, firewall ou HTTP.
 
 A ativação tem regressões para confirmar com Enter mantendo stdin aberto, aceitar
