@@ -1,5 +1,23 @@
 # Estado e retomada
 
+## Preparação da 0.1.0-alpha.4
+
+Pedido atual: instalação fácil em servidor remoto, por domínio ou IPv4 público.
+Decisão 0009 amplia o escopo. setup.sh pede endereço de acesso sem esquema/porta,
+valida por pilot-cert.sh --check-address antes de gravar, gera SAN DNS/IP e exibe
+URL/pasta/CA/convite. Inicialização verifica loopback e independe do DNS externo.
+Cliente pede URL real, sem sugerir um IP LAN arbitrário. CA privada e TLS validado
+preservados; sem ACME/CA pública automático. Configurações existentes preservadas.
+
+scripts/check-pilot.sh passou: build/fmt/Clippy, 72 Rust, 5 HTTPS, agora 6 TLS
+(IP/DNS), 2 validações de certificado e 5 testes do assistente. Novo cenário instala
+com sync.example.test sem DNS, verifica SAN/nome incorreto e HTTPS/SNI via --resolve.
+Dois clientes Rust usam localhost como DNS. Manual explica DNS A, firewall Linux/
+provedor, linger e renovação. Não há alegação de teste em servidor público real.
+Pacote estático x86_64 passou checksum, instalação e os 5 testes de setup.
+Chromium local 390/768/1440px passou. Publicar/verificar assets conforme
+RELEASING.md antes de enviar main.
+
 ## Versão pública atual
 
 **0.1.0-alpha.3**, para testes, GPL-3.0-only:

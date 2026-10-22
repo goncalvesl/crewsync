@@ -4,7 +4,7 @@ O CrewSync mantém uma pasta atualizada entre seus computadores. Seu objetivo é
 
 Para começar, siga Instalar e Sincronizar. A preparação do servidor é feita uma vez pelo administrador. A explicação técnica fica na última seção.
 
-Esta é uma versão de teste para Linux em rede privada. Use primeiro arquivos de teste e mantenha backup separado.
+Esta é uma versão de teste para Linux, com servidor remoto ou local. Use primeiro arquivos de teste e mantenha backup separado.
 
 ## Instalar
 
@@ -20,19 +20,19 @@ Nos outros computadores, execute:
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, também cria o certificado, configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No cliente, ativa o computador e inicia a sincronização.
+O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o domínio ou IPv4 de acesso, cria o certificado, configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No cliente, ativa o computador e inicia a sincronização.
 
 Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não precisa de Rust, Cargo ou Python. Os comandos funcionam no terminal de uma sessão Linux, sem sudo. Os diretórios sugeridos podem ser alterados. Escolha diretórios novos para a configuração e os dados internos do servidor; instalações existentes são preservadas.
 
 Se preferir baixar e conferir o pacote manualmente:
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.3 (alpha, para testes).
+Versão atual: 0.1.0-alpha.4 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-arm64.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.3) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.4) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-source.tar.gz)
 <!-- downloads:end -->
 
 Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.
@@ -99,15 +99,24 @@ Confira depois de editar:
 
 ## HTTPS e rede
 
-O servidor já fica iniciado após o assistente. Use o IP escolhido na instalação e mantenha esse endereço fixo. Entregue aos clientes somente `ca.crt`, localizado na pasta `tls` da configuração. Mantenha os arquivos `.key` privados. O certificado vence em 90 dias; renove antes disso, conforme a seção técnica.
+O servidor já fica iniciado após o assistente. Quando ele perguntar o endereço, informe o domínio usado pelos clientes, como `sync.empresa.com`, ou o IPv4 público/VPN. Digite somente o nome ou IP, sem `https://`, porta ou caminho. A porta é perguntada separadamente; o padrão é 8443.
 
-Se usar UFW, permita a porta TCP do servidor para a rede local correta. Exemplo para `192.168.1.0/24`:
+Em servidor remoto, siga estes passos:
+
+- Se usar domínio, aponte o registro DNS A para o IPv4 público do servidor.
+- Libere a porta TCP escolhida no firewall do Linux e nas regras de rede do provedor para os clientes.
+- Com systemd, execute `sudo loginctl enable-linger SEU_USUARIO` para manter o serviço funcionando sem uma sessão SSH aberta.
+- No cliente, informe `https://sync.empresa.com:8443`, usando o domínio e a porta reais.
+
+Não é necessário ter o DNS pronto para gerar o certificado e iniciar o servidor; ele precisa estar correto quando os clientes conectarem. Entregue aos clientes somente `ca.crt`, localizado na pasta `tls` da configuração. Mantenha os arquivos `.key` privados. O certificado vence em 90 dias; renove antes disso, conforme a seção técnica.
+
+Se usar UFW, permita a porta para os endereços dos clientes ou da VPN. Exemplo para clientes na rede `192.168.1.0/24`:
 
 ```bash
 sudo ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 ```
 
-Não é necessário abrir portas nos clientes. O endereço que eles usam deve ser o IP real, nunca `0.0.0.0`.
+Não é necessário abrir portas nos clientes. O endereço que eles usam deve ser o domínio ou IP de acesso real, nunca `0.0.0.0`. Se o servidor remoto estiver atrás de roteador/NAT, encaminhe a porta até ele.
 
 Para gerar um convite válido por dez minutos:
 
@@ -173,7 +182,7 @@ No cliente, use `crewsync-client.service`. Sem systemd, encerre o PID indicado e
 ## Diagnostico
 
 - Não conecta: confira se o servidor está aberto, o endereço está correto e a porta está liberada.
-- Erro de certificado: confira o arquivo `ca.crt`, o IP, a data dos computadores e a validade do certificado.
+- Erro de certificado: confira o arquivo `ca.crt`, o domínio/IP, a data dos computadores e a validade do certificado.
 - Acesso negado: peça ao administrador para conferir seu usuário, dispositivo e permissão na pasta.
 - Conflito de revisão: sincronize ou consulte o histórico novamente antes de tentar recuperar uma versão.
 - Armazenamento em uso: encerre a outra instância. Não apague o arquivo `lock`.
@@ -195,12 +204,12 @@ Esta seção é opcional. Ela explica o funcionamento e reúne procedimentos ava
 
 O bootstrap consulta a API pública de releases do GitHub, incluindo alpha, e valida o SHA-256 do pacote antes de extrair e executar o assistente. Requer ferramentas comuns de shell Linux; não depende do gerenciador de pacotes da distribuição. A API anônima pode limitar requisições; nesse caso, use o download manual. Os downloads agora usam `linux-x86_64` e `linux-arm64`. O antigo `unknown` era o campo de fornecedor no identificador de plataforma Rust, sem relação com a versão.
 
-A inicialização usa systemd de usuário quando disponível; caso contrário, grava `start.sh`, `service.pid` e `service.log` na configuração e inicia com nohup. O modo sem systemd não configura início automático após reboot. O assistente verifica HTTPS local antes de anunciar o servidor pronto. Firewall e acesso entre computadores precisam permitir a porta escolhida.
+A inicialização usa systemd de usuário quando disponível; caso contrário, grava `start.sh`, `service.pid` e `service.log` na configuração e inicia com nohup. O modo sem systemd não configura início automático após reboot. O assistente valida domínio/IPv4 antes de instalar e inclui esse endereço no certificado. Verifica HTTPS por 127.0.0.1 antes de anunciar o servidor pronto, sem depender do DNS público. A CA é privada e criada automaticamente; não é um certificado público Let’s Encrypt. Firewall e acesso entre computadores precisam permitir a porta escolhida.
 
-Para renovar, pare o servidor e gere um conjunto novo em outro diretório com o IP atual. Preserve o conjunto anterior até conferir o novo. Ajuste os caminhos do serviço e entregue o novo `ca.crt` a cada cliente antes de reiniciar a sincronização:
+Para renovar, pare o servidor e gere um conjunto novo em outro diretório com o domínio ou IPv4 usado pelos clientes. Preserve o conjunto anterior até conferir o novo. Ajuste os caminhos do serviço e entregue o novo `ca.crt` a cada cliente antes de reiniciar a sincronização:
 
 ```bash
-"$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/.config/crewsync-server/tls-novo" 192.168.1.101
+"$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/.config/crewsync-server/tls-novo" sync.empresa.com
 ```
 
 Para uma instalação sem o assistente, copie e edite o exemplo TOML, gere os certificados e execute `crewsync-server serve CONFIG 0.0.0.0 8443 CERT KEY`. No cliente, crie a pasta de configuração privada (0700) e a pasta local, copie `ca.crt`, execute `crewsync-client activate URL CA SESSION NOME` e cole o convite. Use `crewsync-client sync SESSION PASTA DIRETORIO` uma vez ou `crewsync-client watch SESSION PASTA DIRETORIO 5` continuamente. Não rode `sync` junto ao serviço watch na mesma pasta.
@@ -221,7 +230,7 @@ Linux kernel 5.6 ou superior, `/proc` montado e filesystem local com suporte a `
 
 ### Segurança e configuração
 
-HTTPS usa rustls com TLS 1.2/1.3, CA explícita e validação do endereço; não existe opção de ignorar o certificado. O servidor atende uma operação por vez, com timeout de conexão de 30 segundos, para rede privada. Tokens são individuais por dispositivo e somente seus hashes ficam no servidor.
+HTTPS usa rustls com TLS 1.2/1.3, CA explícita e validação do endereço; não existe opção de ignorar o certificado. O servidor atende uma operação por vez, com timeout de conexão de 30 segundos, com acesso por domínio ou IPv4. Tokens são individuais por dispositivo e somente seus hashes ficam no servidor.
 
 Somente pastas de primeiro nível são compartilhamentos; subpastas herdam o acesso. Ausência de permissão nega acesso. A configuração TOML é estrita e recarregada antes de cada requisição; recarga inválida mantém a última válida. Trocar a raiz exige reiniciar. `max_upload_bytes` limita cada envio, não o armazenamento total.
 

@@ -123,3 +123,10 @@ Cobre caminhos com espaços/aspas/%/$, preservação de configuração, entradas
 inválidas, convite enviado imediatamente em terminal real sem eco e bootstrap via terminal com download simulado de alpha e hash incorreto.
 Não instala nem inicia serviços na conta real. Na matriz de pacotes usa
 CREWSYNC_BIN_DIR para executar os binários musl nativos de cada arquitetura.
+
+Certificados remotos: cert_input.py cobre domínio/IPv4 e entradas maliciosas
+recusadas sem gravar arquivos; tls_memory.py faz seis ensaios TLS (IP e domínio,
+CA correta/incorreta e nome incorreto). test_setup.py inclui instalação com domínio
+não resolvível, verificação SAN/hostname e HTTPS/SNI com curl --resolve; clientes
+Rust do cenário de sincronização usam URL DNS localhost. Não alterar DNS público
+ou /etc/hosts nos testes e não afirmar validação externa a partir de loopback.

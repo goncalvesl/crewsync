@@ -22,7 +22,7 @@ curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/se
 ```
 
 O assistente baixa a última release, pergunta os diretórios e inicia o serviço.
-No servidor, cria configuração, certificado e convite. No cliente, pede endereço,
+No servidor, aceita domínio ou IPv4 público/VPN e cria configuração, certificado e convite. No cliente, pede endereço,
 certificado e convite para ativar e sincronizar. Requer curl/tar/sha256sum e,
 no servidor, OpenSSL; dispensa Rust/Cargo/Python. Veja o manual para firewall,
 início sem login, atualização e instalações existentes.
@@ -30,12 +30,12 @@ início sem login, atualização e instalações existentes.
 ## Downloads
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.3 (alpha, para testes).
+Versão atual: 0.1.0-alpha.4 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-arm64.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.3) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.4) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-source.tar.gz)
 <!-- downloads:end -->
 
 ## Usar
@@ -57,7 +57,7 @@ HTTPS com CA e hostname verificados, ativação temporária por dispositivo,
 revogação, ACLs read/write, sync/watch com eventos e reconciliação periódica,
 conflitos preservados, exclusões persistentes, histórico/restauração, retenção
 configurável, coleta offline com simulação e backup verificável em destino novo.
-Não substitui backup independente. Rede privada; veja limites no manual.
+Não substitui backup independente. Servidor remoto ou local por HTTPS; veja limites no manual.
 
 ## Desenvolver
 

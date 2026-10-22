@@ -7,12 +7,13 @@ import unittest
 
 
 class TLS(unittest.TestCase):
+    host = "192.0.2.10"
     @classmethod
     def setUpClass(cls):
         cls.temp = tempfile.TemporaryDirectory()
         root = pathlib.Path(cls.temp.name) / 'tls'
         generator = pathlib.Path(__file__).resolve().parents[2] / 'scripts/pilot-cert.sh'
-        subprocess.run([str(generator), str(root), '192.0.2.10'], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        subprocess.run([str(generator), str(root), cls.host], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         cls.cert = str(root / 'ca.crt')
         cls.server_cert = str(root / 'server.crt')
         cls.key = str(root / 'server.key')
@@ -48,13 +49,16 @@ class TLS(unittest.TestCase):
                 return
         self.fail('handshake não concluiu no limite')
     def test_trusted_certificate_and_matching_host(self):
-        self.handshake('localhost', True)
+        self.handshake(self.host, True)
     def test_hostname_mismatch_is_rejected(self):
         with self.assertRaises(ssl.SSLCertVerificationError):
             self.handshake('another-host.invalid', True)
     def test_untrusted_certificate_is_rejected(self):
         with self.assertRaises(ssl.SSLCertVerificationError):
             self.handshake('localhost', False)
+
+class DNS(TLS):
+    host = 'sync.example.test'
 
 if __name__ == '__main__':
     unittest.main()

@@ -114,7 +114,7 @@ class Setup(unittest.TestCase):
             folder = self.root / f'files {index}'
             self.configs.append(cfg)
             invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
-            answers = [prefix, cfg, folder, f'https://127.0.0.1:{port}', config / 'tls/ca.crt', f'pc{index}', 'Obras']
+            answers = [prefix, cfg, folder, f'https://localhost:{port}', config / 'tls/ca.crt', f'pc{index}', 'Obras']
             result = self.setup_terminal('client', answers, invite) if index == 1 else self.setup('client', answers + [invite])
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertNotIn(invite, result.stdout + result.stderr)
@@ -127,6 +127,25 @@ class Setup(unittest.TestCase):
                 break
             time.sleep(0.1)
         self.assertEqual((clients[1] / 'hello.txt').read_text(), 'ready')
+
+    def test_remote_domain_certificate_and_endpoint_without_public_dns(self):
+        config = self.root / 'remote config'
+        self.configs.append(config)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', 'sync.example.test', port, 'ana', 'Obras'])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn(f'https://sync.example.test:{port}', result.stdout)
+        tls = config / 'tls'
+        command = ['openssl', 'verify', '-CAfile', str(tls / 'ca.crt'), '-verify_hostname']
+        good = subprocess.run(command + ['sync.example.test', str(tls / 'server.crt')], capture_output=True)
+        self.assertEqual(good.returncode, 0, good.stderr)
+        bad = subprocess.run(command + ['wrong.example.test', str(tls / 'server.crt')], capture_output=True)
+        self.assertNotEqual(bad.returncode, 0)
+        # SNI e verificação HTTPS no domínio, roteando apenas este teste para loopback.
+        response = subprocess.run(['curl', '--noproxy', '*', '--cacert', str(tls / 'ca.crt'), '--resolve', f'sync.example.test:{port}:127.0.0.1', '--max-time', '5', '-sS', f'https://sync.example.test:{port}/'], capture_output=True)
+        self.assertEqual(response.returncode, 0, response.stderr)
 
     def test_systemd_unit_preserves_special_characters_in_paths(self):
         self.executable('systemctl', '#!/usr/bin/env python3\n' + r'''import os, shlex, subprocess, sys
@@ -156,10 +175,10 @@ sys.exit(0)
             verified = subprocess.run(['systemd-analyze', '--user', 'verify', str(unit)], capture_output=True, text=True, env=self.env)
             self.assertEqual(verified.returncode, 0, verified.stderr)
 
-    def test_invalid_ip_and_overlapping_directories_leave_installation_untouched(self):
+    def test_invalid_address_and_overlapping_directories_leave_installation_untouched(self):
         prefix = self.root / 'programs'
         cfg = self.root / 'config'
-        for answers in [[prefix, cfg, self.root / 'data', 'bad-ip'], [prefix, cfg, cfg / 'data']]:
+        for answers in [[prefix, cfg, self.root / 'data', value] for value in ['bad-ip', '', 'https://sync.example.com', 'sync.example.com:8443', '256.1.2.3', 'sync.example.com,DNS:evil.example']] + [[prefix, cfg, cfg / 'data']]:
             result = self.setup('server', answers)
             self.assertNotEqual(result.returncode, 0)
             self.assertFalse(prefix.exists())

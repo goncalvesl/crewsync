@@ -55,6 +55,15 @@ aceite em docs/reports/physical-acceptance.json somente após executar. Release
 0.1.0-alpha.1 foi autorizada para teste; esses critérios continuam obrigatórios
 para a versão estável.
 
+## Instalação em servidor remoto
+
+O mantenedor ampliou o uso para servidor remoto por domínio ou IPv4 público.
+Assistente com endereço de acesso separado do bind, SAN DNS/IP, validação antes
+de gravar arquivos e teste HTTPS local independente do DNS externo. CA privada
+continua automática, sem exigir ACME/proxy. Documentar DNS, firewall do provedor,
+serviço sem login e validade do certificado. Decisão 0009; validação real de
+acesso externo depende da infraestrutura do operador.
+
 ## 7. Manual e site
 
 Manual completo, instalação, início, permissões/dispositivos, conflitos, histórico,

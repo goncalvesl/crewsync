@@ -18,6 +18,7 @@ texto integral em [LICENSE](../LICENSE). Veja a decisão 0007.
 Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
 
 - Implementação em Rust, simples de operar, rápida e com integridade dos arquivos.
+- Servidor remoto acessível por domínio ou IPv4, com instalação guiada e HTTPS validado; rede local/VPN também suportada (decisão 0009).
 - Servidor central e clientes; piloto inicial Linux em dois computadores, com aproximadamente cinco usuários no uso previsto.
 - Windows depois; Android no futuro, com acesso online sem exigir operação offline.
 - Apenas pastas de primeiro nível compartilhadas; subpastas herdam permissões.

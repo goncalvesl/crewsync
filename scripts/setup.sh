@@ -39,10 +39,9 @@ manager=background
 if command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1; then manager=systemd; fi
 if [ "$role" = server ]; then
     ask 'Diretório dos dados do servidor (novo)' "$HOME/.local/share/crewsync-server"; data=$(canonical "$answer"); new_path "$data"; separate "$config" "$data"
-    suggested_ip=$(ip -4 route get 1.1.1.1 2>/dev/null | sed -n 's/.* src \([0-9.]*\).*/\1/p' || true)
-    ask 'IPv4 deste computador na rede local' "${suggested_ip:-127.0.0.1}"; ip=$answer
-    # Validar antes de gravar configuração ou instalar binários.
-    printf '%s\n' "$ip" | awk -F. 'NR != 1 || NF != 4 { exit 1 } { for(i=1;i<=4;i++) if($i !~ /^[0-9]+$/ || $i>255 || (length($i)>1 && substr($i,1,1)=="0")) exit 1 } END { if(NR!=1) exit 1 }' || fail 'IPv4 inválido.'
+    printf 'Informe o endereço usado pelos clientes: domínio (sync.empresa.com), IPv4 público ou IP de VPN.\n' >&2
+    ask 'Domínio ou IPv4 de acesso (sem https:// e sem porta)' ''; server_host=$answer
+    sh "$package/scripts/pilot-cert.sh" --check-address "$server_host"
     ask 'Porta HTTPS' 8443; port=$answer
     case "$port" in ''|*[!0-9]*) fail 'Porta inválida.' ;; esac
     [ "${#port}" -le 5 ] && [ "$port" -ge 1024 ] && [ "$port" -le 65535 ] || fail 'Use uma porta entre 1024 e 65535.'
@@ -53,7 +52,7 @@ if [ "$role" = server ]; then
 else
     ask 'Diretório local para sincronizar' "$HOME/CrewSync-Obras"; [ ! -L "$answer" ] || fail 'A pasta local não pode ser um link simbólico.'; data=$(canonical "$answer"); separate "$config" "$data"
     [ ! -L "$data" ] || fail 'A pasta local não pode ser um link simbólico.'
-    ask 'Endereço HTTPS do servidor' 'https://192.168.1.101:8443'; url=$answer
+    ask 'Endereço HTTPS do servidor (ex.: https://sync.empresa.com:8443)' ''; url=$answer
     case "$url" in https://*) ;; *) fail 'O endereço deve começar com https://.' ;; esac
     ask 'Arquivo ca.crt recebido do administrador' "$HOME/Downloads/ca.crt"; ca=$answer; path "$ca"
     [ -f "$ca" ] || fail 'Certificado não encontrado. Copie ca.crt do servidor por um meio confiável.'
@@ -75,7 +74,7 @@ enabled = true
 $user = "write"
 CONFIG
     "$prefix/bin/crewsync-server" check-config "$config/server.toml"
-    sh "$package/scripts/pilot-cert.sh" "$config/tls" "$ip"
+    sh "$package/scripts/pilot-cert.sh" "$config/tls" "$server_host"
     set -- "$prefix/bin/crewsync-server" serve "$config/server.toml" 0.0.0.0 "$port" "$config/tls/server.crt" "$config/tls/server.key"
 else
     install -m 600 "$ca" "$config/ca.crt"
@@ -119,10 +118,11 @@ if [ "$role" = server ]; then
         sleep 1
     done
     [ "$ready" = yes ] || fail "O servidor não iniciou. Consulte $( [ "$manager" = systemd ] && printf 'journalctl --user -u %s' "$service" || printf '%s/service.log' "$config" )."
-    printf '\nServidor pronto: https://%s:%s\nCopie apenas este certificado para os clientes: %s/tls/ca.crt\nConvite para o primeiro cliente (válido por 1 hora):\n' "$ip" "$port" "$config"
+    printf '\nServidor pronto: https://%s:%s\nCopie apenas este certificado para os clientes: %s/tls/ca.crt\nConvite para o primeiro cliente (válido por 1 hora):\n' "$server_host" "$port" "$config"
+    printf 'Pasta compartilhada: %s\n' "$share"
     "$prefix/bin/crewsync-server" invite "$config/server.toml" "$user" 3600
     printf 'Outro convite: "%s/bin/crewsync-server" invite "%s/server.toml" "%s" 3600\n' "$prefix" "$config" "$user"
-    printf 'Se houver firewall, libere TCP %s para a sua rede local.\n' "$port"
+    printf 'Se houver firewall, libere TCP %s no servidor e no painel do provedor para os clientes.\n' "$port"
 else
     printf '\nCliente ativado e sincronizando: %s\n' "$data"
 fi
