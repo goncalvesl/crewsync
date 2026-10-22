@@ -35,6 +35,7 @@ tar.gz upstream para x86_64 e ARM64. O pacote Arch é construído com `makepkg`;
 Arch Linux ARM não está incluído nesta versão. Os pacotes da distribuição instalam
 em `/usr/bin`, `/usr/share/crewsync`, `/etc/crewsync` e
 `/var/lib/crewsync`. O daemon roda como usuário de sistema `crewsync`, sem login.
+As raízes de armazenamento são privadas (`0700`) e pertencem à conta de serviço.
 A instalação do pacote não inicia nem habilita o serviço antes da configuração.
 O diretório da configuração é root-owned e gravável pelo grupo do serviço para
 permitir que o painel publique mudanças atomicamente; o subdiretório TLS é root-owned

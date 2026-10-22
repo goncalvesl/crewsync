@@ -37,6 +37,12 @@ TLS e unidade systemd. Remoção comum preserva configuração e dados. Instalad
 usuário permanece intacto. VMs e ciclos reboot/upgrade/removal por distro continuam
 pendentes antes de estabilizar.
 
+Correção alpha.9 em preparação: o assistente da alpha.8 deixava a raiz de dados
+em `0750`, mas o armazenamento exige `0700`; o setup encerrava ao gerar a chave
+administrativa. A correção aplica `0700` na instalação e em atualizações dos
+quatro formatos. Para recuperar uma instalação já configurada parcialmente,
+consultar a seção de instalação do [manual](MANUAL.md).
+
 ## Histórico da implementação alpha.7 — transporte
 
 Pedido atual implementado: HTTP explícito para testes, HTTPS por proxy e HTTPS

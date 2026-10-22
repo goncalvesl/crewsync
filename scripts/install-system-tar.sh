@@ -40,6 +40,8 @@ ReadWritePaths=/var/opt/crewsync /etc/opt/crewsync
 WantedBy=multi-user.target
 UNIT
 if [ "$updating" = yes ]; then
+    chown crewsync:crewsync /var/opt/crewsync
+    chmod 0700 /var/opt/crewsync
     systemctl daemon-reload
     systemctl restart crewsync-server.service
     printf 'CrewSync atualizado; configuração e dados foram preservados.\n'

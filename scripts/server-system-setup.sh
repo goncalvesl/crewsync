@@ -33,7 +33,8 @@ ask 'Primeira pasta compartilhada' Obras; share=$answer
 printf '%s\n' "$share" | grep -Eq '^[A-Za-z0-9_-]{1,64}$' || fail 'Nome inválido.'
 mkdir -p "$etc_dir/tls" "$var_dir"
 chmod 2770 "$etc_dir"
-chmod 750 "$etc_dir/tls" "$var_dir"
+chmod 750 "$etc_dir/tls"
+chmod 700 "$var_dir"
 chown root:crewsync "$etc_dir" "$etc_dir/tls"
 chown crewsync:crewsync "$var_dir"
 cat > "$etc_dir/server.toml" <<EOF

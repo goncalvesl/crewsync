@@ -40,7 +40,7 @@ def make_deb(tree, out, arch):
         root = pathlib.Path(tmp)/'root'; shutil.copytree(tree,root)
         deb = root / 'DEBIAN'; deb.mkdir()
         (deb / 'control').write_text(f'''Package: crewsync\nVersion: {DEB_VERSION}-1\nSection: net\nPriority: optional\nArchitecture: {debian_arch}\nDepends: adduser, systemd, util-linux, openssl\nMaintainer: CrewSync maintainers\nDescription: CrewSync Linux folder synchronizer\n Rust server with a dedicated systemd service and client tools.\n''')
-        (deb / 'postinst').write_text('''#!/bin/sh\nset -e\nif ! getent group crewsync >/dev/null; then addgroup --system crewsync; fi\nif ! getent passwd crewsync >/dev/null; then adduser --system --ingroup crewsync --home /var/lib/crewsync --no-create-home --disabled-login --shell /usr/sbin/nologin crewsync; fi\nchown crewsync:crewsync /var/lib/crewsync\nchmod 0750 /var/lib/crewsync\nif command -v systemctl >/dev/null; then systemctl daemon-reload || true; systemctl try-restart crewsync-server.service || true; fi\n''')
+        (deb / 'postinst').write_text('''#!/bin/sh\nset -e\nif ! getent group crewsync >/dev/null; then addgroup --system crewsync; fi\nif ! getent passwd crewsync >/dev/null; then adduser --system --ingroup crewsync --home /var/lib/crewsync --no-create-home --disabled-login --shell /usr/sbin/nologin crewsync; fi\nchown crewsync:crewsync /var/lib/crewsync\nchmod 0700 /var/lib/crewsync\nif command -v systemctl >/dev/null; then systemctl daemon-reload || true; systemctl try-restart crewsync-server.service || true; fi\n''')
         (deb / 'postrm').write_text('''#!/bin/sh\nset -e\nif command -v systemctl >/dev/null; then systemctl daemon-reload || true; fi\n# Configuration and synchronized data are intentionally preserved.\n''')
         (deb / 'prerm').write_text('''#!/bin/sh\nset -e\nif [ "$1" = remove ] && command -v systemctl >/dev/null; then systemctl disable --now crewsync-server.service >/dev/null 2>&1 || true; fi\n''')
         for name in ('postinst','postrm','prerm'): (deb / name).chmod(0o755)
@@ -55,7 +55,7 @@ def make_rpm(tree, out, arch):
         payload = top/'BUILDROOT'; shutil.copytree(tree,payload)
         # rpmbuild consumes the staged tree with an explicit file list.
         packaged_dirs = ['etc/crewsync', 'var/lib/crewsync', 'usr/share/crewsync', 'usr/share/licenses/crewsync', 'usr/lib/systemd/system']
-        entries = ['%dir %attr(0750,root,crewsync) /etc/crewsync', '%dir %attr(0750,crewsync,crewsync) /var/lib/crewsync']
+        entries = ['%dir %attr(0750,root,crewsync) /etc/crewsync', '%dir %attr(0700,crewsync,crewsync) /var/lib/crewsync']
         entries += ['%dir /'+directory for directory in packaged_dirs[2:]]
         for path in sorted(payload.rglob('*')):
             if path.is_file():

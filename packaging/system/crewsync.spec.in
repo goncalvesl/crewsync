@@ -16,6 +16,8 @@ getent group crewsync >/dev/null || groupadd -r crewsync
 getent passwd crewsync >/dev/null || useradd -r -g crewsync -d /var/lib/crewsync -s /sbin/nologin -M crewsync
 exit 0
 %post
+chown crewsync:crewsync /var/lib/crewsync
+chmod 0700 /var/lib/crewsync
 systemctl daemon-reload >/dev/null 2>&1 || :
 systemctl try-restart crewsync-server.service >/dev/null 2>&1 || :
 %preun

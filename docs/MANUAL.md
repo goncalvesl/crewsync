@@ -29,14 +29,14 @@ Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não
 Se preferir baixar e conferir o pacote manualmente:
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.8 (alpha, para testes).
+Versão atual: 0.1.0-alpha.9 (alpha, para testes).
 
-- **Arch Linux:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0_alpha.8-1-x86_64.pkg.tar.zst) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0_alpha.8-1-x86_64.pkg.tar.zst.sha256)
-- **Debian/Ubuntu:** [amd64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0.alpha.8-1_amd64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0.alpha.8-1_amd64.deb.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0.alpha.8-1_arm64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0.alpha.8-1_arm64.deb.sha256)
-- **Fedora:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0.alpha.8-1.x86_64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0.alpha.8-1.x86_64.rpm.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0.alpha.8-1.aarch64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0.alpha.8-1.aarch64.rpm.sha256)
-- **Tar.gz independente:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-x86_64.tar.gz.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-arm64.tar.gz.sha256)
+- **Arch Linux:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0_alpha.9-1-x86_64.pkg.tar.zst) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0_alpha.9-1-x86_64.pkg.tar.zst.sha256)
+- **Debian/Ubuntu:** [amd64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_amd64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_amd64.deb.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_arm64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_arm64.deb.sha256)
+- **Fedora:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.x86_64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.x86_64.rpm.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.aarch64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.aarch64.rpm.sha256)
+- **Tar.gz independente:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-x86_64.tar.gz.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.8) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.9) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-source.tar.gz)
 <!-- downloads:end -->
 
 Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.
@@ -51,6 +51,24 @@ administrativa e o convite. Os arquivos ficam em `/usr/bin`, `/etc/crewsync` e
 `/var/lib/crewsync`; a instalação do pacote não inicia o servidor antes desse
 passo.
 
+O estado interno do servidor deve permanecer privado (`0700`). Se uma instalação
+alpha.8 parar com `diretório interno deve ser privado, regular e 0700`, corrija a
+permissão e reinicie o serviço antes de concluir a configuração:
+
+```sh
+sudo chown crewsync:crewsync /var/lib/crewsync
+sudo chmod 0700 /var/lib/crewsync
+sudo systemctl restart crewsync-server
+sudo -u crewsync /usr/bin/crewsync-server admin-key /etc/crewsync/server.toml https://sync.empresa.com:8443
+sudo -u crewsync /usr/bin/crewsync-server invite /etc/crewsync/server.toml usuario 3600
+```
+
+Guarde a chave administrativa e o convite exibidos. Use a URL pública escolhida
+na instalação e substitua `usuario` pelo primeiro usuário. Para tar.gz, use
+`/var/opt/crewsync`, `/etc/opt/crewsync/server.toml` e
+`/opt/crewsync/bin/crewsync-server`. A alpha.9 aplica `0700` automaticamente
+durante instalação e atualização.
+
 O tar.gz independente é a quarta opção: extraia-o e execute `sudo
 ./install-system.sh` na pasta extraída. Ele instala o programa em `/opt/crewsync`,
 a configuração em `/etc/opt/crewsync` e os dados em `/var/opt/crewsync`. Arch está
@@ -61,7 +79,7 @@ o tar.gz o interrompe durante a troca dos binários e o inicia novamente.
 
 ## Painel do servidor
 
-**Alpha.8.** Para atualizar uma instalação alpha.7, baixe a alpha.8 e substitua os programas mantendo a configuração e o armazenamento. Abra no navegador o endereço do
+**Alpha.9.** Para atualizar uma instalação alpha.8, atualize o pacote ou substitua os programas mantendo a configuração e o armazenamento. Abra no navegador o endereço do
 servidor, por exemplo `https://sync.empresa.com/`. O instalador mostra a chave
 administrativa ao terminar; guarde-a em um gerenciador de senhas. Ela é separada
 dos convites e dos tokens dos dispositivos.

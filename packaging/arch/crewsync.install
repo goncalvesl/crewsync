@@ -1,7 +1,7 @@
 post_install() {
   getent group crewsync >/dev/null || groupadd -r crewsync
   getent passwd crewsync >/dev/null || useradd -r -U -d /var/lib/crewsync -s /usr/bin/nologin -M crewsync
-  install -d -o crewsync -g crewsync -m 0750 /var/lib/crewsync
+  install -d -o crewsync -g crewsync -m 0700 /var/lib/crewsync
   systemctl daemon-reload || true
 }
 
