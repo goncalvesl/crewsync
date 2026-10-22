@@ -1,6 +1,8 @@
-# CrewSync 0.1.0-alpha.2
+# CrewSync 0.1.0-alpha.3
 
 Instalação guiada de servidor e cliente Linux, com um comando e sem compilar.
+Corrige a alpha.2: desativa o eco do terminal antes de exibir o pedido de convite,
+impedindo que uma resposta rápida apareça na tela. Regressão com terminal real.
 
 ## Instalar
 

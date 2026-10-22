@@ -61,7 +61,7 @@ local na porta 8765, com site sob /crewsync/. Não é dependência do aplicativo
 
 ## Última release
 
-0.1.0-alpha.2: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.2.
+0.1.0-alpha.3: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.3.
 Pacotes x86_64/ARM64 e fonte com dependências vendorizadas, cada um com checksum.
 Downloads por arquitetura ficam no manual e são atualizados por prepare-release.py.
 Fonte: package-source.py; check-source.py compila sem acesso ao cache de crates.

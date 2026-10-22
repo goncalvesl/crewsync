@@ -30,12 +30,12 @@ início sem login, atualização e instalações existentes.
 ## Downloads
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.2 (alpha, para testes).
+Versão atual: 0.1.0-alpha.3 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-arm64.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.2) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.3) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.3/crewsync-0.1.0-alpha.3-source.tar.gz)
 <!-- downloads:end -->
 
 ## Usar

@@ -120,6 +120,6 @@ de expor os novos links no site. Procedimento recorrente em RELEASING.md.
 Assistente: `python3 tests/packaging/test_setup.py` usa diretórios sintéticos,
 porta efêmera, HTTPS real, dois clientes watch e ambos os modos de inicialização.
 Cobre caminhos com espaços/aspas/%/$, preservação de configuração, entradas
-inválidas e bootstrap via terminal com download simulado de alpha e hash incorreto.
+inválidas, convite enviado imediatamente em terminal real sem eco e bootstrap via terminal com download simulado de alpha e hash incorreto.
 Não instala nem inicia serviços na conta real. Na matriz de pacotes usa
 CREWSYNC_BIN_DIR para executar os binários musl nativos de cada arquitetura.

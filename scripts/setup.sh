@@ -79,9 +79,9 @@ CONFIG
     set -- "$prefix/bin/crewsync-server" serve "$config/server.toml" 0.0.0.0 "$port" "$config/tls/server.crt" "$config/tls/server.key"
 else
     install -m 600 "$ca" "$config/ca.crt"
-    printf 'Convite de ativação (entrada oculta): ' >&2
     saved_tty=
     if [ -t 0 ]; then saved_tty=$(stty -g); stty -echo; trap 'stty "$saved_tty"' EXIT HUP INT TERM; fi
+    printf 'Convite de ativação (entrada oculta): ' >&2
     IFS= read -r invite || fail 'Convite não informado.'
     if [ -n "$saved_tty" ]; then stty "$saved_tty"; trap - EXIT HUP INT TERM; fi
     printf '\n' >&2

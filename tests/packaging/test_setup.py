@@ -58,6 +58,36 @@ class Setup(unittest.TestCase):
     def setup(self, role, answers):
         return subprocess.run(['sh', str(self.package / 'setup.sh'), role], input='\n'.join(map(str, answers)) + '\n', text=True, capture_output=True, env=self.env, timeout=45)
 
+    def setup_terminal(self, role, answers, invite):
+        pid, fd = pty.fork()
+        if pid == 0:
+            os.execvpe('sh', ['sh', str(self.package / 'setup.sh'), role], self.env)
+        os.write(fd, ('\n'.join(map(str, answers)) + '\n').encode())
+        output = b''
+        sent = False
+        deadline = time.monotonic() + 45
+        try:
+            while time.monotonic() < deadline:
+                if select.select([fd], [], [], 0.1)[0]:
+                    try:
+                        chunk = os.read(fd, 65536)
+                    except OSError:
+                        break
+                    if not chunk:
+                        break
+                    output += chunk
+                    if not sent and b'(entrada oculta):' in output:
+                        os.write(fd, (invite + '\n').encode())
+                        sent = True
+            else:
+                os.kill(pid, signal.SIGKILL)
+                self.fail('Terminal setup timeout')
+        finally:
+            os.close(fd)
+            _, status = os.waitpid(pid, 0)
+        self.assertTrue(sent, output.decode(errors='replace'))
+        return subprocess.CompletedProcess([], os.waitstatus_to_exitcode(status), output.decode(errors='replace'), '')
+
     def test_server_and_two_clients_ready_and_existing_config_preserved(self):
         prefix = self.root / 'programs with spaces'
         config = self.root / 'server config'
@@ -84,7 +114,8 @@ class Setup(unittest.TestCase):
             folder = self.root / f'files {index}'
             self.configs.append(cfg)
             invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
-            result = self.setup('client', [prefix, cfg, folder, f'https://127.0.0.1:{port}', config / 'tls/ca.crt', f'pc{index}', 'Obras', invite])
+            answers = [prefix, cfg, folder, f'https://127.0.0.1:{port}', config / 'tls/ca.crt', f'pc{index}', 'Obras']
+            result = self.setup_terminal('client', answers, invite) if index == 1 else self.setup('client', answers + [invite])
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertNotIn(invite, result.stdout + result.stderr)
             self.assertEqual((cfg / 'session.json').stat().st_mode & 0o777, 0o600)
