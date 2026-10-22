@@ -64,8 +64,11 @@ em Pages. Não mover tags ou sobrescrever assets publicados.
 
 Manual, README e site têm downloads diretos da 0.1.0-alpha.1 para cada arquitetura,
 checksums e fonte. Site: https://goncalvesl.github.io/crewsync/.
-A atualização do site será verificada após enviar main; o código/tag já estão
-publicados e os assets foram conferidos antes dessa atualização.
+Pages passou na execução 39818128099:
+https://github.com/goncalvesl/crewsync/actions/runs/39818128099.
+Início e manual públicos retornaram HTTP 200 com a versão e os quatro links de
+pacote/checksum corretos. QA Chromium no endereço público passou em
+390/768/1440px. Assets foram conferidos antes de expor os novos links no site.
 
 ## Pendências e limites
 
