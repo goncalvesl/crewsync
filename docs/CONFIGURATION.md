@@ -15,12 +15,9 @@ nem verifica sua existência, permissões ou integridade. Sucesso retorna códig
 e as contagens de usuários e compartilhamentos; configuração inválida/ausente
 retorna 1, invocação incorreta retorna 2. Erros não reproduzem valores do TOML.
 
-Requer `/usr/bin/python3` >= 3.11 com `tomllib`. A biblioteca padrão é executada
-em modo isolado, sem shell, apenas para converter TOML em JSON; toda a validação
-de esquema e autorização permanece em Rust. É uma dependência temporária pela
-indisponibilidade da crate `toml` no ambiente de implementação. Veja a
-[decisão 0003](decisions/0003-config-authorization.md) e a
-[documentação primária do tomllib](https://docs.python.org/3/library/tomllib.html).
+O servidor distribuído interpreta TOML nativamente em Rust; não precisa de Python
+para validar ou carregar a configuração. A dependência temporária de Python na
+fundação do projeto é histórica e foi substituída pelo parser nativo.
 
 ## Esquema versão 1
 
@@ -68,6 +65,25 @@ referências nas permissões; desativá-lo permite conservar essas referências.
 Arquivo: UTF-8, regular (sem symlink no componente final), até 1 MiB, no máximo
 1000 usuários e 1000 compartilhamentos. Somente o operador deve poder modificá-lo.
 O arquivo não contém tokens, convites ou credenciais.
+
+## Pastas e dispositivos no uso diário
+
+Para adicionar um compartilhamento, acrescente um bloco `[shares.NOME.permissions]`
+e conceda `read` ou `write` a usuários existentes. Não duplique cabeçalhos já
+presentes; edite o bloco existente. Valide com `crewsync-server check-config CONFIG`.
+O worker HTTPS recarrega mudanças válidas na próxima requisição, sem reiniciar.
+
+Clientes em `watch-root` consultam a lista de pastas autorizadas a cada ciclo e
+criam RAIZ/NOME. Todos os dispositivos do usuário herdam as mesmas permissões;
+não é necessário reativá-los para receber uma nova pasta. Remover o acesso não
+apaga as cópias locais. Acrescente os arquivos pelo cliente, sem editar o
+armazenamento interno do servidor.
+
+Cada computador exige um convite próprio, temporário e de uso único, mesmo que
+pertença ao mesmo usuário. A ativação gera uma credencial por dispositivo, que
+permanece válida após reinícios até revogação. Revogar um dispositivo não revoga
+os demais; desativar o usuário bloqueia todos eles. Veja os comandos e exemplos
+no [manual](MANUAL.md).
 
 ## API local e recarga
 

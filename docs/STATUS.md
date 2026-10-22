@@ -10,6 +10,22 @@ hashes conferidos após download. Não mover tags ou sobrescrever assets publica
 Alpha.5 permanece tag em `8a2808f`, sem release: a CI ARM64 detectou uma corrida
 na limpeza de processos dos testes; correção incluída na alpha.6.
 
+## Atualização do manual e site
+
+Orientações práticas para adicionar usuários e compartilhamentos no server.toml,
+validar a configuração e receber novas pastas sem reiniciar ou reativar clientes.
+Seção Dispositivos reúne convite de uso único por computador (inclusive para o
+mesmo usuário), validade, credencial persistente e revogação individual. Homepage
+e README apontam para os procedimentos. CONFIGURATION corrige referência histórica
+a Python: o parser distribuído é Rust nativo. Publicação apenas documental;
+versão dos programas e downloads continua alpha.6, sem alterar assets da release.
+
+Validação: build/check do site, três testes do gerador, quatro gates de release e
+prepare-release --check passaram. Exemplos TOML do manual foram validados pelo
+binário real: um usuário e dois compartilhamentos, sem criar armazenamento.
+Chromium local passou em 390/768/1440px: navegação, âncoras, overflow e console.
+Aguardar deploy Pages e verificar conteúdo e navegação públicos antes de encerrar.
+
 ## Comportamento novo do cliente
 
 O assistente pergunta somente a raiz local, como `/home/voce/Terna`. sync-root e

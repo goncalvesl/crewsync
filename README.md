@@ -28,6 +28,11 @@ autorizadas, cada uma em sua subpasta. Requer curl/tar/sha256sum e,
 no servidor, OpenSSL; dispensa Rust/Cargo/Python. Veja o manual para firewall,
 início sem login, atualização e instalações existentes.
 
+Escolha uma raiz local: cada pasta autorizada aparece dentro dela automaticamente.
+Cada computador precisa de um convite próprio, mesmo quando pertence ao mesmo
+usuário. Veja como [gerenciar pastas e permissões](docs/MANUAL.md#configurar) e
+[ativar ou revogar dispositivos](docs/MANUAL.md#dispositivos).
+
 ## Downloads
 
 <!-- downloads:start -->

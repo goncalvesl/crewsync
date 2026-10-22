@@ -39,9 +39,30 @@ Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta e
 
 ## Dispositivos
 
-Antes de instalar o cliente, peça ao administrador o endereço HTTPS, o arquivo `ca.crt`, o nome da pasta compartilhada e um convite próprio para este computador. Transfira `ca.crt` por um meio confiável. Nunca copie as chaves `.key` nem a sessão de outro computador.
+Antes de instalar cada cliente, peça ao administrador o endereço HTTPS, o arquivo `ca.crt` e um convite próprio para este computador. Escolha uma raiz local; o cliente descobre as pastas autorizadas automaticamente. Transfira `ca.crt` por um meio confiável. Nunca copie as chaves `.key` nem a sessão de outro computador.
 
-Informe esses dados ao assistente. O convite não aparece enquanto você digita e só pode ser usado uma vez. Para outro computador, gere outro convite.
+### Um convite por dispositivo
+
+Cada computador precisa de um convite novo, mesmo sendo do mesmo usuário. O convite é temporário e de uso único; depois da ativação, o dispositivo recebe sua própria credencial e herda as permissões do usuário. Não precisa de outro convite para reiniciar ou receber acesso a uma nova pasta.
+
+No servidor, gere um convite válido por uma hora, substituindo `ana` pelo usuário cadastrado:
+
+```bash
+"$HOME/.local/bin/crewsync-server" invite "$HOME/.config/crewsync-server/server.toml" ana 3600
+```
+
+Cole o convite quando o assistente do cliente solicitar; ele não aparece enquanto você digita. Se perder o convite, se ele expirar ou já tiver sido usado, gere outro. Se a resposta de uma ativação for perdida, gere outro convite para tentar novamente.
+
+### Conferir ou bloquear um dispositivo
+
+No servidor, liste os dispositivos e use o ID correspondente para revogar somente aquele computador:
+
+```bash
+"$HOME/.local/bin/crewsync-server" devices "$HOME/.config/crewsync-server/server.toml"
+"$HOME/.local/bin/crewsync-server" revoke "$HOME/.config/crewsync-server/server.toml" ID_DO_DISPOSITIVO
+```
+
+Revogar um dispositivo preserva o acesso dos demais. Desativar o usuário com `enabled = false` bloqueia todos os seus dispositivos. As cópias locais não são apagadas ao perder o acesso.
 
 ## Sincronizar
 
@@ -89,13 +110,50 @@ Use os números reais da consulta. Depois execute `sync` nos dois computadores o
 
 O assistente do servidor cria `$HOME/.config/crewsync-server/server.toml`. Os arquivos internos ficam, por padrão, em `$HOME/.local/share/crewsync-server`; essa pasta é separada da pasta dos clientes e não deve ser editada manualmente.
 
-Para adicionar usuários e pastas, edite `server.toml`. Use `read` para leitura e `write` para leitura, alteração e exclusão. Usuários com `enabled = false` ficam bloqueados. A configuração de exemplo instalada em `$HOME/.local/share/crewsync/server.example.toml` mostra a sintaxe.
+### Adicionar um usuário
 
-Confira depois de editar:
+No servidor, faça backup antes de editar a configuração:
+
+```bash
+cp -a "$HOME/.config/crewsync-server/server.toml" "$HOME/.config/crewsync-server/server.toml.bak"
+```
+
+Abra `server.toml` no editor de sua preferência. Para cadastrar uma nova pessoa, acrescente um bloco com um nome único:
+
+```toml
+[users.ana]
+enabled = true
+```
+
+Se o usuário já existe, mantenha o bloco existente, sem duplicá-lo. O cadastro sozinho não concede acesso a nenhuma pasta.
+
+### Adicionar pastas e permissões
+
+Acrescente ao mesmo arquivo os compartilhamentos desejados. Exemplo para a usuária `ana`, já cadastrada:
+
+```toml
+[shares.Financeiro.permissions]
+ana = "write"
+
+[shares.Projetos.permissions]
+ana = "write"
+```
+
+Use `read` para leitura e `write` para leitura, criação, alteração e exclusão. Sem permissão, o usuário não vê a pasta. Para conceder acesso a uma pasta já configurada, acrescente o usuário ao bloco de permissões existente, sem repetir o cabeçalho.
+
+Confira a configuração depois de editar:
 
 ```bash
 "$HOME/.local/bin/crewsync-server" check-config "$HOME/.config/crewsync-server/server.toml"
 ```
+
+Com configuração válida, não precisa reiniciar o servidor: as permissões são recarregadas na próxima operação. Se houver erro, corrija o arquivo; o servidor mantém a última configuração válida.
+
+Nos clientes alpha.6 com raiz automática, as pastas aparecem na próxima reconciliação. Ao escolher `/home/voce/Terna`, por exemplo, serão criadas `/home/voce/Terna/Financeiro` e `/home/voce/Terna/Projetos`. Todos os dispositivos ativados do usuário recebem o mesmo acesso, sem novos convites.
+
+Coloque os arquivos nessas pastas pelo cliente. Não crie ou copie diretórios dentro do armazenamento interno do servidor: ele mantém objetos e índices próprios. Subpastas herdam a permissão do compartilhamento; não precisam de outro bloco no TOML.
+
+Se o servidor foi instalado como `root`, `$HOME` nos comandos acima corresponde a `/root`. Execute os comandos de configuração e convite na conta usada para instalar o servidor. A configuração de exemplo instalada em `$HOME/.local/share/crewsync/server.example.toml` mostra outros casos.
 
 ## HTTPS e rede
 
@@ -117,21 +175,6 @@ sudo ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 ```
 
 Não é necessário abrir portas nos clientes. O endereço que eles usam deve ser o domínio ou IP de acesso real, nunca `0.0.0.0`. Se o servidor remoto estiver atrás de roteador/NAT, encaminhe a porta até ele.
-
-Para gerar um convite válido por dez minutos:
-
-```bash
-"$HOME/.local/bin/crewsync-server" invite "$HOME/.config/crewsync-server/server.toml" ana 600
-```
-
-Para listar ou bloquear um dispositivo:
-
-```bash
-"$HOME/.local/bin/crewsync-server" devices "$HOME/.config/crewsync-server/server.toml"
-"$HOME/.local/bin/crewsync-server" revoke "$HOME/.config/crewsync-server/server.toml" ID_DO_DISPOSITIVO
-```
-
-Cada convite vale para uma ativação. Se perder a resposta da ativação, gere outro. Desativar um usuário na configuração bloqueia todos os seus dispositivos.
 
 ## Manutencao
 
