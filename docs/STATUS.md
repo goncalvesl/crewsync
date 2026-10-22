@@ -1,20 +1,16 @@
 # Estado e retomada
 
-## Versão pública atual — 0.1.0-alpha.8
+## Versão pública atual — 0.1.0-alpha.9
 
-Release alpha para testes: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.8.
-Tag aponta ao commit 3f583c9. A CI Packages 39867666092 e Rust 39867666159
-passaram; foram publicados 18 assets: Arch x86_64, Debian/Fedora x86_64 e ARM64,
-tar.gz x86_64 e ARM64, fonte e install.sh, com nove sidecars SHA-256. Os nove
-sidecars foram baixados e conferidos. Os checksums Debian/RPM foram corrigidos
-após publicação para refletir os nomes públicos normalizados pelo GitHub; os
-empacotadores e links agora geram esses mesmos nomes. `check-package.py` passou
-no tar.gz x86_64 e `check-system-packages.py` validou os pacotes Debian/RPM
-x86_64. A CI construiu/testou os dois targets musl, validou Debian/RPM em
-x86_64/ARM64, fez build Arch com makepkg e verificou fonte offline. `install.sh`
-passou `sh -n` e checksum. O Pages 39868376339 publicou README/manual/site
-atualizados; 14 links de pacote/checksum no site responderam HTTP 200 em
-https://goncalvesl.github.io/crewsync/.
+Release alpha para testes: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.9.
+Tag aponta ao commit 62466bb. As CIs Packages 39870243158 e Rust 39870243174
+passaram. Foram publicados 18 assets para Arch x86_64, Debian/Fedora x86_64 e
+ARM64, tar.gz x86_64 e ARM64, fonte e install.sh, com nove sidecars SHA-256.
+Os nove sidecars foram baixados e conferidos; `check-package.py` e
+`check-arch-package.py` passaram nos pacotes públicos x86_64. A CI validou os
+pacotes Debian/RPM nas duas arquiteturas, e o checker Debian/RPM local também
+passou em Ubuntu 24.04. `install.sh` passou `sh -n` e checksum. Links públicos
+do site serão conferidos após o deploy Pages.
 
 A versão inclui painel administrativo Rust no mesmo listener, HTTP explícito para
 testes, HTTPS por proxy e HTTPS direto. Painel gerencia usuários, pastas virtuais,
@@ -37,11 +33,11 @@ TLS e unidade systemd. Remoção comum preserva configuração e dados. Instalad
 usuário permanece intacto. VMs e ciclos reboot/upgrade/removal por distro continuam
 pendentes antes de estabilizar.
 
-Correção alpha.9 em preparação: o assistente da alpha.8 deixava a raiz de dados
-em `0750`, mas o armazenamento exige `0700`; o setup encerrava ao gerar a chave
-administrativa. A correção aplica `0700` na instalação e em atualizações dos
-quatro formatos. Para recuperar uma instalação já configurada parcialmente,
-consultar a seção de instalação do [manual](MANUAL.md).
+Correção da alpha.8: o assistente deixava a raiz de dados em `0750`, mas o
+armazenamento exige `0700`; o setup encerrava ao gerar a chave administrativa.
+A alpha.9 aplica `0700` na instalação e em atualizações dos quatro formatos. Para
+recuperar uma instalação alpha.8 já configurada parcialmente, consulte a seção de
+instalação do [manual](MANUAL.md).
 
 ## Histórico da implementação alpha.7 — transporte
 
