@@ -1,5 +1,23 @@
 # Estado e retomada
 
+## Release em publicação — 0.1.0-alpha.5
+
+Raiz local automática: sync-root/watch-root consultam os compartilhamentos
+permitidos a cada ciclo e sincronizam RAIZ/NOME. Assistente pergunta somente a raiz.
+Comandos individuais preservados; cópias sem acesso ficam locais, arquivos avulsos
+não são enviados. Migração do layout antigo é explícita. Decisão 0010, manual,
+README, notas e exemplo systemd atualizados; protocolo compatível com alpha.4.
+
+Rede e escrita Git liberadas na retomada. Alpha.5 conferida livre no GitHub.
+prepare-release.py sincronizou versões, lock, metadados e downloads. Enviar a tag
+antes de main; só expor links após conferir os oito assets públicos e hashes.
+
+Validação local: scripts/check-pilot.sh passou (build/fmt/Clippy, 74 Rust, cinco
+HTTPS, seis TLS reais, dois testes de entrada de certificado, site, instalação,
+cinco cenários do assistente e quatro gates de release). Teste adicional do
+assistente verifica novo compartilhamento descoberto sem reconfiguração e pasta
+não autorizada ausente. Pacotes musl x86_64/ARM64 e fonte offline pendem da CI.
+
 ## Versão pública atual
 
 **0.1.0-alpha.4**, para testes, GPL-3.0-only:

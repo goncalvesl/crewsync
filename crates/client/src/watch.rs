@@ -12,14 +12,20 @@ pub struct Changes {
 impl Changes {
     pub fn new(root: &Path) -> io::Result<Self> {
         let root = std::fs::canonicalize(root)?;
-        let metadata = root.join(".crewsync");
+        let watched_root = root.clone();
         let (sender, receiver) = mpsc::sync_channel(1);
         let mut watcher = RecommendedWatcher::new(
             move |event: notify::Result<Event>| {
                 let relevant = match event {
                     Ok(event) => {
                         !matches!(event.kind, EventKind::Access(_))
-                            && event.paths.iter().any(|p| !p.starts_with(&metadata))
+                            && event.paths.iter().any(|p| {
+                                p.strip_prefix(&watched_root).map_or(true, |relative| {
+                                    !relative
+                                        .components()
+                                        .any(|part| part.as_os_str() == ".crewsync")
+                                })
+                            })
                     }
                     Err(_) => true, // overflow/erro exige reconciliação completa
                 };

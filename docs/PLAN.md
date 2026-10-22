@@ -91,3 +91,10 @@ versão estável anunciada. Disponibilidade dos artefatos/CI em STATUS.md.
 2. Otimizações após medições: transporte comprimido/retomada; armazenamento raw.
 3. Interface gráfica para status, erros, conflitos e pastas.
 4. Android online: listar, baixar e enviar, sem espelhamento offline obrigatório.
+
+## Raiz local automática
+
+Pedido do mantenedor: cliente escolhe somente uma raiz local e descobre os
+compartilhamentos autorizados, cada um em sua subpasta. Assistente passa a usar
+sync-root/watch-root; comandos individuais preservados. Migração explícita para
+instalações anteriores, sem mover ou apagar arquivos automaticamente.

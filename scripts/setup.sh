@@ -50,15 +50,13 @@ if [ "$role" = server ]; then
     ask 'Nome da pasta compartilhada (letras, números, _ ou -)' Obras; share=$answer
     printf '%s\n' "$share" | LC_ALL=C grep -Eq '^[a-zA-Z0-9_-]{1,64}$' || fail 'Nome da pasta inválido.'
 else
-    ask 'Diretório local para sincronizar' "$HOME/CrewSync-Obras"; [ ! -L "$answer" ] || fail 'A pasta local não pode ser um link simbólico.'; data=$(canonical "$answer"); separate "$config" "$data"
+    ask 'Raiz local para as pastas compartilhadas' "$HOME/CrewSync"; [ ! -L "$answer" ] || fail 'A pasta local não pode ser um link simbólico.'; data=$(canonical "$answer"); separate "$config" "$data"
     [ ! -L "$data" ] || fail 'A pasta local não pode ser um link simbólico.'
     ask 'Endereço HTTPS do servidor (ex.: https://sync.empresa.com:8443)' ''; url=$answer
     case "$url" in https://*) ;; *) fail 'O endereço deve começar com https://.' ;; esac
     ask 'Arquivo ca.crt recebido do administrador' "$HOME/Downloads/ca.crt"; ca=$answer; path "$ca"
     [ -f "$ca" ] || fail 'Certificado não encontrado. Copie ca.crt do servidor por um meio confiável.'
     ask 'Nome deste computador' "$(uname -n)"; device=$answer
-    ask 'Nome da pasta compartilhada' Obras; share=$answer
-    [ -n "$share" ] || fail 'Informe a pasta compartilhada.'
 fi
 mkdir -p "$(dirname -- "$config")"
 mkdir -m 700 "$config"
@@ -87,8 +85,8 @@ else
     printf '%s\n' "$invite" | "$prefix/bin/crewsync-client" activate "$url" "$config/ca.crt" "$config/session.json" "$device"
     unset invite
     mkdir -p "$data"
-    "$prefix/bin/crewsync-client" sync "$config/session.json" "$share" "$data"
-    set -- "$prefix/bin/crewsync-client" watch "$config/session.json" "$share" "$data" 5
+    "$prefix/bin/crewsync-client" sync-root "$config/session.json" "$data"
+    set -- "$prefix/bin/crewsync-client" watch-root "$config/session.json" "$data" 5
 fi
 # Arquivo privado com argumentos literais, usado pelos dois modos de serviço.
 {

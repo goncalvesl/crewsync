@@ -44,6 +44,9 @@ impl Tree {
             Mode::empty(),
             ResolveFlags::NO_SYMLINKS,
         )?);
+        Self::from_root(root)
+    }
+    fn from_root(root: File) -> io::Result<Self> {
         match rfs::mkdirat(&root, ".crewsync", Mode::from_bits_truncate(0o700)) {
             Ok(()) => root.sync_all()?,
             Err(e) if e == rustix::io::Errno::EXIST => {}
@@ -81,6 +84,19 @@ impl Tree {
             fs::remove_file(path)?;
         }
         Ok(tree)
+    }
+    /// Cria e abre um compartilhamento sem seguir links, ancorado na raiz.
+    pub(crate) fn child(&self, name: &str) -> io::Result<Self> {
+        validate_path(name)?;
+        if name.contains('/') {
+            return Err(invalid("compartilhamento deve ser de primeiro nível"));
+        }
+        match rfs::mkdirat(&self.root, name, Mode::from_bits_truncate(0o700)) {
+            Ok(()) => self.root.sync_all()?,
+            Err(e) if e == rustix::io::Errno::EXIST => {}
+            Err(e) => return Err(e.into()),
+        }
+        Self::from_root(self.directory(name)?)
     }
     pub fn meta_path(&self) -> PathBuf {
         proc_path(&self.meta)

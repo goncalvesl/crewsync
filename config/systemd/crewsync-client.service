@@ -1,14 +1,14 @@
-# Uma unidade por compartilhamento; adaptar o nome Obras e os caminhos absolutos.
+# Uma raiz local para todos os compartilhamentos autorizados.
 [Unit]
 StartLimitIntervalSec=300
 StartLimitBurst=3
-Description=CrewSync periodic reconciliation for Obras
+Description=CrewSync reconciliation
 After=network-online.target
 Wants=network-online.target
 
 [Service]
 Type=simple
-ExecStart=%h/.local/bin/crewsync-client watch %h/.config/crewsync/session.json Obras %h/CrewSync-Obras 5
+ExecStart=%h/.local/bin/crewsync-client watch-root %h/.config/crewsync-client/session.json %h/CrewSync 5
 Restart=on-failure
 RestartSec=30
 KillMode=control-group

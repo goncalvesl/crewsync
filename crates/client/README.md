@@ -7,9 +7,11 @@ cargo run -p crewsync-client -- --help
 ```
 
 Comandos: `activate URL CA SESSION NAME` (convite por stdin), `shares SESSION`,
-`sync SESSION SHARE FOLDER` e `watch SESSION SHARE FOLDER [SECONDS]`.
-Uma pasta por compartilhamento; credencial privada fora da árvore sincronizada.
-O modo watch usa varredura periódica, ainda sem observador de eventos.
+`sync-root SESSION ROOT` e `watch-root SESSION ROOT [SECONDS]`.
+A raiz contém uma subpasta por compartilhamento autorizado, descoberto a cada ciclo.
+Os comandos individuais `sync SESSION SHARE FOLDER` e `watch SESSION SHARE FOLDER [SECONDS]`
+continuam disponíveis. A credencial privada deve ficar fora da árvore sincronizada.
+O modo watch combina eventos locais com reconciliação periódica.
 
 Baseline, cópias substituídas e conflitos ficam em `.crewsync/` (não sincronizado).
 Links/arquivos especiais são recusados; acesso a arquivos usa descritores e

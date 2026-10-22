@@ -212,7 +212,9 @@ Exemplos opcionais de unidades de usuário estão em
 [config/systemd](../config/systemd/). Adapte os caminhos, copie as unidades para
 `$HOME/.config/systemd/user/` e use `systemctl --user daemon-reload` e
 `systemctl --user enable --now crewsync-server.service` (ou `crewsync-client.service`).
-As unidades limitam reinícios e encerram também o servidor e seu worker. Linger
+O exemplo de cliente usa o novo modo watch-root; para este roteiro individual,
+adapte ExecStart para o comando watch acima. As unidades limitam reinícios e
+encerram também o servidor e seu worker. Linger
 e execução antes do login dependem da administração do computador; não são
 configurados automaticamente.
 

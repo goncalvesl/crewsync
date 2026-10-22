@@ -21,7 +21,7 @@ Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
 - Servidor remoto acessível por domínio ou IPv4, com instalação guiada e HTTPS validado; rede local/VPN também suportada (decisão 0009).
 - Servidor central e clientes; piloto inicial Linux em dois computadores, com aproximadamente cinco usuários no uso previsto.
 - Windows depois; Android no futuro, com acesso online sem exigir operação offline.
-- Apenas pastas de primeiro nível compartilhadas; subpastas herdam permissões.
+- Apenas pastas de primeiro nível compartilhadas; subpastas herdam permissões. O cliente pergunta somente a raiz local e cria dentro dela todas as pastas autorizadas.
 - Permissões por usuário em arquivo no servidor: leitura ou leitura e escrita.
 - Sem banco de dados externo; estado persistido em arquivos internos.
 - Armazenamento `raw`, sem compactação. Não implementar armazenamento compactado.

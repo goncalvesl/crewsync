@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 //! Cliente Linux de piloto: ativação e reconciliação por revisão-base.
+pub mod root;
 pub mod sync;
 pub mod tree;
 use crewsync_protocol::{Operation, Request, disk, invalid, transport};

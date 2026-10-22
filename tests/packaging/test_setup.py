@@ -114,12 +114,12 @@ class Setup(unittest.TestCase):
             folder = self.root / f'files {index}'
             self.configs.append(cfg)
             invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
-            answers = [prefix, cfg, folder, f'https://localhost:{port}', config / 'tls/ca.crt', f'pc{index}', 'Obras']
+            answers = [prefix, cfg, folder, f'https://localhost:{port}', config / 'tls/ca.crt', f'pc{index}']
             result = self.setup_terminal('client', answers, invite) if index == 1 else self.setup('client', answers + [invite])
             self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
             self.assertNotIn(invite, result.stdout + result.stderr)
             self.assertEqual((cfg / 'session.json').stat().st_mode & 0o777, 0o600)
-            clients.append(folder)
+            clients.append(folder / "Obras")
         (clients[0] / 'hello.txt').write_text('ready')
         deadline = time.monotonic() + 15
         while time.monotonic() < deadline:
@@ -127,6 +127,24 @@ class Setup(unittest.TestCase):
                 break
             time.sleep(0.1)
         self.assertEqual((clients[1] / 'hello.txt').read_text(), 'ready')
+        # Uma nova permissão é descoberta pelo watch sem reconfigurar os clientes.
+        with (config / 'server.toml').open('a') as settings:
+            settings.write("\n[shares.Plantas.permissions]\nana='write'\n[shares.Privado.permissions]\n")
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if all((folder.parent / 'Plantas').is_dir() for folder in clients):
+                break
+            time.sleep(0.1)
+        for folder in clients:
+            self.assertTrue((folder.parent / 'Plantas').is_dir())
+            self.assertFalse((folder.parent / 'Privado').exists())
+        (clients[0].parent / 'Plantas/second.txt').write_text('another share')
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if (clients[1].parent / 'Plantas/second.txt').exists():
+                break
+            time.sleep(0.1)
+        self.assertEqual((clients[1].parent / 'Plantas/second.txt').read_text(), 'another share')
 
     def test_remote_domain_certificate_and_endpoint_without_public_dns(self):
         config = self.root / 'remote config'

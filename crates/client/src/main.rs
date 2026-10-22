@@ -9,7 +9,7 @@ fn main() -> ExitCode {
     if args.len() == 1 {
         if args[0] == "--help" {
             println!(
-                "crewsync-client — Cliente de sincronização (em desenvolvimento)\n\nUso: crewsync-client --help | --version\n  activate URL CA SESSION NOME (convite por stdin)\n  shares SESSION\n  history SESSION SHARE CAMINHO\n  restore SESSION SHARE CAMINHO REVISAO BASE\n  sync SESSION SHARE PASTA\n  watch SESSION SHARE PASTA [SEGUNDOS]\n\nCliente HTTPS para piloto Linux. Retenção automática ainda não implementada."
+                "crewsync-client — Cliente de sincronização (em desenvolvimento)\n\nUso: crewsync-client --help | --version\n  activate URL CA SESSION NOME (convite por stdin)\n  shares SESSION\n  history SESSION SHARE CAMINHO\n  restore SESSION SHARE CAMINHO REVISAO BASE\n  sync-root SESSION RAIZ\n  watch-root SESSION RAIZ [SEGUNDOS]\n  sync SESSION SHARE PASTA\n  watch SESSION SHARE PASTA [SEGUNDOS]\n\nCliente HTTPS para piloto Linux. Retenção automática ainda não implementada."
             );
             return ExitCode::SUCCESS;
         }
@@ -82,6 +82,9 @@ fn main() -> ExitCode {
             Ok(())
         })()),
         Some("sync" | "watch") if args.len() == 4 || args.len() == 5 => Some(run_sync(&args)),
+        Some("sync-root" | "watch-root") if args.len() == 3 || args.len() == 4 => {
+            Some(run_sync(&args))
+        }
         _ => None,
     };
     if let Some(result) = result {
@@ -98,12 +101,15 @@ fn main() -> ExitCode {
 }
 
 fn run_sync(args: &[std::ffi::OsString]) -> io::Result<()> {
-    let watch = args[0] == "watch";
-    if !watch && args.len() != 4 {
+    let all = args[0] == "sync-root" || args[0] == "watch-root";
+    let watch = args[0] == "watch" || args[0] == "watch-root";
+    let folder_index = if all { 2 } else { 3 };
+    let interval_index = folder_index + 1;
+    if !watch && args.len() != interval_index {
         return Err(io::Error::other("argumentos inválidos; use --help"));
     }
-    let seconds: u64 = if args.len() == 5 {
-        args[4]
+    let seconds: u64 = if args.len() > interval_index {
+        args[interval_index]
             .to_string_lossy()
             .parse()
             .map_err(|_| io::Error::other("intervalo inválido"))?
@@ -115,13 +121,13 @@ fn run_sync(args: &[std::ffi::OsString]) -> io::Result<()> {
             "intervalo deve estar entre 1 e 3600 segundos",
         ));
     }
-    if std::fs::canonicalize(&args[1])?.starts_with(std::fs::canonicalize(&args[3])?) {
+    if std::fs::canonicalize(&args[1])?.starts_with(std::fs::canonicalize(&args[folder_index])?) {
         return Err(io::Error::other(
             "credencial deve ficar fora da pasta sincronizada",
         ));
     }
     let changes = if watch {
-        match crewsync_client::watch::Changes::new(Path::new(&args[3])) {
+        match crewsync_client::watch::Changes::new(Path::new(&args[folder_index])) {
             Ok(changes) => Some(changes),
             Err(_) => {
                 eprintln!("Observador indisponível; usando reconciliação periódica.");
@@ -134,7 +140,15 @@ fn run_sync(args: &[std::ffi::OsString]) -> io::Result<()> {
     let mut delay = seconds;
     loop {
         let session = Session::load(Path::new(&args[1]))?;
-        let result = sync::sync(&session, &args[2].to_string_lossy(), Path::new(&args[3]));
+        let result = if all {
+            crewsync_client::root::sync(&session, Path::new(&args[folder_index]))
+        } else {
+            sync::sync(
+                &session,
+                &args[2].to_string_lossy(),
+                Path::new(&args[folder_index]),
+            )
+        };
         let failed = result.is_err();
         match result {
             Ok(report) => {

@@ -35,6 +35,15 @@ pub fn sync(session: &impl Remote, share: &str, root: &Path) -> io::Result<Repor
         return Err(invalid("compartilhamento deve ser de primeiro nível"));
     }
     let tree = Tree::open(root)?;
+    sync_tree(session, share, tree)
+}
+
+pub(crate) fn sync_tree(session: &impl Remote, share: &str, tree: Tree) -> io::Result<Report> {
+    if tree.meta_path().join("root.json").try_exists()? {
+        return Err(invalid(
+            "pasta usada como raiz de compartilhamentos; use sync-root/watch-root",
+        ));
+    }
     let state_path = tree.meta_path().join("state.json");
     let mut state: State = match disk::read_json(&state_path, crewsync_protocol::MAX_JSON) {
         Ok(state) => state,

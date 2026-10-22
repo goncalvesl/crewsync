@@ -1,55 +1,46 @@
-# CrewSync 0.1.0-alpha.4
+# CrewSync 0.1.0-alpha.5
 
-Instalação simples para servidor remoto por domínio ou IPv4 público/VPN.
+O cliente pergunta somente a raiz local e sincroniza automaticamente todas as
+pastas às quais o usuário tem acesso. Por exemplo, ao escolher `/home/voce/Terna`,
+o compartilhamento Obras aparece em `/home/voce/Terna/Obras`.
 
 ## Instalar
 
-Servidor:
-
-```sh
-curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- server
-```
-
-Cliente:
+Cliente novo:
 
 ```sh
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-No servidor, informe o endereço que os clientes usarão, como sync.empresa.com,
-sem https:// ou porta. A porta é perguntada separadamente (padrão 8443). O
-assistente valida o nome/IP antes de instalar, cria certificado com SAN DNS/IP,
-inicia o serviço e mostra URL, pasta, ca.crt e convite. A verificação de início
-é local e não depende de DNS público já configurado. No cliente, informe a URL
-HTTPS completa e o ca.crt recebido por meio confiável, além do convite.
+Informe URL HTTPS, ca.crt recebido por meio confiável, convite e raiz local.
+O assistente ativa o dispositivo e inicia o serviço. A lista de compartilhamentos
+é consultada a cada reconciliação. Arquivos avulsos na raiz não são enviados;
+pastas que perderem acesso permanecem no disco, sem novas sincronizações.
 
-Aponte o DNS A para o IPv4 público e permita a porta TCP no firewall do Linux e
-no painel do provedor para os clientes. Para systemd funcionar sem login SSH,
-execute sudo loginctl enable-linger SEU_USUARIO. Sem systemd, o modo nohup
-continua disponível; reinício após reboot é manual.
+## Compatibilidade e atualização
 
-## Certificados e atualização
+O protocolo não mudou; o cliente novo usa a operação Shares já existente no
+servidor alpha.4. Não é necessário reinstalar o servidor para usar a raiz local.
+Os comandos individuais sync/watch continuam disponíveis. Novos comandos:
+`sync-root SESSION RAIZ` e `watch-root SESSION RAIZ [SEGUNDOS]`.
 
-CA privada automática, HTTPS validado e certificado de servidor com validade de
-90 dias. Não exige ACME/proxy e não instala certificado de CA pública/Let's Encrypt.
-Domínio DNS ASCII/Punycode ou IPv4 aceitos; URLs, porta no nome, curingas, IPv6,
-nomes inválidos e injeções são recusados sem criar certificados.
+Instalações existentes exigem migração explícita: pare o serviço, faça backup,
+atualize o binário e mova a pasta individual inteira (incluindo .crewsync) para
+RAIZ/NOME_DO_COMPARTILHAMENTO. Ajuste o serviço para watch-root. Não execute os dois
+modos sobre a mesma árvore. O assistente preserva configurações existentes e
+recusa reinstalação sobre elas. Veja o procedimento técnico no manual.
 
-Instalações existentes são preservadas. Para atualizar, pare o serviço, faça
-backup, instale o novo pacote com install.sh --server/--client no mesmo PREFIX e
-reinicie. Para mudar o endereço de certificado já existente, gere conjunto novo
-em outro diretório e ajuste o serviço, seguindo a seção técnica do manual;
-redistribua o novo ca.crt. A troca de endereço não apaga dados ou dispositivos.
+## Validação e limites
 
-## Testes e limites
+Validação local passou: 74 testes Rust, build, fmt, Clippy, cinco cenários HTTPS,
+seis verificações TLS reais sem sockets, dois testes de entrada de certificado,
+instalação, assistente em terminal, site e gates de release. O assistente testa
+dois clientes em HTTPS, criação das subpastas e descoberta de um novo compartilhamento
+sem reconfiguração. Pacotes musl x86_64/ARM64, fonte offline e ENOSPC são validados
+pela CI antes da publicação.
 
-Validação de entradas sem gravar arquivos, TLS real por domínio/IP, nomes e CAs
-incorretos recusados, instalação com domínio sem DNS público, verificação SAN/SNI,
-ativação em terminal com convite oculto e dois clientes Rust sincronizando por
-URL DNS. Suíte Rust/HTTPS, pacotes x86_64/ARM64, ENOSPC isolado, fonte offline e
-site continuam na CI. Não confundir testes loopback com teste de acesso externo.
-
-Manual: https://goncalvesl.github.io/crewsync/manual.html.
-GPL-3.0-only. Alpha para testes Linux >=5.6, /proc e filesystem local. Servidor
-serializado e sem quotas totais/retomada parcial. Aceite físico ampliado continua
-pendente; não é versão estável nem substituto de backup. Windows/GUI/Android futuros.
+Alpha para testes Linux >=5.6, /proc e disco local. Sincronização serial, sem
+quotas totais, retomada parcial ou compactação. Erros permanentes encerram o serviço;
+falhas transitórias têm atraso limitado. Aceite físico ampliado continua pendente;
+não é versão estável nem substitui backup. Windows/GUI/Android ficam para o futuro.
+GPL-3.0-only. Manual: https://goncalvesl.github.io/crewsync/manual.html.

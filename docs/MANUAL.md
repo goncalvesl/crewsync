@@ -27,12 +27,12 @@ Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não
 Se preferir baixar e conferir o pacote manualmente:
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.4 (alpha, para testes).
+Versão atual: 0.1.0-alpha.5 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-linux-arm64.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.5/crewsync-0.1.0-alpha.5-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.5/crewsync-0.1.0-alpha.5-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.5/crewsync-0.1.0-alpha.5-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.5/crewsync-0.1.0-alpha.5-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.4) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.4/crewsync-0.1.0-alpha.4-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.5) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.5/crewsync-0.1.0-alpha.5-source.tar.gz)
 <!-- downloads:end -->
 
 Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.
@@ -45,7 +45,7 @@ Informe esses dados ao assistente. O convite não aparece enquanto você digita 
 
 ## Sincronizar
 
-Depois do assistente, a sincronização já fica ativa. Crie um arquivo de teste na pasta local escolhida e confira no outro computador.
+Depois do assistente, a sincronização já fica ativa. Escolha somente a raiz local (por exemplo, `/home/voce/Terna`): o cliente cria `Terna/Obras` e uma subpasta para cada compartilhamento autorizado. Crie um arquivo de teste dentro de uma dessas subpastas e confira no outro computador. Arquivos soltos na raiz não são enviados. A lista é atualizada a cada reconciliação; se o acesso for removido, a cópia local permanece sem sincronizar.
 
 Com systemd, consulte o estado:
 
@@ -212,7 +212,7 @@ Para renovar, pare o servidor e gere um conjunto novo em outro diretório com o 
 "$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/.config/crewsync-server/tls-novo" sync.empresa.com
 ```
 
-Para uma instalação sem o assistente, copie e edite o exemplo TOML, gere os certificados e execute `crewsync-server serve CONFIG 0.0.0.0 8443 CERT KEY`. No cliente, crie a pasta de configuração privada (0700) e a pasta local, copie `ca.crt`, execute `crewsync-client activate URL CA SESSION NOME` e cole o convite. Use `crewsync-client sync SESSION PASTA DIRETORIO` uma vez ou `crewsync-client watch SESSION PASTA DIRETORIO 5` continuamente. Não rode `sync` junto ao serviço watch na mesma pasta.
+Para uma instalação sem o assistente, copie e edite o exemplo TOML, gere os certificados e execute `crewsync-server serve CONFIG 0.0.0.0 8443 CERT KEY`. No cliente, crie a pasta de configuração privada (0700) e a pasta local, copie `ca.crt`, execute `crewsync-client activate URL CA SESSION NOME` e cole o convite. Use `crewsync-client sync-root SESSION RAIZ` uma vez ou `crewsync-client watch-root SESSION RAIZ 5` continuamente. Os comandos individuais `sync SESSION PASTA DIRETORIO` e `watch SESSION PASTA DIRETORIO 5` continuam disponíveis. Não rode `sync` junto ao serviço watch na mesma pasta.
 
 ### Arquitetura e sincronização
 
@@ -278,3 +278,14 @@ cargo build --release --workspace --locked
 Os executáveis ficam em `target/release/`. Consulte o [repositório](https://github.com/goncalvesl/crewsync) para documentação de desenvolvimento, plano e testes. Leia `AGENTS.md` e `docs/WORKFLOW.md` antes de contribuir. Use dados sintéticos e execute `scripts/check-pilot.sh`; nunca inclua credenciais ou documentos reais.
 
 Rapidez é um objetivo medido por ensaios reproduzíveis, sem promessa universal para os arquivos da equipe. Ainda não há quotas totais, compactação, retomada parcial ou limpeza automática das cópias locais. Resultados localhost não substituem medições físicas entre computadores.
+
+### Migrar uma pasta individual para a raiz local
+
+Pare o serviço do cliente antes de mudar o layout. Uma pasta anteriormente usada
+como o próprio compartilhamento não pode virar raiz automaticamente. Por exemplo,
+renomeie `Terna` para `Terna-anterior`, crie uma nova `Terna` e mova
+`Terna-anterior` inteira para `Terna/Obras`, incluindo `.crewsync` e os arquivos
+ocultos. Use o nome real do compartilhamento e preserve um backup. Altere o serviço
+para `watch-root SESSION RAIZ 5`, recarregue o systemd e inicie novamente. Não rode
+os modos individual e raiz ao mesmo tempo. O cliente recusa mistura de layouts,
+links e raízes vinculadas a outro servidor.

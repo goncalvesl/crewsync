@@ -27,6 +27,7 @@ impl Remote for Backend {
     ) -> io::Result<()> {
         let mut store = self.store.borrow_mut();
         let value = match operation {
+            Operation::Shares => serde_json::to_vec(&store.shares("writer")).unwrap(),
             Operation::Manifest { share } => {
                 serde_json::to_vec(&store.manifest("writer", &share)?).unwrap()
             }
@@ -331,4 +332,56 @@ fn local_directory_deletion_cannot_remove_new_remote_children() {
     assert_eq!(fs::read(b.join("dir/new")).unwrap(), b"new remotely");
     assert_eq!(fs::read(b.join("dir/old")).unwrap(), b"edited remotely");
     assert_eq!(fixture.sync(&b).uploaded, 0);
+}
+
+#[test]
+fn root_discovers_shares_and_preserves_removed_access_and_unmanaged_files() {
+    let f = Fixture::new();
+    let config = f.root.join("server.toml");
+    let original = fs::read_to_string(&config).unwrap();
+    fs::write(
+        &config,
+        format!(
+            "{original}[shares.Plantas.permissions]\nwriter='write'\n[shares.Privado.permissions]\n"
+        ),
+    )
+    .unwrap();
+    f.backend.store.borrow_mut().reload_config().unwrap();
+    let root = f.folder("local-root");
+    fs::write(root.join("avulso.txt"), b"local only").unwrap();
+    crewsync_client::root::sync(&f.backend, &root).unwrap();
+    assert!(root.join("Obras").is_dir());
+    assert!(root.join("Plantas").is_dir());
+    assert!(!root.join("Privado").exists());
+    fs::write(root.join("Obras/file"), b"obras").unwrap();
+    fs::write(root.join("Plantas/file"), b"plantas").unwrap();
+    crewsync_client::root::sync(&f.backend, &root).unwrap();
+    let second = f.folder("second-root");
+    crewsync_client::root::sync(&f.backend, &second).unwrap();
+    assert_eq!(fs::read(second.join("Obras/file")).unwrap(), b"obras");
+    assert_eq!(fs::read(second.join("Plantas/file")).unwrap(), b"plantas");
+    assert!(!second.join("avulso.txt").exists());
+    fs::write(&config, &original).unwrap();
+    f.backend.store.borrow_mut().reload_config().unwrap();
+    fs::write(root.join("Plantas/file"), b"changed offline").unwrap();
+    crewsync_client::root::sync(&f.backend, &root).unwrap();
+    assert_eq!(
+        fs::read(root.join("Plantas/file")).unwrap(),
+        b"changed offline"
+    );
+    assert!(sync::sync(&f.backend, "Obras", &root).is_err());
+}
+
+#[test]
+fn root_refuses_legacy_layout_and_symlink_share_without_following_it() {
+    let f = Fixture::new();
+    let legacy = f.folder("legacy");
+    f.sync(&legacy);
+    assert!(crewsync_client::root::sync(&f.backend, &legacy).is_err());
+    assert!(!legacy.join("Obras").exists());
+    let root = f.folder("root");
+    let outside = f.folder("outside");
+    std::os::unix::fs::symlink(&outside, root.join("Obras")).unwrap();
+    assert!(crewsync_client::root::sync(&f.backend, &root).is_err());
+    assert_eq!(fs::read_dir(&outside).unwrap().count(), 0);
 }
