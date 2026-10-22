@@ -1,16 +1,20 @@
 # Estado e retomada
 
-## Versão pública atual — 0.1.0-alpha.7
+## Versão pública atual — 0.1.0-alpha.8
 
-Release alpha para testes: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.7.
-Tag v0.1.0-alpha.7 aponta ao commit 732c0d7. A CI 39860997484 passou nos jobs
-de fonte offline, pacote musl x86_64 e ARM64 e publicação. Release não draft e
-prerelease, com oito assets. Pacotes, checksums, fonte e install.sh foram baixados;
-quatro checksums conferidos. check-package passou no tar.gz x86_64; ambos binários
-reportam 0.1.0-alpha.7. README e documentação de origem estão em main. Os workflows Pages 39861395282 e
-39862776775 expiraram após 10 minutos em updating_pages. A terceira execução limpa,
-39864144393, concluiu em 15 segundos. Verificação pública com cache-busting confirmou
-alpha.7, painel e manual atualizados em https://goncalvesl.github.io/crewsync/.
+Release alpha para testes: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.8.
+Tag aponta ao commit 3f583c9. A CI Packages 39867666092 e Rust 39867666159
+passaram; foram publicados 18 assets: Arch x86_64, Debian/Fedora x86_64 e ARM64,
+tar.gz x86_64 e ARM64, fonte e install.sh, com nove sidecars SHA-256. Os nove
+sidecars foram baixados e conferidos. Os checksums Debian/RPM foram corrigidos
+após publicação para refletir os nomes públicos normalizados pelo GitHub; os
+empacotadores e links agora geram esses mesmos nomes. `check-package.py` passou
+no tar.gz x86_64 e `check-system-packages.py` validou os pacotes Debian/RPM
+x86_64. A CI construiu/testou os dois targets musl, validou Debian/RPM em
+x86_64/ARM64, fez build Arch com makepkg e verificou fonte offline. `install.sh`
+passou `sh -n` e checksum. O Pages 39868376339 publicou README/manual/site
+atualizados; 14 links de pacote/checksum no site responderam HTTP 200 em
+https://goncalvesl.github.io/crewsync/.
 
 A versão inclui painel administrativo Rust no mesmo listener, HTTP explícito para
 testes, HTTPS por proxy e HTTPS direto. Painel gerencia usuários, pastas virtuais,
@@ -25,29 +29,13 @@ passou painel em 390/768/1440px sem overflow ou erros de console. Fonte da relea
 compilou offline; ambos pacotes musl passaram a matriz CI, inclusive teste ENOSPC,
 HTTPS e instalação. Nenhum servidor de produção ou certificado real foi alterado.
 
-O mantenedor definiu o servidor Linux-only. Decisão 0013 registra o plano de
-pacotes Arch, Debian, Fedora e tar.gz independente; o fluxo está implementado no
-candidato alpha.8 descrito abaixo. Layout distro em /usr/bin, /etc/crewsync e
-/var/lib/crewsync; tar em /opt/crewsync, /etc/opt e /var/opt.
-
-## Candidato 0.1.0-alpha.8 — publicação pendente
-
-Quatro formatos de servidor: Arch x86_64 via makepkg; `.deb` e `.rpm` para
-x86_64/ARM64; tar.gz para x86_64/ARM64, com instalador de sistema em /opt. O
-assistente cria usuário sem login, configuração e TLS; systemd executa como
-`crewsync`. Configuração pode ser atualizada pelo painel, TLS não é gravável pelo
-daemon. Remoção comum preserva estado. Instalador por usuário permanece intacto.
-
-Validação local: `scripts/check-pilot.sh` passou com build, fmt, Clippy, testes
-Rust, HTTPS, assistente, painel, proxy, site e gates. `scripts/check-package.py`
-passou no tar.gz x86_64 com os novos arquivos. O pacote Arch foi construído por
-makepkg e passou consultas pacman de metadados/layout e checksum. `.deb` e `.rpm`
-x86_64 foram gerados em Ubuntu 24.04; `check-system-packages.py` validou campos,
-layout, dependências e checksums. O fluxo da tag ainda recompila e repete isso com
-binários musl x86_64/ARM64. Chromium local passou em 390/768/1440px. Não foi
-instalado pacote em servidor real; VMs
-Arch/Debian/Fedora e ciclo reboot/upgrade/removal permanecem pendentes antes de
-estabilizar.
+O mantenedor definiu o servidor Linux-only. Decisão 0013 registra os quatro
+formatos. Pacotes de sistema instalam em `/usr/bin`, `/etc/crewsync` e
+`/var/lib/crewsync`; tar.gz usa `/opt/crewsync`, `/etc/opt/crewsync` e
+`/var/opt/crewsync`. O assistente cria usuário de serviço sem login, configuração,
+TLS e unidade systemd. Remoção comum preserva configuração e dados. Instalador por
+usuário permanece intacto. VMs e ciclos reboot/upgrade/removal por distro continuam
+pendentes antes de estabilizar.
 
 ## Histórico da implementação alpha.7 — transporte
 
