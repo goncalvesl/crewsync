@@ -30,11 +30,11 @@ def assets(version):
 def markdown(version):
     lines = [f'Versão atual: {version}' + (' (alpha, para testes).' if '-' in version else '.'), '']
     root = f'{REPOSITORY}/releases/download/v{version}/'
-    native_deb = version.replace('-alpha.', '~alpha.')
+    public_native = version.replace('-alpha.', '.alpha.')
     variants = [
         ('Arch Linux', [('x86_64', f'crewsync-{version.replace("-alpha.", "_alpha.")}-1-x86_64.pkg.tar.zst')]),
-        ('Debian/Ubuntu', [('amd64', f'crewsync_{native_deb}-1_amd64.deb'), ('ARM64', f'crewsync_{native_deb}-1_arm64.deb')]),
-        ('Fedora', [('x86_64', f'crewsync-{native_deb}-1.x86_64.rpm'), ('ARM64', f'crewsync-{native_deb}-1.aarch64.rpm')]),
+        ('Debian/Ubuntu', [('amd64', f'crewsync_{public_native}-1_amd64.deb'), ('ARM64', f'crewsync_{public_native}-1_arm64.deb')]),
+        ('Fedora', [('x86_64', f'crewsync-{public_native}-1.x86_64.rpm'), ('ARM64', f'crewsync-{public_native}-1.aarch64.rpm')]),
         ('Tar.gz independente', [('x86_64', f'crewsync-{version}-linux-x86_64.tar.gz'), ('ARM64', f'crewsync-{version}-linux-arm64.tar.gz')]),
     ]
     for label, packages in variants:
@@ -48,12 +48,12 @@ def markdown(version):
 
 def html(version):
     root = f'{REPOSITORY}/releases/download/v{version}/'
-    native_deb = version.replace('-alpha.', '~alpha.')
+    public_native = version.replace('-alpha.', '.alpha.')
     links = []
     variants = [
         ('Arch Linux', [('x86_64', f'crewsync-{version.replace("-alpha.", "_alpha.")}-1-x86_64.pkg.tar.zst')]),
-        ('Debian/Ubuntu', [('amd64', f'crewsync_{native_deb}-1_amd64.deb'), ('ARM64', f'crewsync_{native_deb}-1_arm64.deb')]),
-        ('Fedora', [('x86_64', f'crewsync-{native_deb}-1.x86_64.rpm'), ('ARM64', f'crewsync-{native_deb}-1.aarch64.rpm')]),
+        ('Debian/Ubuntu', [('amd64', f'crewsync_{public_native}-1_amd64.deb'), ('ARM64', f'crewsync_{public_native}-1_arm64.deb')]),
+        ('Fedora', [('x86_64', f'crewsync-{public_native}-1.x86_64.rpm'), ('ARM64', f'crewsync-{public_native}-1.aarch64.rpm')]),
         ('Tar.gz independente', [('x86_64', f'crewsync-{version}-linux-x86_64.tar.gz'), ('ARM64', f'crewsync-{version}-linux-arm64.tar.gz')]),
     ]
     for label, packages in variants:

@@ -10,6 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 VERSION = re.search(r'^version = "([^"]+)"', (ROOT/'Cargo.toml').read_text(), re.M)[1]
 DEB_VERSION = VERSION.replace('-alpha.', '~alpha.') + '-1'
 RPM_VERSION = VERSION.replace('-alpha.', '~alpha.')
+PUBLIC_VERSION = VERSION.replace('-alpha.', '.alpha.')
 
 def output(args):
     return subprocess.check_output(args, text=True).strip()
@@ -31,8 +32,8 @@ def main():
     require('runuser -u crewsync' in setup,'Convites e chave administrativa devem pertencer à conta de serviço')
     deb_arch='amd64' if args.arch=='x86_64' else 'arm64'
     expected={
-        'deb':args.directory/f'crewsync_{DEB_VERSION}_{deb_arch}.deb',
-        'rpm':args.directory/f'crewsync-{RPM_VERSION}-1.{args.arch}.rpm',
+        'deb':args.directory/f'crewsync_{PUBLIC_VERSION}-1_{deb_arch}.deb',
+        'rpm':args.directory/f'crewsync-{PUBLIC_VERSION}-1.{args.arch}.rpm',
     }
     for fmt,path in expected.items():
         require(path.is_file(),f'Pacote {fmt} ausente: {path.name}')

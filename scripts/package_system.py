@@ -11,6 +11,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 VERSION = re.search(r'^version = "([^"]+)"', (ROOT / 'Cargo.toml').read_text(), re.M)[1]
 DEB_VERSION = VERSION.replace('-alpha.', '~alpha.')
 RPM_VERSION = VERSION.replace('-alpha.', '~alpha.')
+# GitHub normalizes '~' in asset names to '.', so use that spelling in
+# published filenames while preserving the package's embedded version.
+PUBLIC_VERSION = VERSION.replace('-alpha.', '.alpha.')
 
 def run(args, **kwargs):
     subprocess.run(args, check=True, **kwargs)
@@ -72,7 +75,7 @@ def main():
     args=parser.parse_args(); args.output.mkdir(parents=True,exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='crewsync-system-pkg-') as temp:
         tree=pathlib.Path(temp)/'root'; tree.mkdir(); add_payload(tree,args.bin_dir)
-        products=[('deb',f'crewsync_{DEB_VERSION}-1_{"amd64" if args.arch=="x86_64" else "arm64"}.deb',make_deb),('rpm',f'crewsync-{RPM_VERSION}-1.{args.arch}.rpm',make_rpm)]
+        products=[('deb',f'crewsync_{PUBLIC_VERSION}-1_{"amd64" if args.arch=="x86_64" else "arm64"}.deb',make_deb),('rpm',f'crewsync-{PUBLIC_VERSION}-1.{args.arch}.rpm',make_rpm)]
         for _,filename,builder in products:
             output=args.output/filename; builder(tree,output,args.arch)
             subprocess.run(['sha256sum',output.name],cwd=args.output,check=True,stdout=(args.output/(output.name+'.sha256')).open('w'))
