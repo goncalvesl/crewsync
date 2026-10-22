@@ -22,7 +22,7 @@ def metadata(version):
                 repository=REPOSITORY, targets=TARGETS)
 
 def assets(version):
-    return [(target, f'{REPOSITORY}/releases/download/v{version}/crewsync-{version}-{target}.tar.gz') for target in TARGETS]
+    return [(target, f'{REPOSITORY}/releases/download/v{version}/crewsync-{version}-{'linux-x86_64' if target.startswith('x86_64') else 'linux-arm64'}.tar.gz') for target in TARGETS]
 
 def markdown(version):
     lines = [f'Versão atual: {version}' + (' (alpha, para testes).' if '-' in version else '.'), '']

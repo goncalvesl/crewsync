@@ -2,73 +2,66 @@
 
 O CrewSync mantém uma pasta atualizada entre seus computadores. Seu objetivo é ser simples de instalar, manter e usar, além de rápido.
 
-Para começar como usuário, siga Instalar, Dispositivos e Sincronizar. A preparação do servidor é feita uma vez pelo administrador. A explicação técnica fica na última seção.
+Para começar, siga Instalar e Sincronizar. A preparação do servidor é feita uma vez pelo administrador. A explicação técnica fica na última seção.
 
 Esta é uma versão de teste para Linux em rede privada. Use primeiro arquivos de teste e mantenha backup separado.
 
 ## Instalar
 
-Escolha o pacote para seu computador:
-
-<!-- downloads:start -->
-Versão atual: 0.1.0-alpha.1 (alpha, para testes).
-
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz.sha256)
-
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.1) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-source.tar.gz)
-<!-- downloads:end -->
-
-Extraia o pacote e, dentro da pasta extraída, execute:
+No servidor, execute este comando e responda às perguntas:
 
 ```bash
-./install.sh --client
+curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- server
 ```
 
-Pronto: o cliente está em `$HOME/.local/bin`. Não precisa instalar Rust, Cargo ou Python, nem usar sudo. Os comandos deste manual usam o caminho completo; não é necessário configurar o PATH.
+Nos outros computadores, execute:
 
-No computador que vai servir os arquivos, use `./install.sh --server`. Se quiser os dois programas na mesma máquina, execute apenas `./install.sh`. O instalador também guarda o manual em `$HOME/.local/share/crewsync/MANUAL.md`.
+```bash
+curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
+```
+
+O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, também cria o certificado, configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No cliente, ativa o computador e inicia a sincronização.
+
+Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não precisa de Rust, Cargo ou Python. Os comandos funcionam no terminal de uma sessão Linux, sem sudo. Os diretórios sugeridos podem ser alterados. Escolha diretórios novos para a configuração e os dados internos do servidor; instalações existentes são preservadas.
+
+Se preferir baixar e conferir o pacote manualmente:
+
+<!-- downloads:start -->
+Versão atual: 0.1.0-alpha.2 (alpha, para testes).
+
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-arm64.tar.gz.sha256)
+
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.2) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-source.tar.gz)
+<!-- downloads:end -->
+
+Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.
 
 ## Dispositivos
 
-Peça ao administrador três coisas: o endereço do servidor, o arquivo `ca.crt` e um convite de ativação próprio para este computador.
+Antes de instalar o cliente, peça ao administrador o endereço HTTPS, o arquivo `ca.crt`, o nome da pasta compartilhada e um convite próprio para este computador. Transfira `ca.crt` por um meio confiável. Nunca copie as chaves `.key` nem a sessão de outro computador.
 
-Crie a pasta de configuração e uma pasta nova para seus arquivos:
-
-```bash
-mkdir -p "$HOME/.config/crewsync" "$HOME/CrewSync-Obras"
-chmod 700 "$HOME/.config/crewsync"
-```
-
-Salve `ca.crt` em `$HOME/.config/crewsync/`. Ative o computador usando o endereço recebido; abaixo, troque `192.168.1.10` pelo IP correto:
-
-```bash
-"$HOME/.local/bin/crewsync-client" activate https://192.168.1.10:8443 "$HOME/.config/crewsync/ca.crt" "$HOME/.config/crewsync/session.json" pc1
-```
-
-Cole o convite e pressione Enter. Em outro computador, use outro convite e outro nome, como `pc2`. Não copie `session.json` entre computadores ou para dentro da pasta sincronizada.
+Informe esses dados ao assistente. O convite não aparece enquanto você digita e só pode ser usado uma vez. Para outro computador, gere outro convite.
 
 ## Sincronizar
 
-Para sincronizar uma vez:
+Depois do assistente, a sincronização já fica ativa. Crie um arquivo de teste na pasta local escolhida e confira no outro computador.
+
+Com systemd, consulte o estado:
 
 ```bash
-"$HOME/.local/bin/crewsync-client" sync "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras"
+systemctl --user status crewsync-client.service
 ```
 
-Para continuar acompanhando as mudanças:
+O serviço inicia durante sua sessão. Para continuar sem login, execute `sudo loginctl enable-linger SEU_USUARIO` em cada computador que precisar disso. Sem systemd, o assistente inicia um processo em segundo plano e informa o log e o comando para reiniciar após ligar o computador.
+
+Para conferir quais pastas você pode acessar, usando os diretórios sugeridos:
 
 ```bash
-"$HOME/.local/bin/crewsync-client" watch "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras" 5
+"$HOME/.local/bin/crewsync-client" shares "$HOME/.config/crewsync-client/session.json"
 ```
 
-Deixe o comando aberto; Ctrl-C encerra. Faça isso nos dois computadores. Troque `Obras` e a pasta local se o administrador indicar outros nomes. Não execute dois clientes ao mesmo tempo na mesma pasta.
-
-Para conferir quais pastas você pode acessar:
-
-```bash
-"$HOME/.local/bin/crewsync-client" shares "$HOME/.config/crewsync/session.json"
-```
+Não execute dois clientes na mesma pasta. Se escolheu outros diretórios, ajuste os caminhos nos exemplos deste manual.
 
 ## Conflitos
 
@@ -81,46 +74,32 @@ Arquivos locais substituídos ou excluídos podem ser encontrados em `.crewsync/
 Para ver as versões de um arquivo:
 
 ```bash
-"$HOME/.local/bin/crewsync-client" history "$HOME/.config/crewsync/session.json" Obras planta.txt
+"$HOME/.local/bin/crewsync-client" history "$HOME/.config/crewsync-client/session.json" Obras planta.txt
 ```
 
 A última linha mostra o estado atual. Para recuperar uma versão, informe o número desejado e o número atual. Exemplo: recuperar a versão 1 quando a atual é 3:
 
 ```bash
-"$HOME/.local/bin/crewsync-client" restore "$HOME/.config/crewsync/session.json" Obras planta.txt 1 3
+"$HOME/.local/bin/crewsync-client" restore "$HOME/.config/crewsync-client/session.json" Obras planta.txt 1 3
 ```
 
 Use os números reais da consulta. Depois execute `sync` nos dois computadores ou aguarde `watch`. É preciso ter permissão de escrita. Se outra pessoa já mudou o arquivo, consulte o histórico novamente antes de repetir.
 
 ## Configurar
 
-Esta parte é para o administrador do servidor. Instale com `./install.sh --server` e prepare a configuração:
+O assistente do servidor cria `$HOME/.config/crewsync-server/server.toml`. Os arquivos internos ficam, por padrão, em `$HOME/.local/share/crewsync-server`; essa pasta é separada da pasta dos clientes e não deve ser editada manualmente.
+
+Para adicionar usuários e pastas, edite `server.toml`. Use `read` para leitura e `write` para leitura, alteração e exclusão. Usuários com `enabled = false` ficam bloqueados. A configuração de exemplo instalada em `$HOME/.local/share/crewsync/server.example.toml` mostra a sintaxe.
+
+Confira depois de editar:
 
 ```bash
-mkdir -p "$HOME/crewsync-pilot"
-cp "$HOME/.local/share/crewsync/server.example.toml" "$HOME/crewsync-pilot/server.toml"
-```
-
-Edite `server.toml`. Em `storage_root`, coloque um caminho absoluto como `/home/SEU_USUARIO/crewsync-pilot/store`. Essa é uma pasta interna do serviço, separada das pastas dos clientes; o servidor a cria quando necessário.
-
-O exemplo permite que `ana` altere a pasta `Obras` e que `bruno` apenas leia. Ajuste os nomes e as permissões da equipe: `read` para leitura, `write` para leitura e alteração. Usuários com `enabled = false` ficam bloqueados.
-
-Confira a configuração:
-
-```bash
-"$HOME/.local/bin/crewsync-server" check-config "$HOME/crewsync-pilot/server.toml"
+"$HOME/.local/bin/crewsync-server" check-config "$HOME/.config/crewsync-server/server.toml"
 ```
 
 ## HTTPS e rede
 
-Descubra o IP do servidor na rede e mantenha esse endereço fixo. O comando abaixo prepara os certificados e exige OpenSSL instalado apenas nessa preparação. Troque o IP pelo real:
-
-```bash
-"$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/crewsync-pilot/tls" 192.168.1.10
-"$HOME/.local/bin/crewsync-server" serve "$HOME/crewsync-pilot/server.toml" 0.0.0.0 8443 "$HOME/crewsync-pilot/tls/server.crt" "$HOME/crewsync-pilot/tls/server.key"
-```
-
-Aguarde `CrewSync HTTPS ready 8443`. Entregue aos clientes somente o arquivo `ca.crt`. Mantenha os arquivos `.key` privados no servidor. O certificado vence em 90 dias; renove antes disso.
+O servidor já fica iniciado após o assistente. Use o IP escolhido na instalação e mantenha esse endereço fixo. Entregue aos clientes somente `ca.crt`, localizado na pasta `tls` da configuração. Mantenha os arquivos `.key` privados. O certificado vence em 90 dias; renove antes disso, conforme a seção técnica.
 
 Se usar UFW, permita a porta TCP do servidor para a rede local correta. Exemplo para `192.168.1.0/24`:
 
@@ -133,14 +112,14 @@ Não é necessário abrir portas nos clientes. O endereço que eles usam deve se
 Para gerar um convite válido por dez minutos:
 
 ```bash
-"$HOME/.local/bin/crewsync-server" invite "$HOME/crewsync-pilot/server.toml" ana 600
+"$HOME/.local/bin/crewsync-server" invite "$HOME/.config/crewsync-server/server.toml" ana 600
 ```
 
 Para listar ou bloquear um dispositivo:
 
 ```bash
-"$HOME/.local/bin/crewsync-server" devices "$HOME/crewsync-pilot/server.toml"
-"$HOME/.local/bin/crewsync-server" revoke "$HOME/crewsync-pilot/server.toml" ID_DO_DISPOSITIVO
+"$HOME/.local/bin/crewsync-server" devices "$HOME/.config/crewsync-server/server.toml"
+"$HOME/.local/bin/crewsync-server" revoke "$HOME/.config/crewsync-server/server.toml" ID_DO_DISPOSITIVO
 ```
 
 Cada convite vale para uma ativação. Se perder a resposta da ativação, gere outro. Desativar um usuário na configuração bloqueia todos os seus dispositivos.
@@ -152,13 +131,13 @@ A configuração de exemplo mantém até dez versões anteriores por até trinta
 Antes de limpar, faça backup e pare o servidor. Primeiro veja o que seria removido:
 
 ```bash
-"$HOME/.local/bin/crewsync-server" maintain "$HOME/crewsync-pilot/server.toml"
+"$HOME/.local/bin/crewsync-server" maintain "$HOME/.config/crewsync-server/server.toml"
 ```
 
 Se concordar com o relatório, aplique a limpeza e inicie o servidor novamente:
 
 ```bash
-"$HOME/.local/bin/crewsync-server" maintain "$HOME/crewsync-pilot/server.toml" --apply
+"$HOME/.local/bin/crewsync-server" maintain "$HOME/.config/crewsync-server/server.toml" --apply
 ```
 
 Sem `--apply`, nada é removido. A limpeza não apaga a versão atual nem as cópias locais em `conflicts` e `trash`. Nunca apague manualmente os arquivos internos do servidor.
@@ -168,7 +147,7 @@ Sem `--apply`, nada é removido. A limpeza não apaga a versão atual nem as có
 Com o servidor parado, crie uma cópia em uma pasta nova, preferencialmente em outra mídia:
 
 ```bash
-"$HOME/.local/bin/crewsync-server" backup "$HOME/crewsync-pilot/server.toml" /caminho/backup-novo
+"$HOME/.local/bin/crewsync-server" backup "$HOME/.config/crewsync-server/server.toml" /caminho/backup-novo
 ```
 
 Copie também a pasta de certificados separadamente e proteja as chaves. Para ensaiar a recuperação, use outra pasta nova:
@@ -181,9 +160,15 @@ A raiz recuperada fica em `/caminho/restauracao-nova/store`. Ajuste `storage_roo
 
 ## Servicos e atualizacao
 
-Para atualizar, pare os programas, faça backup e execute o instalador do novo pacote. Depois inicie o servidor e os clientes. Não apague suas configurações ou pastas. Não volte a uma versão antiga que desconheça o formato do histórico atual.
+Para atualizar uma instalação existente, pare os serviços e faça backup. Baixe e extraia o novo pacote para sua arquitetura, execute `./install.sh --server` ou `./install.sh --client` (com o mesmo `PREFIX` se personalizou a instalação) e reinicie os serviços. O assistente de configuração é para instalações novas e não sobrescreve dados existentes. Não volte a versões que desconheçam o formato do histórico atual.
 
-Para iniciar automaticamente, o pacote inclui exemplos de serviços em `config/systemd/`. A instalação e os comandos estão na seção técnica. O instalador não inicia serviços sozinho.
+```bash
+systemctl --user stop crewsync-server.service
+# Faça o backup e instale o novo pacote antes de continuar.
+systemctl --user start crewsync-server.service
+```
+
+No cliente, use `crewsync-client.service`. Sem systemd, encerre o PID indicado em `service.pid`, confira que parou e use `start.sh` depois da atualização.
 
 ## Diagnostico
 
@@ -205,6 +190,20 @@ CrewSync é software livre sob a GNU GPL versão 3 somente (`GPL-3.0-only`). O t
 ## Detalhes tecnicos
 
 Esta seção é opcional. Ela explica o funcionamento e reúne procedimentos avançados para administração e desenvolvimento.
+
+### Instalação, certificados e execução manual
+
+O bootstrap consulta a API pública de releases do GitHub, incluindo alpha, e valida o SHA-256 do pacote antes de extrair e executar o assistente. Requer ferramentas comuns de shell Linux; não depende do gerenciador de pacotes da distribuição. A API anônima pode limitar requisições; nesse caso, use o download manual. Os downloads agora usam `linux-x86_64` e `linux-arm64`. O antigo `unknown` era o campo de fornecedor no identificador de plataforma Rust, sem relação com a versão.
+
+A inicialização usa systemd de usuário quando disponível; caso contrário, grava `start.sh`, `service.pid` e `service.log` na configuração e inicia com nohup. O modo sem systemd não configura início automático após reboot. O assistente verifica HTTPS local antes de anunciar o servidor pronto. Firewall e acesso entre computadores precisam permitir a porta escolhida.
+
+Para renovar, pare o servidor e gere um conjunto novo em outro diretório com o IP atual. Preserve o conjunto anterior até conferir o novo. Ajuste os caminhos do serviço e entregue o novo `ca.crt` a cada cliente antes de reiniciar a sincronização:
+
+```bash
+"$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/.config/crewsync-server/tls-novo" 192.168.1.101
+```
+
+Para uma instalação sem o assistente, copie e edite o exemplo TOML, gere os certificados e execute `crewsync-server serve CONFIG 0.0.0.0 8443 CERT KEY`. No cliente, crie a pasta de configuração privada (0700) e a pasta local, copie `ca.crt`, execute `crewsync-client activate URL CA SESSION NOME` e cole o convite. Use `crewsync-client sync SESSION PASTA DIRETORIO` uma vez ou `crewsync-client watch SESSION PASTA DIRETORIO 5` continuamente. Não rode `sync` junto ao serviço watch na mesma pasta.
 
 ### Arquitetura e sincronização
 
@@ -238,7 +237,7 @@ Restaurar um backup antigo pode recuar revisões. Nesse caso, pare todos os clie
 
 ### Serviços, logs e desinstalação
 
-Adapte os caminhos nos exemplos de `config/systemd/`, copie as unidades desejadas para `$HOME/.config/systemd/user/` e execute somente as correspondentes à função desta máquina:
+O assistente cria as unidades com os caminhos escolhidos. Para instalação manual, adapte os exemplos de `config/systemd/` e copie as unidades desejadas para `$HOME/.config/systemd/user/` e execute somente as correspondentes à função desta máquina:
 
 ```bash
 systemctl --user daemon-reload

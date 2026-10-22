@@ -1,5 +1,23 @@
 # Estado e retomada
 
+## Preparação da 0.1.0-alpha.2
+
+Instaladores guiados implementados em scripts/setup-online.sh e scripts/setup.sh.
+Bootstrap identifica arquitetura, inclui alpha e verifica checksum. Servidor
+pergunta diretórios/IP/porta/usuário/pasta, cria HTTPS e inicia; cliente ativa com
+CA/convite e inicia watch. systemd de usuário ou nohup, sem sobrescrever configuração.
+Nomes dos pacotes passam a linux-x86_64/linux-arm64. install.sh troca binários
+atomicamente, preservando processo existente e configuração.
+
+Validação local: scripts/check-pilot.sh passou (build/fmt/Clippy, 72 Rust, 5 HTTPS,
+3 TLS, certificado, site, instalação e gates). Quatro testes adicionais de setup
+passaram com HTTPS e dois clientes, modo systemd/unidade validada por systemd-analyze,
+modo sem systemd, caracteres especiais, configuração preservada e bootstrap
+via pipe com alpha simulada e checksum errado. Pacote estático x86_64 passou checksum, instalação e os quatro testes de setup.
+Fonte compilou offline com CARGO_HOME vazio. QA Chromium 390/768/1440px passou.
+Nenhum dado ou serviço real foi alterado. Publicação ainda pendente nesta preparação;
+concluir conforme RELEASING.md e registrar os links reais após publicar.
+
 ## Versão pública atual
 
 **0.1.0-alpha.1**, publicada para testes a pedido do mantenedor:

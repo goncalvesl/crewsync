@@ -1,43 +1,55 @@
-# CrewSync 0.1.0-alpha.1
+# CrewSync 0.1.0-alpha.2
 
-Primeira release pública para testes em Linux, sob GPL-3.0-only.
+Instalação guiada de servidor e cliente Linux, com um comando e sem compilar.
 
-## Download e instalação
+## Instalar
 
-Escolha o pacote x86_64 (Intel/AMD) ou aarch64 (ARM64), extraia e execute:
+Servidor:
 
 ```sh
-./install.sh --client
+curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- server
 ```
 
-No servidor, use `./install.sh --server`; sem opção, instala os dois. Não exige
-Rust/Cargo/Python no uso diário nem ajustes no PATH. Manual simples no pacote e em
-https://goncalvesl.github.io/crewsync/manual.html. Cada pacote tem checksum SHA-256.
-A fonte correspondente, scripts de build e dependências estão em `crewsync-0.1.0-alpha.1-source.tar.gz`.
+Cliente:
 
-## Funcionalidades
+```sh
+curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
+```
 
-- Servidor HTTPS nativo Rust com CA e endereço verificados.
-- Convite de uso único, token por dispositivo, revogação e permissões read/write.
-- Sincronização manual ou por eventos com reconciliação periódica, exclusões
-  persistentes, diretórios vazios e conflitos preservados.
-- Histórico/restauração, retenção configurável e coleta segura com servidor parado.
-- Backup verificável e restauração em destino novo.
+O assistente detecta x86_64/ARM64, baixa a última release (incluindo alpha),
+confere o SHA-256 e pergunta os diretórios. No servidor, configura usuário e pasta,
+cria certificados HTTPS, inicia o serviço e fornece um convite. No cliente, pede
+endereço, ca.crt e convite, ativa o dispositivo e inicia a sincronização.
 
-## Compatibilidade e validação
+Requer curl, tar e ferramentas comuns do shell/coreutils; OpenSSL apenas na
+preparação do servidor. Não precisa de Rust, Cargo ou Python. O pacote também
+inclui `setup.sh server|client` para executar o assistente sem o bootstrap online.
+Os downloads agora usam nomes linux-x86_64 e linux-arm64; `unknown` nos nomes
+anteriores era o campo de fornecedor do target Rust, sem relação com a versão.
 
-Linux kernel >=5.6 com /proc e filesystem local. Pacotes estáticos musl x86_64 e
-ARM64, sem dependência de glibc. Configuração e sessões do piloto são preservadas;
-faça backup com serviço parado antes de atualizar. Não rebaixar após histórico v2.
+## Serviços e instalações existentes
 
-Testes locais: 72 Rust, 5 HTTPS, 3 TLS, gerador de certificados, instalador, geração
-do manual e preparação/gates de release. A publicação é condicionada à matriz
-nativa x86_64/ARM64, ENOSPC real isolado, smoke dos pacotes e build offline das fontes.
+Usa systemd de usuário quando disponível. Para funcionar sem login, configure
+`sudo loginctl enable-linger SEU_USUARIO`. Sem systemd, inicia em segundo plano e
+informa log, PID e comando de reinício; nesse modo não configura início no boot.
+O firewall deve permitir a porta TCP escolhida na rede local. Transfira apenas o
+ca.crt para os clientes por um meio confiável; certificados não são ignorados.
 
-## Limitações da alpha
+O assistente não sobrescreve configurações, certificados ou sessões existentes.
+Para atualizar a alpha.1, pare os serviços, faça backup e use `install.sh --server`
+ou `--client` do novo pacote no mesmo PREFIX; depois reinicie. A troca de binários
+agora é atômica. Não rebaixar após histórico v2. GPL-3.0-only preservada.
 
-Rede privada, servidor serializado, sem quotas totais, retomada parcial,
-compactação ou limpeza automática de cópias locais. Windows/GUI/Android são futuros.
-O piloto básico foi confirmado pelo mantenedor; matriz física ampliada e medições
-entre máquinas continuam pendentes. Esta é uma alpha para teste, não uma versão
-estável nem substituto de backup.
+## Validação e limites
+
+Testes do assistente: servidor HTTPS e dois clientes reais, sincronização watch,
+preservação de configuração, entradas inválidas, caminhos com caracteres especiais,
+unidades de serviço e bootstrap via pipe/terminal, incluindo recusa de hash errado.
+A CI repete os testes com os binários musl em x86_64 e ARM64, além da suíte Rust,
+HTTPS, ENOSPC isolado, pacotes e build offline do fonte vendorizado.
+
+Manual: https://goncalvesl.github.io/crewsync/manual.html.
+Linux kernel >=5.6 com /proc e filesystem local, rede privada, servidor serializado.
+Windows/GUI/Android são futuros. Matriz física ampliada continua pendente; alpha
+para testes, sem substituir backup independente. Certificado gerado vale 90 dias;
+o manual explica renovação e operação.

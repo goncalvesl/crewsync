@@ -34,11 +34,18 @@ share_dir=$install_prefix/share/crewsync
 mkdir -p "$install_prefix/bin" "$share_dir"
 install -m 644 "$package_dir/LICENSE" "$share_dir/LICENSE"
 install -m 644 "$package_dir/docs/MANUAL.md" "$share_dir/MANUAL.md"
+install_binary() {
+    temporary=$(mktemp "$install_prefix/bin/.crewsync-install.XXXXXX")
+    if install -m 755 "$1" "$temporary" && mv -f "$temporary" "$2"; then :; else
+        rm -f "$temporary"
+        return 1
+    fi
+}
 if [ "$install_client" = yes ]; then
-    install -m 755 "$package_dir/bin/crewsync-client" "$install_prefix/bin/crewsync-client"
+    install_binary "$package_dir/bin/crewsync-client" "$install_prefix/bin/crewsync-client"
 fi
 if [ "$install_server" = yes ]; then
-    install -m 755 "$package_dir/bin/crewsync-server" "$install_prefix/bin/crewsync-server"
+    install_binary "$package_dir/bin/crewsync-server" "$install_prefix/bin/crewsync-server"
     install -m 644 "$package_dir/config/server.example.toml" "$share_dir/server.example.toml"
     install -m 755 "$package_dir/scripts/pilot-cert.sh" "$share_dir/pilot-cert.sh"
 fi

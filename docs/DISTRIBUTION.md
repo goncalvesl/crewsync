@@ -14,12 +14,16 @@ python3 scripts/package.py --bin-dir target/x86_64-unknown-linux-musl/release --
 python3 scripts/check-package.py target/packages/*.tar.gz
 ```
 
-Um pacote contém binários, install.sh, exemplos públicos de configuração/systemd,
+Um pacote contém binários, install.sh e setup.sh, exemplos públicos de configuração/systemd,
 gerador de certificados e documentação. Nenhum dado privado é coletado da raiz
 do piloto. Inclui checksum SHA-256 e avisos das dependências. PREFIX controla a
 instalação; default ~/.local. `./install.sh --client` instala somente o cliente,
 `--server` instala servidor e auxiliares; sem opção, instala ambos. Manual e GPL
-ficam em share/crewsync. Não há sudo, ajustes de PATH ou inicialização automática.
+ficam em share/crewsync. install.sh não inicia serviços. setup.sh server|client
+é o assistente guiado que configura e inicia; setup-online.sh baixa a última
+release e valida o checksum antes de chamar esse assistente. Não há sudo ou
+ajustes de PATH. Serviços de usuário systemd, ou nohup quando indisponível.
+Os nomes públicos dos pacotes são linux-x86_64 e linux-arm64.
 
 ## Automação
 
@@ -57,7 +61,7 @@ local na porta 8765, com site sob /crewsync/. Não é dependência do aplicativo
 
 ## Última release
 
-0.1.0-alpha.1: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.1.
+0.1.0-alpha.2: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.2.
 Pacotes x86_64/ARM64 e fonte com dependências vendorizadas, cada um com checksum.
 Downloads por arquitetura ficam no manual e são atualizados por prepare-release.py.
 Fonte: package-source.py; check-source.py compila sem acesso ao cache de crates.

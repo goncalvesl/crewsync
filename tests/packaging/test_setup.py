@@ -1,0 +1,190 @@
+"""Instalações reais isoladas: HTTPS, ativação, watch e bootstrap sem rede externa."""
+import io
+import os
+from pathlib import Path
+import pty
+import select
+import shutil
+import signal
+import socket
+import subprocess
+import tarfile
+import tempfile
+import time
+import unittest
+
+ROOT = Path(__file__).resolve().parents[2]
+
+class Setup(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory(prefix='crewsync setup % $ \' " ' )
+        self.root = Path(self.temp.name)
+        self.env = dict(os.environ, HOME=str(self.root / 'home'), XDG_CONFIG_HOME=str(self.root / 'units'))
+        Path(self.env['HOME']).mkdir()
+        runtime = self.root / 'runtime'
+        runtime.mkdir(mode=0o700)
+        self.env['XDG_RUNTIME_DIR'] = str(runtime)
+        self.mock = self.root / 'mock'
+        self.mock.mkdir()
+        self.executable('systemctl', '#!/bin/sh\nexit 1\n')
+        self.env['PATH'] = str(self.mock) + ':' + os.environ['PATH']
+        self.package = self.root / 'package'
+        for folder in ['bin', 'scripts', 'docs', 'config']:
+            (self.package / folder).mkdir(parents=True, exist_ok=True)
+        for source, dest in [('scripts/setup.sh', 'setup.sh'), ('scripts/install.sh', 'install.sh'), ('scripts/pilot-cert.sh', 'scripts/pilot-cert.sh'), ('LICENSE', 'LICENSE'), ('docs/MANUAL.md', 'docs/MANUAL.md'), ('config/server.example.toml', 'config/server.example.toml')]:
+            shutil.copyfile(ROOT / source, self.package / dest)
+        for role in ['server', 'client']:
+            source = Path(os.environ.get('CREWSYNC_BIN_DIR', ROOT / 'target/debug')) / ('crewsync-' + role)
+            shutil.copyfile(source, self.package / 'bin' / source.name)
+        if os.environ.get('CREWSYNC_PACKAGE_DIR'):
+            self.package = Path(os.environ['CREWSYNC_PACKAGE_DIR'])
+        self.configs = []
+
+    def tearDown(self):
+        for config in self.configs:
+            pid = config / 'service.pid'
+            if pid.exists():
+                try:
+                    os.kill(int(pid.read_text()), signal.SIGTERM)
+                except ProcessLookupError:
+                    pass
+        self.temp.cleanup()
+
+    def executable(self, name, text):
+        path = self.mock / name
+        path.write_text(text)
+        path.chmod(0o755)
+
+    def setup(self, role, answers):
+        return subprocess.run(['sh', str(self.package / 'setup.sh'), role], input='\n'.join(map(str, answers)) + '\n', text=True, capture_output=True, env=self.env, timeout=45)
+
+    def test_server_and_two_clients_ready_and_existing_config_preserved(self):
+        prefix = self.root / 'programs with spaces'
+        config = self.root / 'server config'
+        data = self.root / 'server data'
+        self.configs.append(config)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        answers = [prefix, config, data, '127.0.0.1', port, 'ana', 'Obras']
+        result = self.setup('server', answers)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn('Servidor pronto:', result.stdout)
+        self.assertEqual((config / 'tls/server.key').stat().st_mode & 0o777, 0o600)
+        before = (config / 'server.toml').read_bytes()
+        again = self.setup('server', answers)
+        self.assertNotEqual(again.returncode, 0)
+        self.assertEqual((config / 'server.toml').read_bytes(), before)
+        updated = subprocess.run(['sh', str(self.package / 'install.sh'), '--server'], env=dict(self.env, PREFIX=str(prefix)), capture_output=True, text=True)
+        self.assertEqual(updated.returncode, 0, updated.stderr)
+        os.kill(int((config / 'service.pid').read_text()), 0)
+        clients = []
+        for index in [1, 2]:
+            cfg = self.root / f'client {index}'
+            folder = self.root / f'files {index}'
+            self.configs.append(cfg)
+            invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
+            result = self.setup('client', [prefix, cfg, folder, f'https://127.0.0.1:{port}', config / 'tls/ca.crt', f'pc{index}', 'Obras', invite])
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertNotIn(invite, result.stdout + result.stderr)
+            self.assertEqual((cfg / 'session.json').stat().st_mode & 0o777, 0o600)
+            clients.append(folder)
+        (clients[0] / 'hello.txt').write_text('ready')
+        deadline = time.monotonic() + 15
+        while time.monotonic() < deadline:
+            if (clients[1] / 'hello.txt').exists():
+                break
+            time.sleep(0.1)
+        self.assertEqual((clients[1] / 'hello.txt').read_text(), 'ready')
+
+    def test_systemd_unit_preserves_special_characters_in_paths(self):
+        self.executable('systemctl', '#!/usr/bin/env python3\n' + r'''import os, shlex, subprocess, sys
+from pathlib import Path
+if 'enable' in sys.argv:
+    unit = Path(os.environ['XDG_CONFIG_HOME']) / 'systemd/user/crewsync-server.service'
+    line = next(line for line in unit.read_text().splitlines() if line.startswith('ExecStart='))
+    args = shlex.split(line.split('=', 1)[1].replace('%%', '%').replace('$$', '$'))
+    config = Path(args[1]).parent
+    with (config / 'service.log').open('w') as log:
+        proc = subprocess.Popen(args, stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+    (config / 'service.pid').write_text(str(proc.pid))
+sys.exit(0)
+''')
+        config = self.root / 'server'
+        self.configs.append(config)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', port, 'ana', 'Obras'])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        unit = Path(self.env['XDG_CONFIG_HOME']) / 'systemd/user/crewsync-server.service'
+        self.assertIn('%%', unit.read_text())
+        self.assertIn('$$', unit.read_text())
+        self.assertIn('systemctl --user status', result.stdout)
+        if shutil.which('systemd-analyze'):
+            verified = subprocess.run(['systemd-analyze', '--user', 'verify', str(unit)], capture_output=True, text=True, env=self.env)
+            self.assertEqual(verified.returncode, 0, verified.stderr)
+
+    def test_invalid_ip_and_overlapping_directories_leave_installation_untouched(self):
+        prefix = self.root / 'programs'
+        cfg = self.root / 'config'
+        for answers in [[prefix, cfg, self.root / 'data', 'bad-ip'], [prefix, cfg, cfg / 'data']]:
+            result = self.setup('server', answers)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(prefix.exists())
+            self.assertFalse(cfg.exists())
+
+    def bootstrap(self, corrupt=False):
+        import hashlib
+        name = 'crewsync-0.2.0-alpha.3-linux-x86_64'
+        archive = self.root / 'fixture.tar.gz'
+        with tarfile.open(archive, 'w:gz') as tar:
+            content = b'#!/bin/sh\nprintf "SETUP-EXECUTED:%s\\n" "$1"\n'
+            info = tarfile.TarInfo(name + '/setup.sh')
+            info.size = len(content)
+            tar.addfile(info, io.BytesIO(content))
+        digest = '0' * 64 if corrupt else hashlib.sha256(archive.read_bytes()).hexdigest()
+        (self.root / 'checksum').write_text(digest + '  fixture.tar.gz\n')
+        self.executable('uname', '#!/bin/sh\ncase "$1" in -s) echo Linux;; -m) echo x86_64;; esac\n')
+        self.executable('curl', '''#!/bin/sh
+case "$*" in *api.github.com*) printf '{\n  "tag_name": "v0.2.0-alpha.3",\n}\n'; exit;; esac
+source="$FIXTURE/fixture.tar.gz"
+case "$*" in *sha256*) source="$FIXTURE/checksum";; esac
+while [ "$#" -gt 0 ]; do if [ "$1" = -o ]; then cp "$source" "$2"; exit; fi; shift; done
+exit 1
+''')
+        self.env['FIXTURE'] = str(self.root)
+        pid, fd = pty.fork()
+        if pid == 0:
+            os.execvpe('sh', ['sh', '-c', 'cat "$1" | sh -s -- client', 'bootstrap', str(ROOT / 'scripts/setup-online.sh')], self.env)
+        output = b''
+        deadline = time.monotonic() + 10
+        try:
+            while time.monotonic() < deadline:
+                ready, _, _ = select.select([fd], [], [], 0.1)
+                if ready:
+                    try:
+                        chunk = os.read(fd, 4096)
+                    except OSError:
+                        break
+                    if not chunk:
+                        break
+                    output += chunk
+            else:
+                os.kill(pid, signal.SIGKILL)
+                self.fail('Bootstrap timeout')
+        finally:
+            os.close(fd)
+            _, status = os.waitpid(pid, 0)
+        return os.waitstatus_to_exitcode(status), output.decode(errors='replace')
+
+    def test_online_bootstrap_selects_latest_alpha_and_checks_hash_before_execution(self):
+        status, output = self.bootstrap()
+        self.assertEqual(status, 0, output)
+        self.assertIn('SETUP-EXECUTED:client', output)
+        status, output = self.bootstrap(corrupt=True)
+        self.assertNotEqual(status, 0, output)
+        self.assertNotIn('SETUP-EXECUTED:', output)
+
+if __name__ == '__main__':
+    unittest.main()

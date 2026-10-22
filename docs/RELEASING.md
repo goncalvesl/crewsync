@@ -50,7 +50,9 @@ sem conferir a release no GitHub.
 ## Verificar e atualizar a documentação pública
 
 1. Conferir `gh release view vVERSAO --json url,isDraft,isPrerelease,assets`.
-   Devem existir os dois pacotes musl, seus checksums, fonte e checksum de fonte.
+   Devem existir os dois pacotes musl, seus checksums, fonte e checksum de fonte, além de install.sh e seu checksum.
+   Os nomes públicos usam linux-x86_64/linux-arm64; os targets Rust permanecem no
+   metadado do pacote. Testar também setup.sh e o bootstrap publicado.
 2. Baixar os assets publicados, conferir hashes e executar check-package no pacote
    x86_64 (ARM64 é executado nativamente na CI). Conferir que --version corresponde
    à tag. Não executar um binário ARM64 diretamente no host x86_64.

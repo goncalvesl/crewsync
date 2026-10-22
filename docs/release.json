@@ -1,6 +1,6 @@
 {
-  "version": "0.1.0-alpha.1",
-  "tag": "v0.1.0-alpha.1",
+  "version": "0.1.0-alpha.2",
+  "tag": "v0.1.0-alpha.2",
   "prerelease": true,
   "repository": "https://github.com/goncalvesl/crewsync",
   "targets": [

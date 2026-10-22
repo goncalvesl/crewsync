@@ -7,15 +7,35 @@ a integridade dos arquivos. Instalação com o mínimo de passos e dependências
 manual direto, com aprofundamento técnico apenas na seção final.
 Armazenamento raw, sem banco de dados externo. Windows e Android são posteriores.
 
+## Instalar com um comando
+
+Servidor:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- server
+```
+
+Cliente:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
+```
+
+O assistente baixa a última release, pergunta os diretórios e inicia o serviço.
+No servidor, cria configuração, certificado e convite. No cliente, pede endereço,
+certificado e convite para ativar e sincronizar. Requer curl/tar/sha256sum e,
+no servidor, OpenSSL; dispensa Rust/Cargo/Python. Veja o manual para firewall,
+início sem login, atualização e instalações existentes.
+
 ## Downloads
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.1 (alpha, para testes).
+Versão atual: 0.1.0-alpha.2 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-x86_64-unknown-linux-musl.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-aarch64-unknown-linux-musl.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.1) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.1/crewsync-0.1.0-alpha.1-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.2) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.2/crewsync-0.1.0-alpha.2-source.tar.gz)
 <!-- downloads:end -->
 
 ## Usar

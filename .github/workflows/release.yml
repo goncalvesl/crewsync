@@ -70,6 +70,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
+          cp scripts/setup-online.sh target/packages/install.sh
+          (cd target/packages && sha256sum install.sh > install.sh.sha256)
           flags=(--latest)
           if [[ "$TAG" == *-alpha.* ]]; then flags=(--prerelease --latest=false); fi
           gh release create "$TAG" target/packages/* --verify-tag "${flags[@]}" --notes-file docs/RELEASE-NOTES.md

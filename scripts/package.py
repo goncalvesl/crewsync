@@ -18,10 +18,12 @@ def main():
     parser.add_argument('--output', type=pathlib.Path, default=ROOT / 'target/packages')
     args = parser.parse_args()
     version = re.search(r'^version = "([^"]+)"', (ROOT / 'Cargo.toml').read_text(), re.M)[1]
-    name = f'crewsync-{version}-{args.target}'
+    platform = {'x86_64-unknown-linux-musl': 'linux-x86_64', 'aarch64-unknown-linux-musl': 'linux-arm64'}.get(args.target, args.target)
+    name = f'crewsync-{version}-{platform}'
     args.output.mkdir(parents=True, exist_ok=True)
     archive = args.output / f'{name}.tar.gz'
     files = [('bin/' + n, args.bin_dir / n) for n in ['crewsync-client', 'crewsync-server']]
+    files += [('setup.sh', ROOT / 'scripts/setup.sh')]
     files += [('README.md', ROOT / 'README.md'), ('install.sh', ROOT / 'scripts/install.sh'), ('scripts/pilot-cert.sh', ROOT / 'scripts/pilot-cert.sh')]
     files += [('config/' + name, ROOT / 'config' / name) for name in ['README.md', 'server.example.toml', 'systemd/crewsync-client.service', 'systemd/crewsync-server.service']]
     files += [(str(p.relative_to(ROOT)), p) for p in (ROOT / 'docs').rglob('*.md')]
