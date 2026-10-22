@@ -106,3 +106,13 @@ pendentes, conforme docs/reports/physical-acceptance.json.
 ## Evidências
 
 Registrar no status ou relatório da etapa os comandos executados, resultados, ambiente e limitações. Não afirmar que testes passaram quando não foram executados. Benchmarks devem indicar hardware, volume e tipos de arquivo, sem tratar tempo exato como teste determinístico.
+
+## Publicação
+
+`python3 -m unittest discover -s tests/release` cobre sincronização de versões e
+links, arquiteturas, fonte, README/manual/site obsoletos, tag/licença, bloqueio de
+estável sem aceite físico e Cargo.lock desatualizado. prepare-release.py --check
+roda na CI e no build de Pages. package-source/check-source verificam checksum,
+extração e build offline com CARGO_HOME vazio; a release só publica após fontes e
+ambas as arquiteturas passarem. Assets públicos são baixados e verificados antes
+de expor os novos links no site. Procedimento recorrente em RELEASING.md.

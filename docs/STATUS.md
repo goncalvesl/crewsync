@@ -1,112 +1,82 @@
 # Estado e retomada
 
-## Escopo e autorização
+## Versão pública atual
 
-O usuário confirmou o piloto básico em dois computadores e autorizou executar
-todas as etapas restantes sem paradas. Implementação Linux e preparação de
-operação/site/distribuição foram realizadas. Windows/GUI/Android seguem como
-evolução posterior do escopo definido. O mantenedor escolheu GPL-3.0-only e
-reforçou o objetivo: simples de instalar, manter e usar, além de rápido. A instalação
-deve ter o mínimo de passos; o manual deve ser direto, com detalhes técnicos no fim.
+**0.1.0-alpha.1**, publicada para testes a pedido do mantenedor:
+https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.1.
+Tag imutável `v0.1.0-alpha.1`, commit `df2495b`; licença GPL-3.0-only.
 
-## Atualização: licença e simplicidade
+A release oferece pacotes Linux estáticos musl x86_64 e ARM64, checksums SHA-256
+e fonte correspondente com dependências vendorizadas. Os seis downloads públicos
+retornaram HTTP 200; os três arquivos baixados tiveram checksums conferidos.
+O pacote x86_64 publicado foi extraído/instalado em PREFIX temporário e executou
+--version, --help e check-config; os dois binários informam 0.1.0-alpha.1.
+ARM64 foi executado e validado nativamente na CI.
 
-- GPL-3.0-only aplicada: LICENSE oficial, metadados nas três crates e pacotes;
-  LICENSE-STATUS removido. Decisão 0007 registra a autorização do mantenedor.
-- Objetivos explícitos em AGENTS/PROJECT/QUALITY/README e site: simples de instalar,
-  manter e usar, além de rápido; reduzir passos/dependências sem reduzir integridade.
-- Instalador com --client/--server, modo conjunto preservado, manual/licença e
-  auxiliares instalados em share/crewsync, caminhos completos sem ajuste de PATH.
-- Manual começa pelo uso diário, separa preparação do administrador e termina
-  com detalhes técnicos opcionais. Renderizador suporta subtítulos nesse apêndice.
-- scripts/check-pilot.sh passou: 72 Rust, 5 HTTPS, 3 TLS, 1 teste de entradas do
-  certificado, 2 testes de geração do manual e 4 testes de instalação; build,
-  formatação, Clippy e links do site passaram. QA local 390/768/1440px passou.
+## Publicar novamente
 
-## Publicação 0.1.0-alpha.1 em preparação
+Tarefa recorrente registrada em AGENTS.md e docs/RELEASING.md. Quando o mantenedor
+pedir publicação, incrementar versão, testar, publicar e verificar a release,
+atualizar os downloads de cada arquitetura no manual/README/site e verificar o
+site publicado. Não encerrar no commit ou no início de workflow.
 
-Solicitação atual autoriza release alpha pública, downloads por arquitetura no
-manual e procedimento recorrente em AGENTS/RELEASING. Versão e links centralizados
-em docs/release.json e prepare-release.py. O gate físico permanece para estável;
-alpha explicitamente identificada, sem falsificar aceite. A fonte da release
-inclui dependências vendorizadas e deve compilar offline antes de publicar.
+`python3 scripts/prepare-release.py VERSAO` atualiza Cargo/Cargo.lock, dependências
+internas, docs/release.json e blocos de download. `--check` detecta divergências.
+Usar URLs versionados, inclusive alpha (GitHub latest não seleciona prereleases).
+Enviar tag antes de main; publicar/verificar os assets antes de expor seus links
+em Pages. Não mover tags ou sobrescrever assets publicados.
 
 ## Implementado
 
-- Armazenamento raw SHA-256 deduplicado, revisões/tombstones, streaming, temporários,
-  publicação durável e recuperação. Limite de profundidade validado no protocolo.
-- HTTPS/TOML/SHA-256 nativos em Rust (rustls, toml, sha2); sem Python, sha256sum,
-  Cargo ou OpenSSL no runtime. Pontes temporárias removidas, protocolo preservado.
-- Convites de uso único, token por dispositivo, hashes no servidor, revogação,
-  ACLs read/write, deny padrão e recarga que mantém última configuração válida.
-- Sync e watch por eventos notify com reconciliação periódica; fila limitada,
-  debounce finito, ignorando metadata e symlinks; fallback periódico e backoff.
-- Histórico e restauração como nova revisão; retenção configurável de versões e
-  lixeira no servidor; histórico v1 legível com graça, v2 com datas de arquivamento.
-- `maintain CONFIG [--apply]`: simulação, poda e coleta de objetos sem referências,
-  inclusive compartilhamentos retirados da configuração; requer servidor parado
-  e lock exclusivo. Publica metadados duráveis antes de remover objetos. Tombstones
-  atuais nunca são coletados. Cópias locais não são limpas automaticamente.
-- Backup com locks de armazenamento/autenticação, validação e marcador ao final;
-  restauração em destino novo, sem sobrescrita. TLS deve ser copiado separadamente.
-- Logs sem credenciais/usuário/caminho/conteúdo; systemd, manual de atualização,
-  diagnóstico e recuperação de desastre. Veja MANUAL.md e OPERATIONS.md.
-- Site estático responsivo, manual gerado de Markdown, workflows Pages e Packages;
-  pacotes musl x86_64/ARM64, checksum, avisos de dependências, smoke de instalação.
-  Publicação por tag exige licença, versão correspondente e aceite físico ampliado.
+- Rust nativo para HTTPS/TOML/SHA-256, sem Python/Cargo/OpenSSL no runtime.
+- Servidor central raw por hash, deduplicação, revisões/tombstones, streaming,
+  temporários, publicação durável, recuperação e caminhos protegidos.
+- Convite de uso único, token por dispositivo, hashes no servidor, revogação,
+  ACLs read/write, negação padrão e recarga que mantém última configuração válida.
+- Sync/watch com eventos e reconciliação periódica, backoff, snapshots e conflitos
+  preservados; diretórios vazios, exclusões e rename como exclusão/criação.
+- Histórico e restauração por revisão; retenção/lixeira configuráveis e coleta
+  offline com lock exclusivo e simulação; backups/restauração verificáveis.
+- Instalação --client/--server ou ambos; manual/licença/auxiliares em share/crewsync.
+  Objetivo: simples de instalar, manter e usar, além de rápido. Manual simples
+  primeiro e detalhes técnicos na última seção; sem exigir ajuste do PATH.
+- Site/Pages, pacotes e automação de publicação por tag, fonte compilável offline.
 
-## Evidências locais
+## Validação desta release
 
-Arch Linux, kernel 6.18.57-2-lts, Ryzen 5 8600G, Rust/Cargo 1.99.1.
-Dados sintéticos e temporários, sem alterar serviço, instalação ou dados reais.
+- `scripts/check-pilot.sh`: build/fmt/Clippy, 72 Rust locais, 5 HTTPS explícitos,
+  3 TLS, gerador de certificados, instalador e testes de preparação de publicação.
+- 4 testes de release: sincronização de arquitetura/versão/URLs, links obsoletos,
+  gates de licença/tag/aceite e Cargo.lock desatualizado. 3 testes do renderizador
+  do manual e 4 cenários de instalação passaram. Links/âncoras estáticos passaram.
+- Fonte local compilou offline com CARGO_HOME vazio. Pacote local e pacote
+  efetivamente baixado da release passaram checksum e instalação.
+- QA Chromium local: 390/768/1440px, navegação/âncoras/overflow/console passaram.
+- CI completa (incluindo navegador) da tag passou:
+  https://github.com/goncalvesl/crewsync/actions/runs/39817489511.
+- Packages da tag passou integralmente, inclusive publicação:
+  https://github.com/goncalvesl/crewsync/actions/runs/39817489697.
+  x86_64 e ARM64: build/fmt/Clippy/testes, HTTPS, ENOSPC real em tmpfs isolado,
+  instalador, pacote e checksum. Fonte: build offline sem cache de crates.
+- `git diff --check` passou. Nenhum serviço ou dado real foi alterado.
 
-- `scripts/check-pilot.sh`: build, fmt, Clippy, **72 Rust passaram**, 6 ignorados
-  por padrão; **5 HTTPS passaram** explicitamente, **3 TLS/certificados passaram**,
-  2 páginas verificadas e 1 regressão do renderizador do manual passou.
-- Regressão adicional do gerador de certificados: rejeita endereços inválidos,
-  inclusive entrada multilinha, antes de criar diretórios ou chaves.
-- HTTPS cobre dois clientes, conflitos, exclusões offline, revogação, TLS inválido,
-  reinício, restauração de duas versões e upload truncado com recuperação do worker.
-- Retenção/coleta: quantidade, idade, lixeira, prazo de graça, dados atuais,
-  falhas de publicação antes/depois da poda. Backup: locks, tokens, destino novo,
-  links e corrupção recusados, marcadores de conclusão/incompletude.
-- `cargo build --release --workspace --locked`: passou.
-- Build musl x86_64 em rust:alpine: passou; binário static-pie verificado por file.
-- `scripts/check-disk-full.sh target/musl-build/release/deps`: **1 ENOSPC real passou**
-  em tmpfs Docker descartável de 1 MiB; conteúdo confirmado preservado.
-- Binário estático executou check-config em BusyBox sem Python, Cargo ou glibc.
-- Pacote x86_64: checksum, extração, instalação em PREFIX temporário, --help,
-  --version e check-config passaram. Arquivos em target/packages/.
-- QA Chromium/Playwright: 390/768/1440px, navegação, âncoras, console e overflow
-  passaram; screenshots locais em target/site-*.png, inspeção visual realizada.
-- Benchmark real localhost: docs/reports/synthetic-local.json, 101 arquivos,
-  4.219.904 bytes de conteúdo. CPU/tempo/ru_maxrss de processos cliente; tráfego
-  no fio não medido. Não representa duas máquinas físicas ou promessa de desempenho.
-- `git diff --check`: passou.
+## Site e documentação
 
-## Publicação e pendências externas
+Manual, README e site têm downloads diretos da 0.1.0-alpha.1 para cada arquitetura,
+checksums e fonte. Site: https://goncalvesl.github.io/crewsync/.
+A atualização do site será verificada após enviar main; o código/tag já estão
+publicados e os assets foram conferidos antes dessa atualização.
 
-Site publicado: https://goncalvesl.github.io/crewsync/. Pages passou na execução
-[39804635227](https://github.com/goncalvesl/crewsync/actions/runs/39804635227);
-QA Chromium no endereço público também passou em 390/768/1440px.
+## Pendências e limites
 
-CI Rust (incluindo navegador) passou para o código 0f74d82:
-[39804635277](https://github.com/goncalvesl/crewsync/actions/runs/39804635277).
-Matriz Packages passou integralmente em x86_64 e ARM64, incluindo build, testes,
-HTTPS, ENOSPC, empacotamento, instalação e upload dos dois artefatos:
-[39804690647](https://github.com/goncalvesl/crewsync/actions/runs/39804690647).
-O primeiro empacotamento revelou dependência macOS ausente em cache Linux limpo;
-filtrar metadata pelo alvo corrigiu o erro, e a nova execução limpa comprova a
-regressão. Artefatos foram baixados para target/ci-packages/; o pacote x86_64 baixado
-teve checksum e instalação verificados novamente. Não equivalem a release pública.
+O piloto básico em duas máquinas foi confirmado pelo mantenedor. A matriz física
+ampliada e medições entre máquinas continuam pendentes; o registro físico permanece
+basic_pilot_accepted=true e extended_matrix_accepted=false. A solicitação expressa
+autoriza alpha pública de teste; versão estável continua bloqueada sem aceite
+físico. Decisão 0008 registra essa atualização do escopo, sem inventar resultados.
 
-Falta a matriz física ampliada/medições entre computadores; GPL-3.0-only já definida.
-Esses dados não foram inventados; docs/reports/physical-acceptance.json conserva
-basic_pilot_accepted=true e extended_matrix_accepted=false. A automação impede
-publicar uma tag -dev ou versão estável sem esses aceites. O mantenedor autorizou
-alpha pública para teste sem alterar o registro físico. Não há versão estável.
-
-Limites: servidor serial para rede privada, kernel >=5.6 com /proc/filesystem local;
-sem quotas totais, retomada parcial, compressão ou limpeza das cópias locais.
-Não rebaixar servidor após gravar histórico v2. Backup independente permanece
-necessário. Decisões e compatibilidade: 0005 e 0006.
+Linux kernel >=5.6 com /proc e filesystem local; rede privada, servidor serializado.
+Sem quotas totais, compactação, retomada parcial ou limpeza das cópias locais.
+Não rebaixar após histórico v2; backup independente necessário. Windows, GUI e
+Android ficam para etapas futuras. Benchmark localhost em docs/reports não equivale
+a ensaio físico ou promessa de desempenho.

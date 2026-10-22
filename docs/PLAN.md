@@ -73,7 +73,7 @@ manual gera artefatos para ensaio. Tag correspondente publica prerelease somente
 com LICENSE e metadados/downloads consistentes; estável exige aceite físico ampliado. Pacote x86_64 validado localmente sem Python
 no container mínimo; ARM64 passou pela matriz CI, incluindo execução nativa de testes e instalação.
 
-Publicação alpha em preparação por solicitação expressa; estável depende do aceite externo. Nenhuma
+0.1.0-alpha.1 publicada por solicitação expressa; estável depende do aceite externo. Nenhuma
 versão estável anunciada. Disponibilidade dos artefatos/CI em STATUS.md.
 
 ## Evolução posterior (fora da versão Linux atual)
