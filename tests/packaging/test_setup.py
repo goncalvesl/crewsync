@@ -8,6 +8,7 @@ import shutil
 import signal
 import socket
 import subprocess
+import sys
 import tarfile
 import tempfile
 import time
@@ -40,15 +41,69 @@ class Setup(unittest.TestCase):
             self.package = Path(os.environ['CREWSYNC_PACKAGE_DIR'])
         self.configs = []
 
-    def tearDown(self):
-        for config in self.configs:
-            pid = config / 'service.pid'
-            if pid.exists():
+    @staticmethod
+    def stop_service(pid):
+        # O serviço e seu worker podem sobreviver ao shell do assistente.
+        # Fixar identidades via pidfd e esperar ambos antes de remover os dados.
+        descriptors = []
+        def collect(process):
+            try:
+                descriptor = os.pidfd_open(process)
+            except ProcessLookupError:
+                return
+            descriptors.append(descriptor)
+            children = Path(f'/proc/{process}/task/{process}/children')
+            try:
+                for child in children.read_text().split():
+                    collect(int(child))
+            except FileNotFoundError:
+                pass
+        try:
+            collect(pid)
+            for descriptor in descriptors:
                 try:
-                    os.kill(int(pid.read_text()), signal.SIGTERM)
+                    signal.pidfd_send_signal(descriptor, signal.SIGTERM)
                 except ProcessLookupError:
                     pass
+            pending = list(descriptors)
+            deadline = time.monotonic() + 5
+            while pending:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise TimeoutError('Serviço de teste não encerrou')
+                ready, _, _ = select.select(pending, [], [], remaining)
+                pending = [item for item in pending if item not in ready]
+        finally:
+            for descriptor in descriptors:
+                os.close(descriptor)
+
+    def tearDown(self):
+        for config in reversed(self.configs):
+            pid = config / 'service.pid'
+            if pid.exists():
+                self.stop_service(int(pid.read_text()))
         self.temp.cleanup()
+
+    def test_service_cleanup_stops_and_waits_for_workers(self):
+        worker = "import signal; signal.signal(signal.SIGTERM, lambda *_: exit(0)); print('ready', flush=True); signal.pause()"
+        parent = "import subprocess, sys, signal; child = subprocess.Popen([sys.executable, '-c', sys.argv[1]], stdout=subprocess.PIPE, text=True); child.stdout.readline(); print(child.pid, flush=True); signal.pause()"
+        process = subprocess.Popen([sys.executable, '-c', parent, worker], stdout=subprocess.PIPE, text=True)
+        try:
+            ready, _, _ = select.select([process.stdout], [], [], 5)
+            self.assertTrue(ready, 'Worker de teste não iniciou')
+            worker_pid = int(process.stdout.readline())
+            descriptor = os.pidfd_open(worker_pid)
+            try:
+                self.stop_service(process.pid)
+                self.assertEqual(select.select([descriptor], [], [], 0)[0], [descriptor])
+                process.wait(timeout=5)
+            finally:
+                os.close(descriptor)
+        finally:
+            if process.poll() is None:
+                self.stop_service(process.pid)
+                process.wait(timeout=5)
+            process.stdout.close()
 
     def executable(self, name, text):
         path = self.mock / name
@@ -145,6 +200,21 @@ class Setup(unittest.TestCase):
                 break
             time.sleep(0.1)
         self.assertEqual((clients[1].parent / 'Plantas/second.txt').read_text(), 'another share')
+
+    def test_nohup_survives_hangup_before_exec(self):
+        # Reproduz fechamento do terminal antes de nohup instalar seu handler.
+        real_nohup = shutil.which('nohup')
+        self.executable('nohup', '#!/usr/bin/env python3\n' +
+                        "import os, signal, sys\nos.kill(os.getpid(), signal.SIGHUP)\n" +
+                        f"os.execv({real_nohup!r}, [{real_nohup!r}] + sys.argv[1:])\n")
+        config = self.root / 'hangup server'
+        self.configs.append(config)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', port, 'ana', 'Obras'])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        os.kill(int((config / 'service.pid').read_text()), 0)
 
     def test_remote_domain_certificate_and_endpoint_without_public_dns(self):
         config = self.root / 'remote config'

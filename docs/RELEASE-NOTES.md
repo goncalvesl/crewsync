@@ -1,4 +1,4 @@
-# CrewSync 0.1.0-alpha.5
+# CrewSync 0.1.0-alpha.6
 
 O cliente pergunta somente a raiz local e sincroniza automaticamente todas as
 pastas às quais o usuário tem acesso. Por exemplo, ao escolher `/home/voce/Terna`,
@@ -29,6 +29,19 @@ atualize o binário e mova a pasta individual inteira (incluindo .crewsync) para
 RAIZ/NOME_DO_COMPARTILHAMENTO. Ajuste o serviço para watch-root. Não execute os dois
 modos sobre a mesma árvore. O assistente preserva configurações existentes e
 recusa reinstalação sobre elas. Veja o procedimento técnico no manual.
+
+## Inicialização sem systemd
+
+O fallback nohup herda a proteção contra SIGHUP antes de iniciar o processo.
+Fechar o terminal imediatamente após o assistente não encerra mais o cliente
+nessa janela. Uma regressão força o sinal antes de nohup executar.
+
+## Limpeza dos testes
+
+Os testes de instalação encerram e aguardam o serviço e seus workers antes de
+remover os diretórios temporários. Uma regressão verifica a espera pelos filhos.
+Isso corrige a corrida encontrada na validação ARM64 da tag alpha.5, que não
+chegou a publicar uma release. A tag permanece preservada.
 
 ## Validação e limites
 

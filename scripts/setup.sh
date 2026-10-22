@@ -106,8 +106,11 @@ if [ "$manager" = systemd ]; then
     systemctl --user daemon-reload
     systemctl --user enable --now "$service"
 else
+    # Herdar HUP ignorado antes de iniciar: o terminal pode fechar antes de nohup executar.
+    trap '' HUP
     nohup "$config/start.sh" > "$config/service.log" 2>&1 </dev/null &
     echo "$!" > "$config/service.pid"
+    trap - HUP
 fi
 if [ "$role" = server ]; then
     ready=no

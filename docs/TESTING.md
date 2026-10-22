@@ -130,3 +130,16 @@ CA correta/incorreta e nome incorreto). test_setup.py inclui instalação com do
 não resolvível, verificação SAN/hostname e HTTPS/SNI com curl --resolve; clientes
 Rust do cenário de sincronização usam URL DNS localhost. Não alterar DNS público
 ou /etc/hosts nos testes e não afirmar validação externa a partir de loopback.
+
+## Raiz local e processos do assistente
+
+Duas regressões Rust exercitam múltiplos compartilhamentos em subpastas, isolamento,
+perda de acesso com cópia local preservada, arquivos avulsos, links e layout legado.
+O teste real do assistente usa dois clientes e adiciona um compartilhamento durante
+watch, verificando descoberta sem reconfiguração e ausência da pasta sem acesso.
+
+O assistente tem sete cenários, incluindo HUP enviado antes de nohup executar e
+limpeza que encerra serviço e workers, aguardando pidfds antes de apagar o fixture.
+A regressão HUP foi conferida contra o script anterior (falha esperada) e o script
+corrigido. Os testes auxiliares exigem Linux com /proc e suporte a pidfd; isso não
+adiciona dependências aos binários distribuídos.

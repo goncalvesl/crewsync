@@ -1,6 +1,6 @@
 # Estado e retomada
 
-## Release em publicação — 0.1.0-alpha.5
+## Release em publicação — 0.1.0-alpha.6
 
 Raiz local automática: sync-root/watch-root consultam os compartilhamentos
 permitidos a cada ciclo e sincronizam RAIZ/NOME. Assistente pergunta somente a raiz.
@@ -8,15 +8,24 @@ Comandos individuais preservados; cópias sem acesso ficam locais, arquivos avul
 não são enviados. Migração do layout antigo é explícita. Decisão 0010, manual,
 README, notas e exemplo systemd atualizados; protocolo compatível com alpha.4.
 
-Rede e escrita Git liberadas na retomada. Alpha.5 conferida livre no GitHub.
-prepare-release.py sincronizou versões, lock, metadados e downloads. Enviar a tag
-antes de main; só expor links após conferir os oito assets públicos e hashes.
+Alpha.5 permanece tag imutável em 8a2808f, sem release publicada. Packages
+39847893884: x86_64 e fonte passaram; ARM64 detectou corrida no tearDown do teste
+(removia diretório antes do worker encerrar). Rust 39847893883 passou. Corrigida
+limpeza com pidfd: sinaliza serviço e filhos e espera encerramento; regressão nova.
+Repetições detectaram também corrida nohup/HUP: o processo podia morrer antes de
+nohup executar ao fechar o PTY. setup agora herda HUP ignorado antes de iniciar;
+regressão força o sinal antes do exec e falha contra o script anterior. Sete
+cenários do assistente passam. A próxima publicação é alpha.6. Não enviar main
+antes de verificar os assets.
 
-Validação local: scripts/check-pilot.sh passou (build/fmt/Clippy, 74 Rust, cinco
-HTTPS, seis TLS reais, dois testes de entrada de certificado, site, instalação,
-cinco cenários do assistente e quatro gates de release). Teste adicional do
-assistente verifica novo compartilhamento descoberto sem reconfiguração e pasta
-não autorizada ausente. Pacotes musl x86_64/ARM64 e fonte offline pendem da CI.
+Validação anterior local: check-pilot completo, 74 Rust, cinco HTTPS, seis TLS,
+instalação/site/assistente/gates e Chromium 390/768/1440px passaram. O assistente
+verifica descoberta de novo compartilhamento sem reconfiguração. Compatibilidade
+com servidor alpha.4 passou com dois clientes após timeout na primeira tentativa.
+Alpha.6: check-pilot completo passou novamente, com sete testes do assistente.
+Três repetições adicionais com dois clientes passaram após corrigir HUP. A
+regressão HUP falhou contra o script anterior e passou no novo. Pacotes das duas
+arquiteturas e fonte offline serão conferidos na CI antes de publicar.
 
 ## Versão pública atual
 
