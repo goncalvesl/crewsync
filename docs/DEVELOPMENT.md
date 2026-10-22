@@ -9,7 +9,7 @@ rustup toolchain install stable --profile minimal --component rustfmt --componen
 rustup default stable
 ```
 
-Também é possível usar os pacotes da distribuição que forneçam essas ferramentas e suportem a edição 2024. Esta entrega foi validada em Linux com rustc e Cargo 1.99.1; não há MSRV definida. A CI usa Ubuntu 24.04 x86_64 e stable. O servidor usa serde/serde_json para manifestos e rustix para flock; testes usam tempfile. O armazenamento exige GNU coreutils com `/usr/bin/sha256sum`; o parser TOML temporário usa `/usr/bin/python3` >= 3.11 com `tomllib` e `ssl`, sem pacotes Python externos. OpenSSL CLI gera certificados e executa os testes TLS. O cliente exige kernel Linux >= 5.6 e `/proc` montado.
+Também é possível usar os pacotes da distribuição que forneçam essas ferramentas e suportem a edição 2024. Validado em Arch com Rust/Cargo 1.99.1 e em rust:alpine para musl. Sem MSRV prometida; a CI usa stable. O runtime usa toml, sha2 e rustls em Rust, sem Python/coreutils/OpenSSL. Desenvolvimento e testes auxiliares exigem Python padrão e OpenSSL CLI para certificados. Cliente exige kernel >=5.6 e /proc. Veja [DISTRIBUTION.md](DISTRIBUTION.md).
 
 ## Compilar e verificar
 

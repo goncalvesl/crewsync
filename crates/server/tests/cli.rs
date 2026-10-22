@@ -13,7 +13,7 @@ fn help_reports_current_limitations() {
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("saída UTF-8");
     assert!(stdout.contains("Uso: crewsync-server"));
-    assert!(stdout.contains("ainda não implementadas"));
+    assert!(stdout.contains("maintain"));
     assert!(output.stderr.is_empty());
 }
 

@@ -7,7 +7,11 @@ if [ "$#" -ne 2 ]; then
 fi
 cert_dir=$1
 server_ip=$2
-/usr/bin/python3 -I -c 'import ipaddress, sys; ipaddress.IPv4Address(sys.argv[1])' "$server_ip"
+# Validar IPv4 com shell/awk, sem dependência Python no computador do operador.
+printf '%s\n' "$server_ip" | awk -F. 'NF != 4 {exit 1} {for(i=1;i<=4;i++) if ($i !~ /^[0-9]+$/ || length($i)>3 || $i+0>255 || (length($i)>1 && substr($i,1,1)=="0")) exit 1}' || {
+    echo "IPv4 inválido" >&2
+    exit 2
+}
 umask 077
 mkdir -m 700 "$cert_dir"
 openssl req -x509 -newkey rsa:3072 -sha256 -nodes -days 365 \

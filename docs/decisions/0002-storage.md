@@ -1,5 +1,6 @@
 # 0002 — Núcleo de armazenamento Linux, formato 1
 
+> Atualização: dependências temporárias e operação foram substituídas pela [decisão 0006](0006-operation-native-distribution.md). Este registro preserva o contexto histórico.
 ## Decisão
 
 Objetos raw imutáveis identificados por SHA-256 (64 caracteres hexadecimais

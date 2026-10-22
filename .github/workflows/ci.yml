@@ -18,8 +18,8 @@ jobs:
           rustup default stable
       - name: Check system dependencies
         run: |
-          test -x /usr/bin/sha256sum
-          /usr/bin/python3 -I -c 'import tomllib, ssl'
+          /usr/bin/python3 -I -c 'import ssl'
+          cc --version
           openssl version
       - run: cargo build --workspace --locked
       - run: cargo fmt --all -- --check
@@ -30,3 +30,16 @@ jobs:
       - name: HTTPS pilot with server and two clients
         timeout-minutes: 3
         run: cargo test -p crewsync-server --test pilot --locked -- --ignored
+
+      - run: python3 scripts/build-site.py
+      - run: python3 tests/site/check.py target/site
+      - run: python3 tests/site/test_build.py
+      - name: Browser QA
+        run: |
+          npm install --prefix /tmp/crewsync-browser playwright@1.64.1
+          node /tmp/crewsync-browser/node_modules/playwright/cli.js install --with-deps chromium
+          python3 scripts/build-site.py --output target/site-root/crewsync
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory target/site-root > /tmp/crewsync-site.log 2>&1 &
+          site_pid=$!
+          trap 'kill "$site_pid"' EXIT
+          PLAYWRIGHT_MODULE=/tmp/crewsync-browser/node_modules/playwright node tests/site/browser.cjs

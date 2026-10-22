@@ -13,3 +13,7 @@ cargo run -p crewsync-server -- check-config config/server.example.toml
 O parsing e a validação deste exemplo são cobertos pelos testes do servidor.
 Certificados e ativação por dispositivo estão descritos em [PILOT.md](../docs/PILOT.md).
 Unidades systemd de exemplo ficam em `systemd/`; precisam de adaptação local.
+
+O parser TOML agora é nativo em Rust. `[server.retention]` controla a manutenção
+administrativa offline (defaults 30 dias de histórico/lixeira e 10 versões).
+`maintain CONFIG` simula; `--apply` aplica com servidor parado. Consulte o manual.

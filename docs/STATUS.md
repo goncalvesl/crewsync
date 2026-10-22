@@ -1,83 +1,76 @@
 # Estado e retomada
 
-## Implementado para o piloto
+## Escopo e autorização
 
-- Workspace Rust Linux, armazenamento raw por SHA-256, deduplicação, manifestos,
-  revisões, tombstones, publicação durável e recuperação de temporários.
-- TOML estrito, ACLs read/write, recarga inválida mantém última configuração válida.
-- Convites temporários de uso único, token por dispositivo, listagem/revogação;
-  somente hashes no servidor. Ativação persiste consumo e dispositivo juntos.
-- HTTPS obrigatório com validação de CA/hostname, worker autenticado e autorizado
-  em cada operação. Recarga de configuração antes de cada requisição.
-- Cliente `activate`, `shares`, `sync` e `watch`, baseline por revisão, snapshots
-  de upload, downloads verificados, diretórios vazios, exclusões e rename como
-  exclusão/criação. Conflitos locais preservados fora da árvore sincronizada.
-- Proteção de caminhos por descritores/openat2 no cliente; arquivos especiais e
-  links recusados; bloqueio por pasta, temporários e cópias em `.crewsync/`.
-- Gerador de certificados, exemplos systemd e procedimento de backup. Roteiro
-  completo: [PILOT.md](PILOT.md); decisão [0004-pilot.md](decisions/0004-pilot.md).
-- Binários otimizados compilados em `target/release/crewsync-server` e
-  `target/release/crewsync-client`. Não há release pública ou licença atribuída.
+O usuário confirmou o piloto básico em dois computadores e autorizou executar
+todas as etapas restantes sem paradas. Implementação Linux e preparação de
+operação/site/distribuição foram realizadas. Windows/GUI/Android seguem como
+evolução posterior do escopo definido. Licença foi perguntada ao mantenedor;
+sem resposta até este registro, não foi atribuída por suposição.
 
-## Validação realizada e bloqueio de rede
+## Implementado
 
-Linux, Rust/Cargo 1.99.1, Python 3.14.8 e OpenSSL. Executados com sucesso:
+- Armazenamento raw SHA-256 deduplicado, revisões/tombstones, streaming, temporários,
+  publicação durável e recuperação. Limite de profundidade validado no protocolo.
+- HTTPS/TOML/SHA-256 nativos em Rust (rustls, toml, sha2); sem Python, sha256sum,
+  Cargo ou OpenSSL no runtime. Pontes temporárias removidas, protocolo preservado.
+- Convites de uso único, token por dispositivo, hashes no servidor, revogação,
+  ACLs read/write, deny padrão e recarga que mantém última configuração válida.
+- Sync e watch por eventos notify com reconciliação periódica; fila limitada,
+  debounce finito, ignorando metadata e symlinks; fallback periódico e backoff.
+- Histórico e restauração como nova revisão; retenção configurável de versões e
+  lixeira no servidor; histórico v1 legível com graça, v2 com datas de arquivamento.
+- `maintain CONFIG [--apply]`: simulação, poda e coleta de objetos sem referências,
+  inclusive compartilhamentos retirados da configuração; requer servidor parado
+  e lock exclusivo. Publica metadados duráveis antes de remover objetos. Tombstones
+  atuais nunca são coletados. Cópias locais não são limpas automaticamente.
+- Backup com locks de armazenamento/autenticação, validação e marcador ao final;
+  restauração em destino novo, sem sobrescrita. TLS deve ser copiado separadamente.
+- Logs sem credenciais/usuário/caminho/conteúdo; systemd, manual de atualização,
+  diagnóstico e recuperação de desastre. Veja MANUAL.md e OPERATIONS.md.
+- Site estático responsivo, manual gerado de Markdown, workflows Pages e Packages;
+  pacotes musl x86_64/ARM64, checksum, avisos de dependências, smoke de instalação.
+  Publicação por tag exige licença, versão correspondente e aceite físico ampliado.
 
-- `cargo build --workspace --locked --offline`
-- `cargo test --workspace --locked --offline`: **58 passaram, 3 ignorados**.
-- `cargo fmt --all -- --check`
-- `cargo clippy --workspace --all-targets --locked --offline -- -D warnings`
-- `/usr/bin/python3 -I tests/e2e/tls_memory.py`: **3 passaram**, incluindo gerador
-  real de certificados, handshake válido e rejeição de CA/hostname incorretos.
-- `cargo build --release --workspace --locked --offline`
-- `target/release/crewsync-server check-config config/server.example.toml`
-- `target/release/crewsync-client --version`
-- `git diff --check`
+## Evidências locais
 
-Inicialmente o sandbox proibia sockets e escrita em `.git`. Após o usuário
-atualizar a sessão para acesso completo, foi executado com sucesso:
+Arch Linux, kernel 6.18.57-2-lts, Ryzen 5 8600G, Rust/Cargo 1.99.1.
+Dados sintéticos e temporários, sem alterar serviço, instalação ou dados reais.
 
-- `cargo test -p crewsync-server --test pilot --locked --offline -- --ignored`:
-  **3 testes HTTPS passaram**, com servidor e dois clientes em processos separados.
-  Cobrem convergência, conflitos, exclusões offline, reinício, permissões,
-  revogação, symlinks e rejeição de TLS incorreto.
+- `scripts/check-pilot.sh`: build, fmt, Clippy, **72 Rust passaram**, 6 ignorados
+  por padrão; **5 HTTPS passaram** explicitamente, **3 TLS/certificados passaram**,
+  2 páginas verificadas e 1 regressão do renderizador do manual passou.
+- HTTPS cobre dois clientes, conflitos, exclusões offline, revogação, TLS inválido,
+  reinício, restauração de duas versões e upload truncado com recuperação do worker.
+- Retenção/coleta: quantidade, idade, lixeira, prazo de graça, dados atuais,
+  falhas de publicação antes/depois da poda. Backup: locks, tokens, destino novo,
+  links e corrupção recusados, marcadores de conclusão/incompletude.
+- `cargo build --release --workspace --locked`: passou.
+- Build musl x86_64 em rust:alpine: passou; binário static-pie verificado por file.
+- `scripts/check-disk-full.sh target/musl-build/release/deps`: **1 ENOSPC real passou**
+  em tmpfs Docker descartável de 1 MiB; conteúdo confirmado preservado.
+- Binário estático executou check-config em BusyBox sem Python, Cargo ou glibc.
+- Pacote x86_64: checksum, extração, instalação em PREFIX temporário, --help,
+  --version e check-config passaram. Arquivos em target/packages/.
+- QA Chromium/Playwright: 390/768/1440px, navegação, âncoras, console e overflow
+  passaram; screenshots locais em target/site-*.png, inspeção visual realizada.
+- Benchmark real localhost: docs/reports/synthetic-local.json, 101 arquivos,
+  4.219.904 bytes de conteúdo. CPU/tempo/ru_maxrss de processos cliente; tráfego
+  no fio não medido. Não representa duas máquinas físicas ou promessa de desempenho.
+- `git diff --check`: passou.
 
-A correção de diagnóstico transmite um erro local sanitizado no handshake do
-worker. Inicialização agora diferencia configuração/raiz/estado, TLS ausente ou
-inválido, porta ocupada e armazenamento em uso. O terceiro teste HTTPS cobre
-esses erros, incluindo raiz existente com modo 0755 (exige 0700), sem expor valores
-de configuração. A validação de esquema sozinha não verifica permissões em disco.
+## Publicação e pendências externas
 
-Os testes permanecem `ignored` por padrão para suportar ambientes restritos;
-a CI e `scripts/check-pilot.sh` executam-nos explicitamente. Não houve teste em
-duas máquinas físicas nem execução da CI do GitHub nesta sessão.
+Site preparado para https://goncalvesl.github.io/crewsync/; estado de implantação
+será registrado após verificar a execução remota. Workflows e fontes prontos.
+Artefatos CI não equivalem a release publicada. ARM64 requer execução da matriz.
 
-A ativação agora confirma o convite com Enter, sem aguardar EOF/Ctrl-D, e mostra
-progresso enquanto contata o servidor. Três regressões cobrem leitor ainda aberto,
-entrada limitada/CRLF/EOF e processo CLI com stdin mantido aberto, sem ecoar código.
+Faltam escolha da licença e matriz física ampliada/medições entre computadores.
+Esses dados não foram inventados; docs/reports/physical-acceptance.json conserva
+basic_pilot_accepted=true e extended_matrix_accepted=false. A automação impede
+publicar uma tag -dev ou release sem esses aceites. Não há versão estável.
 
-## Próxima ação concreta
-
-Nas máquinas do piloto, executar `scripts/check-pilot.sh` e seguir [PILOT.md](PILOT.md) com dois Linux e dados sintéticos: máquina 1
-servidor+cliente, máquina 2 cliente. Registrar distribuição, kernel, cenários,
-volume de dados e resultados. Corrigir qualquer falha do teste TCP antes de usar
-arquivos reais. Não considerar aceites de rede/piloto encerrados antes disso.
-
-## Limites e pendências
-
-- Sem crates HTTP/TLS/TOML disponíveis no cache e sem DNS para crates.io: ponte
-  HTTPS e parser TOML temporários usam Python padrão embarcado, sem shell.
-  SHA-256 usa `/usr/bin/sha256sum`. Migrar para bibliotecas Rust validadas depois.
-- Cliente exige Linux >= 5.6 com `/proc`, Python >= 3.11 com ssl/tomllib, coreutils;
-  OpenSSL CLI para certificados/testes. Servidor serializado para rede privada,
-  sem promessa de endurecimento HTTP público. Sem observador de eventos: watch
-  usa reconciliação periódica com atraso limitado em falhas transitórias.
-- Raiz interna privada 0700, sem modificações externas durante operações. Snapshot
-  JSON reescrito e objetos verificados; desempenho não medido. Backups requerem
-  processos parados. Nenhum ensaio real de disco cheio/queda de energia foi feito.
-- Etapa 5 incompleta: sem histórico consultável, restauração/retencão configurável,
-  quotas ou coleta. Cópias locais e objetos órfãos são mantidos sem limpeza
-  automática; acompanhar espaço livre. Histórico não substitui backup.
-- Ainda pendentes: medições/piloto físico (etapa 6), site, distribuição, licença,
-  definição de arquiteturas Linux e suporte Windows/Android. Alterações anteriores
-  do workspace preservadas; não houve publicação nem alteração real de firewall.
+Limites: servidor serial para rede privada, kernel >=5.6 com /proc/filesystem local;
+sem quotas totais, retomada parcial, compressão ou limpeza das cópias locais.
+Não rebaixar servidor após gravar histórico v2. Backup independente permanece
+necessário. Decisões e compatibilidade: 0005 e 0006.

@@ -2,10 +2,11 @@
 use crate::{access::AuthorizedStore, auth::AuthStore, config::Config};
 use crewsync_protocol::{Frame, Operation, Response, invalid, transport};
 use std::fs::File;
+use std::io::BufRead;
 use std::io::{self, BufReader, Read, Write};
-use std::os::unix::process::CommandExt;
+use std::net::TcpListener;
 use std::path::Path;
-use std::process::Command;
+use std::process::{Child, ChildStdin, ChildStdout, Command, Stdio};
 
 // EOF antes do tamanho declarado precisa falhar antes de publicar o manifesto.
 struct ExactBody<'a, R> {
@@ -124,6 +125,13 @@ pub fn worker(path: &Path) -> io::Result<()> {
             match frame.request.operation {
                 Operation::Shares => json(&store.shares(&user)),
                 Operation::Manifest { share } => json(&store.manifest(&user, &share)?),
+                Operation::History { share, path } => json(&store.history(&user, &share, &path)?),
+                Operation::Restore {
+                    share,
+                    path,
+                    revision,
+                    base,
+                } => json(&store.restore(&user, &share, &path, revision, base)?),
                 Operation::Get { share, path } => {
                     let file = store.file(&user, &share, &path)?;
                     let size = file.metadata()?.len();
@@ -191,15 +199,145 @@ pub fn worker(path: &Path) -> io::Result<()> {
     }
 }
 
+struct WorkerProcess {
+    child: Child,
+    input: ChildStdin,
+    output: BufReader<ChildStdout>,
+}
+impl Drop for WorkerProcess {
+    fn drop(&mut self) {
+        let _ = self.child.kill();
+        let _ = self.child.wait();
+    }
+}
+impl WorkerProcess {
+    fn open(config: &Path) -> io::Result<Self> {
+        let mut child = Command::new(std::env::current_exe()?)
+            .arg("worker")
+            .arg(config)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .stderr(Stdio::inherit())
+            .spawn()?;
+        let input = child
+            .stdin
+            .take()
+            .ok_or_else(|| invalid("worker indisponível"))?;
+        let output = BufReader::new(
+            child
+                .stdout
+                .take()
+                .ok_or_else(|| invalid("worker indisponível"))?,
+        );
+        let mut worker = Self {
+            child,
+            input,
+            output,
+        };
+        let line = transport::read_line(&mut worker.output)?;
+        if line != b"READY\n" {
+            let error: serde_json::Value =
+                serde_json::from_slice(&line).map_err(|_| invalid("worker não iniciou"))?;
+            return Err(invalid(
+                error["startup_error"]
+                    .as_str()
+                    .unwrap_or("worker não iniciou"),
+            ));
+        }
+        Ok(worker)
+    }
+    fn respond(&mut self, client: &mut (impl BufRead + Write)) -> io::Result<()> {
+        let head = transport::read_http_head(client)?;
+        let length = transport::request_length(&head)?;
+        if length > (1u64 << 40) + crewsync_protocol::MAX_FRAME {
+            return Err(invalid("corpo longo demais"));
+        }
+        let line = transport::read_line(&mut client.take(length))?;
+        let frame: Frame = serde_json::from_slice(&line).map_err(|_| invalid("frame inválido"))?;
+        if frame.body_bytes.checked_add(line.len() as u64) != Some(length) {
+            return Err(invalid("tamanho HTTP inconsistente"));
+        }
+        self.input.write_all(&line)?;
+        if io::copy(&mut client.take(frame.body_bytes), &mut self.input)? != frame.body_bytes {
+            return Err(invalid("upload interrompido"));
+        }
+        self.input.flush()?;
+        let response: Response = serde_json::from_slice(&transport::read_line(&mut self.output)?)
+            .map_err(|_| invalid("worker inválido"))?;
+        write!(
+            client,
+            "HTTP/1.1 {} Result\r\nContent-Length: {}\r\nConnection: close\r\nContent-Type: application/octet-stream\r\n\r\n",
+            response.status, response.length
+        )?;
+        if io::copy(&mut self.output.by_ref().take(response.length), client)? != response.length {
+            return Err(invalid("resposta interrompida"));
+        }
+        client.flush()?;
+        // Somente códigos e métricas; sem token, código, usuário, caminho ou conteúdo.
+        eprintln!(
+            "event=request status={} response_bytes={}",
+            response.status, response.length
+        );
+        Ok(())
+    }
+}
+
+// BufReader normalmente não implementa Write; conservar o buffer de leitura
+// enquanto as respostas são escritas na mesma conexão TLS.
+struct Duplex<T>(BufReader<T>);
+impl<T: Read> Read for Duplex<T> {
+    fn read(&mut self, b: &mut [u8]) -> io::Result<usize> {
+        self.0.read(b)
+    }
+}
+impl<T: Read> BufRead for Duplex<T> {
+    fn fill_buf(&mut self) -> io::Result<&[u8]> {
+        self.0.fill_buf()
+    }
+    fn consume(&mut self, n: usize) {
+        self.0.consume(n);
+    }
+}
+impl<T: Read + Write> Write for Duplex<T> {
+    fn write(&mut self, b: &[u8]) -> io::Result<usize> {
+        self.0.get_mut().write(b)
+    }
+    fn flush(&mut self) -> io::Result<()> {
+        self.0.get_mut().flush()
+    }
+}
+
 pub fn serve(config: &Path, host: &str, port: &str, cert: &Path, key: &Path) -> io::Result<()> {
-    let binary = std::env::current_exe()?;
-    // Substituir o supervisor evita deixar uma ponte órfã ao encerrar este PID.
-    Err(Command::new("/usr/bin/python3")
-        .args(["-I", "-c", transport::BRIDGE, "serve"])
-        .arg(binary)
-        .arg(config)
-        .args([host, port])
-        .arg(cert)
-        .arg(key)
-        .exec())
+    let tls = transport::TlsServer::new(cert, key).map_err(|e| {
+        if e.kind() == io::ErrorKind::NotFound {
+            invalid("Falha ao iniciar HTTPS: certificado ou chave TLS não encontrado")
+        } else {
+            invalid("Falha ao iniciar HTTPS: certificado/chave TLS inválidos ou incompatíveis")
+        }
+    })?;
+    let listener = TcpListener::bind(format!("{host}:{port}")).map_err(|e| {
+        io::Error::new(
+            e.kind(),
+            "Falha ao iniciar HTTPS: porta/endereço indisponível ou já está em uso",
+        )
+    })?;
+    let mut worker = WorkerProcess::open(config)
+        .map_err(|e| invalid(&format!("Falha ao iniciar HTTPS: {e}")))?;
+    println!("CrewSync HTTPS ready {}", listener.local_addr()?.port());
+    io::stdout().flush()?;
+    for tcp in listener.incoming() {
+        let tcp = tcp?;
+        let mut client = Duplex(BufReader::new(tls.accept(tcp)?));
+        if worker.respond(&mut client).is_err() {
+            eprintln!("event=request_failed");
+            let _ = client
+                .write_all(b"HTTP/1.1 400 Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+            let _ = client.flush();
+            // Um corpo truncado pode deixar o IPC desalinhado. Matar antes de
+            // reabrir garante liberação do lock e recuperação de temporários.
+            drop(worker);
+            worker = WorkerProcess::open(config)?;
+        }
+    }
+    Ok(())
 }

@@ -1,5 +1,6 @@
 # 0003 — Configuração e autorização local, formato 1
 
+> Atualização: dependências temporárias e operação foram substituídas pela [decisão 0006](0006-operation-native-distribution.md). Este registro preserva o contexto histórico.
 ## Contexto e decisão
 
 Primeira parte da etapa 3: configurar usuários, compartilhamentos e permissões

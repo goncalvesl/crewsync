@@ -1,11 +1,11 @@
 //! Primitivas Linux para estado interno privado e conteúdo em streaming.
 use crate::invalid;
 use serde::{Serialize, de::DeserializeOwned};
+use sha2::{Digest, Sha256};
 use std::fs::{self, File, OpenOptions};
 use std::io::{self, Read, Seek, Write};
 use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt, PermissionsExt};
 use std::path::Path;
-use std::process::{Command, Stdio};
 
 pub fn private_dir(path: &Path) -> io::Result<()> {
     match fs::DirBuilder::new().mode(0o700).create(path) {
@@ -72,45 +72,20 @@ pub fn random_hex(bytes: usize) -> io::Result<String> {
 pub fn hash_file(file: &File) -> io::Result<String> {
     let mut input = file.try_clone()?;
     input.rewind()?;
-    let output = Command::new("/usr/bin/sha256sum")
-        .stdin(Stdio::from(input))
-        .output()?;
-    if !output.status.success() {
-        return Err(invalid("falha SHA-256"));
+    let mut hasher = Sha256::new();
+    let mut buffer = [0; 64 * 1024];
+    loop {
+        let count = input.read(&mut buffer)?;
+        if count == 0 {
+            break;
+        }
+        hasher.update(&buffer[..count]);
     }
-    let hash = std::str::from_utf8(
-        output
-            .stdout
-            .get(..64)
-            .ok_or_else(|| invalid("saída SHA-256 inválida"))?,
-    )
-    .map_err(|_| invalid("saída SHA-256 inválida"))?
-    .to_owned();
-    validate_hash(&hash)?;
-    Ok(hash)
+    Ok(format!("{:x}", hasher.finalize()))
 }
 
 pub fn hash_secret(value: &str) -> io::Result<String> {
-    let mut child = Command::new("/usr/bin/sha256sum")
-        .stdin(Stdio::piped())
-        .stdout(Stdio::piped())
-        .spawn()?;
-    let input_result = match child.stdin.take() {
-        Some(mut stdin) => stdin.write_all(value.as_bytes()),
-        None => Err(invalid("entrada SHA-256 indisponível")),
-    };
-    let output = child.wait_with_output()?;
-    input_result?;
-    if !output.status.success() {
-        return Err(invalid("falha SHA-256"));
-    }
-    let hash = String::from_utf8(output.stdout).map_err(|_| invalid("saída SHA-256 inválida"))?;
-    let hash = hash
-        .get(..64)
-        .ok_or_else(|| invalid("saída SHA-256 inválida"))?
-        .to_owned();
-    validate_hash(&hash)?;
-    Ok(hash)
+    Ok(format!("{:x}", Sha256::digest(value.as_bytes())))
 }
 
 pub fn validate_hash(hash: &str) -> io::Result<()> {

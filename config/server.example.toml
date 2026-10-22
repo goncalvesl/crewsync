@@ -1,10 +1,16 @@
-# Exemplo sintético, sem credenciais. Requer Python >= 3.11 com tomllib.
+# Exemplo sintético, sem credenciais. Parser TOML nativo em Rust.
 # Validar: cargo run -p crewsync-server -- check-config config/server.example.toml
 version = 1
 
 [server]
 storage_root = "/var/lib/crewsync"
 max_upload_bytes = 1_073_741_824 # 1 GiB por envio; não é quota total
+
+# Aplicada com crewsync-server maintain CONFIG --apply, com serviço parado.
+[server.retention]
+history_days = 30
+previous_versions = 10
+trash_days = 30
 
 [users.ana]
 enabled = true

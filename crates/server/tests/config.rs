@@ -124,3 +124,23 @@ fn documented_user_and_share_limits_are_enforced() {
         assert!(Config::parse(source.as_bytes()).is_err());
     }
 }
+
+#[test]
+fn retention_is_bounded_and_unknown_fields_are_rejected() {
+    for value in [
+        "history_days=0",
+        "history_days=36501",
+        "previous_versions=0",
+        "previous_versions=1001",
+        "trash_days=-1",
+        "typo=30",
+    ] {
+        let doc = format!(
+            "version=1\n[server]\nstorage_root='/tmp/crewsync'\n[server.retention]\n{value}\n"
+        );
+        assert!(
+            crewsync_server::config::Config::parse(doc.as_bytes()).is_err(),
+            "{value}"
+        );
+    }
+}

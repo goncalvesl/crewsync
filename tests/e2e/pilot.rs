@@ -62,6 +62,8 @@ impl Pilot {
                 "/CN=localhost",
                 "-addext",
                 "subjectAltName=DNS:localhost",
+                "-addext",
+                "basicConstraints=critical,CA:FALSE",
                 "-keyout",
             ])
             .arg(&key)
@@ -361,5 +363,108 @@ fn startup_errors_report_tls_port_configuration_and_private_storage() {
     assert!(
         message.contains("configuração") && message.contains("esquema"),
         "{message}"
+    );
+}
+
+#[test]
+#[ignore = "requer sockets TCP: executar com --ignored; CI executa"]
+fn history_restores_deleted_and_changed_files_to_both_clients() {
+    let pilot = Pilot::new();
+    let (_server, url) = pilot.start();
+    let first = pilot.activate(&url, "ana", "history-pc1");
+    let second = pilot.activate(&url, "ana", "history-pc2");
+    let reader = pilot.activate(&url, "reader", "history-reader");
+    let a = pilot.folder("a");
+    let b = pilot.folder("b");
+    fs::write(a.join("planta.txt"), b"original").unwrap();
+    success(sync(&first, &a));
+    success(sync(&second, &b));
+    fs::write(a.join("planta.txt"), b"alterada").unwrap();
+    success(sync(&first, &a));
+    success(sync(&second, &b));
+    fs::remove_file(a.join("planta.txt")).unwrap();
+    success(sync(&first, &a));
+    success(sync(&second, &b));
+    let history = success(run(Command::new(client_bin())
+        .arg("history")
+        .arg(&reader)
+        .args(["Obras", "planta.txt"])));
+    assert_eq!(history.lines().count(), 3);
+    assert!(history.starts_with("1\tarquivo"), "{history}");
+    assert!(history.contains("3\texcluído"), "{history}");
+    let restore = |session: &Path, revision: &str, base: &str| {
+        run(Command::new(client_bin())
+            .arg("restore")
+            .arg(session)
+            .args(["Obras", "planta.txt", revision, base]))
+    };
+    assert!(!restore(&reader, "1", "3").status.success());
+    assert!(!restore(&first, "1", "2").status.success());
+    assert!(!restore(&first, "3", "3").status.success());
+    assert!(success(restore(&first, "1", "3")).contains("revisão 4"));
+    success(sync(&first, &a));
+    success(sync(&second, &b));
+    assert_eq!(fs::read(a.join("planta.txt")).unwrap(), b"original");
+    assert_eq!(fs::read(b.join("planta.txt")).unwrap(), b"original");
+    // Restaurar uma versão alterada também cria uma revisão, sem reenviar bytes.
+    assert!(success(restore(&second, "2", "4")).contains("revisão 5"));
+    success(sync(&first, &a));
+    success(sync(&second, &b));
+    assert_eq!(fs::read(a.join("planta.txt")).unwrap(), b"alterada");
+    assert_eq!(fs::read(b.join("planta.txt")).unwrap(), b"alterada");
+    assert_eq!(
+        fs::read_dir(pilot.root.join("store/objects"))
+            .unwrap()
+            .count(),
+        2
+    );
+}
+
+#[test]
+#[ignore = "requer sockets TCP: executar com --ignored; CI executa"]
+fn truncated_https_upload_restarts_worker_without_publishing_partial_content() {
+    use crewsync_protocol::{Manifest, Operation, Request, transport};
+    let pilot = Pilot::new();
+    let (_server, url) = pilot.start();
+    let session = pilot.activate(&url, "ana", "interrupted");
+    let data: serde_json::Value = serde_json::from_slice(&fs::read(&session).unwrap()).unwrap();
+    let token = data["token"].as_str().unwrap().to_owned();
+    let error = transport::exchange(
+        &url,
+        &pilot.cert,
+        Request {
+            token: Some(token.clone()),
+            operation: Operation::Put {
+                share: "Obras".into(),
+                path: "partial".into(),
+                base: 0,
+                hash: crewsync_protocol::disk::hash_secret("abc").unwrap(),
+                size: 100,
+            },
+        },
+        &mut &b"abc"[..],
+        100,
+        &mut Vec::new(),
+        4096,
+    );
+    assert!(error.is_err());
+    let manifest: Manifest = transport::json(
+        &url,
+        &pilot.cert,
+        Request {
+            token: Some(token),
+            operation: Operation::Manifest {
+                share: "Obras".into(),
+            },
+        },
+    )
+    .unwrap();
+    assert!(manifest.entries.is_empty());
+    let folder = pilot.folder("healthy");
+    fs::write(folder.join("ok"), b"complete").unwrap();
+    success(sync(&session, &folder));
+    assert_eq!(
+        fs::read_dir(pilot.root.join("store/tmp")).unwrap().count(),
+        0
     );
 }

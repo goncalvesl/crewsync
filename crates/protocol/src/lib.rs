@@ -11,7 +11,11 @@ pub fn invalid(message: &str) -> io::Error {
 }
 /// Caminho relativo conservador, sem componentes especiais ou escapes.
 pub fn validate_path(path: &str) -> io::Result<()> {
-    if path.is_empty() || path.len() > 4096 || path.split('/').next() == Some(".crewsync") {
+    if path.is_empty()
+        || path.len() > 4096
+        || path.split('/').count() > 128
+        || path.split('/').next() == Some(".crewsync")
+    {
         return Err(invalid("caminho vazio ou longo demais"));
     }
     for part in path.split('/') {
@@ -95,6 +99,16 @@ pub enum Operation {
         share: String,
         path: String,
     },
+    History {
+        share: String,
+        path: String,
+    },
+    Restore {
+        share: String,
+        path: String,
+        revision: u64,
+        base: u64,
+    },
     Put {
         share: String,
         path: String,
@@ -124,4 +138,13 @@ pub struct Frame {
 pub struct Response {
     pub status: u16,
     pub length: u64,
+}
+
+#[cfg(test)]
+mod path_limit_tests {
+    #[test]
+    fn depth_limit_is_enforced_before_filesystem_access() {
+        assert!(super::validate_path(&["a"; 128].join("/")).is_ok());
+        assert!(super::validate_path(&["a"; 129].join("/")).is_err());
+    }
 }

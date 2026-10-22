@@ -35,11 +35,12 @@ cargo test --workspace
 O workflow `.github/workflows/ci.yml` executa build, fmt, Clippy e testes com
 `--locked`. Também verifica dependências do sistema e roda os testes TLS e de rede.
 
-Nesta entrega há 58 testes Rust locais (incluindo integração de autenticação,
+Nesta entrega há 72 testes Rust locais (incluindo integração de autenticação,
 worker em processo separado, cliente+armazenamento e falhas simuladas), além de
-três testes HTTPS marcados `ignored` por exigirem sockets. O motivo é explícito:
-o ambiente de implementação retorna `Operation not permitted` ao criar sockets,
-inclusive localhost. Não suprimir esses testes na validação real/CI:
+cinco testes HTTPS e um ensaio ENOSPC marcados `ignored` por exigirem
+recursos externos (TCP e tmpfs isolado). O motivo é explícito:
+o ambiente inicial proibia sockets; a sessão atual permite rede e os testes são
+executados explicitamente. Não suprimir esses testes na validação real/CI:
 
 ```bash
 cargo build --workspace --locked
@@ -77,13 +78,28 @@ cadeia e permissões da chave. Esta verificação não testa TCP, firewall ou HT
 A ativação tem regressões para confirmar com Enter mantendo stdin aberto, aceitar
 EOF em pipes/CRLF, limitar a entrada e não imprimir o convite.
 
-Pré-requisitos: `/usr/bin/sha256sum` (coreutils), `/usr/bin/python3` >= 3.11 com
-`tomllib`/`ssl`, OpenSSL CLI. O cliente exige Linux >= 5.6 com `/proc` montado para
-operações relativas a descritores com `openat2` e recusa de symlinks.
+Runtime: Linux >=5.6 com /proc e filesystem local; binários nativos sem Python.
+Testes auxiliares/build do site/pacotes: Python padrão e OpenSSL CLI. O quinto
+cenário HTTPS interrompe upload, confirma recuperação do worker e ausência de
+conteúdo parcial publicado. Retenção/coleta têm relógio controlado, simulação,
+prazo de graça, lixeira, dados atuais preservados e falhas de publicação. Backup
+cobre locks, instalação em destino novo, preservação de tokens e marcador ausente.
+notify tem teste real de eventos e exclusão da área interna. HTTP recusa headers
+ambíguos, duplicados, chunked e cabeçalhos acima do limite.
 
-Falhas de publicação/disco são simuladas; não foi executado ensaio físico de
-disco cheio, queda de energia ou piloto em duas máquinas nesta sessão. Não há
-testes de retenção/histórico/restauração/coleta, pois ainda não estão implementados.
+Site: `python3 scripts/build-site.py` e `python3 tests/site/check.py target/site`.
+Navegador: tests/site/browser.cjs, 390/768/1440px, console, overflow, links e âncoras.
+Pacotes: scripts/check-package.py valida checksum, extração segura, instalação em
+prefixo temporário e comandos básicos. Nenhum teste acessa dados reais.
+
+Benchmark: `python3 scripts/benchmark.py --report target/benchmark.json`.
+Relatório contém wall/CPU/ru_maxrss por processo cliente e bytes de conteúdo, não
+tráfego no fio. ru_maxrss inclui o pico inicial herdado do harness no fork;
+comparar só ensaios com a mesma metodologia. Não representa latência entre máquinas.
+ENOSPC real passou em tmpfs Docker limitado a 1 MiB, preservando arquivo confirmado
+e limpando o upload incompleto. Execute `scripts/check-disk-full.sh DEPS_MUSL`.
+Falhas físicas de energia e matriz ampliada em duas máquinas permanecem
+pendentes, conforme docs/reports/physical-acceptance.json.
 
 ## Evidências
 

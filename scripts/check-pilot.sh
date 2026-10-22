@@ -8,3 +8,7 @@ cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo test --workspace --locked
 /usr/bin/python3 -I tests/e2e/tls_memory.py
 timeout 180s cargo test -p crewsync-server --test pilot --locked -- --ignored
+
+python3 scripts/build-site.py
+python3 tests/site/check.py target/site
+python3 tests/site/test_build.py

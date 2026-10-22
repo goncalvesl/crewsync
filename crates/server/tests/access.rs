@@ -321,3 +321,23 @@ fn invalid_initial_configuration_does_not_create_storage() {
     assert!(AuthorizedStore::open(source).is_err());
     assert!(!dir.path().join("store").exists());
 }
+
+#[test]
+fn history_and_restore_enforce_current_permissions_and_share_isolation() {
+    let (_dir, mut server) = fixture();
+    let rev = server
+        .put_file("writer", "Obras", "file", 0, ABC, &b"abc"[..])
+        .unwrap();
+    let deleted = server.delete("writer", "Obras", "file", rev).unwrap();
+    assert_eq!(server.history("reader", "Obras", "file").unwrap().len(), 2);
+    denied(server.restore("reader", "Obras", "file", rev, deleted));
+    for user in ["unknown", "disabled", "no_access"] {
+        denied(server.history(user, "Obras", "file"));
+        denied(server.restore(user, "Obras", "file", rev, deleted));
+    }
+    denied(server.history("reader", "Privado", "file"));
+    denied(server.restore("reader", "Privado", "file", rev, 0));
+    server
+        .restore("writer", "Obras", "file", rev, deleted)
+        .unwrap();
+}

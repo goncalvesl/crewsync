@@ -13,7 +13,7 @@ fn help_reports_current_limitations() {
     assert!(output.status.success());
     let stdout = String::from_utf8(output.stdout).expect("saída UTF-8");
     assert!(stdout.contains("Uso: crewsync-client"));
-    assert!(stdout.contains("ainda não implementadas"));
+    assert!(stdout.contains("Retenção automática ainda não implementada"));
     assert!(output.stderr.is_empty());
 }
 
@@ -82,7 +82,7 @@ fn activation_confirms_on_enter_while_stdin_stays_open() {
     let message = String::from_utf8(output.stderr).unwrap();
     assert!(message.contains("pressione Enter"));
     assert!(message.contains("Ativando dispositivo"));
-    assert!(message.contains("HTTP 400"));
+    assert!(message.contains("URL HTTPS"));
     assert!(!message.contains(&secret));
     assert!(!String::from_utf8(output.stdout).unwrap().contains(&secret));
     assert!(!directory.path().join("session.json").exists());

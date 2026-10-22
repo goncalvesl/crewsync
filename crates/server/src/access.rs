@@ -66,6 +66,28 @@ impl AuthorizedStore {
         self.store.manifest(share)
     }
 
+    pub fn history(
+        &self,
+        user: &str,
+        share: &str,
+        path: &str,
+    ) -> io::Result<Vec<crewsync_protocol::Entry>> {
+        self.authorize(user, share, Operation::Read)?;
+        self.store.history(share, path)
+    }
+
+    pub fn restore(
+        &mut self,
+        user: &str,
+        share: &str,
+        path: &str,
+        revision: u64,
+        base: u64,
+    ) -> io::Result<u64> {
+        self.authorize(user, share, Operation::Write)?;
+        self.store.restore(share, path, revision, base)
+    }
+
     /// Resolve hash pelo caminho autorizado, nunca por hash arbitrário do cliente.
     pub fn file(&self, user: &str, share: &str, path: &str) -> io::Result<File> {
         self.authorize(user, share, Operation::Read)?;

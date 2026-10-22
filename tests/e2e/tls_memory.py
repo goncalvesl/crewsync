@@ -1,12 +1,10 @@
 """Valida TLS real em MemoryBIO, sem sockets ou conexões externas."""
 import pathlib
-import runpy
 import ssl
 import subprocess
 import tempfile
 import unittest
 
-BRIDGE = runpy.run_path(str(pathlib.Path(__file__).resolve().parents[2] / 'crates/protocol/src/transport.py'))
 
 class TLS(unittest.TestCase):
     @classmethod
@@ -23,7 +21,7 @@ class TLS(unittest.TestCase):
     def tearDownClass(cls):
         cls.temp.cleanup()
     def handshake(self, host, trusted):
-        client_context = BRIDGE['context_client'](self.cert) if trusted else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+        client_context = ssl.create_default_context(cafile=self.cert) if trusted else ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         server_context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         server_context.minimum_version = ssl.TLSVersion.TLSv1_2
         server_context.load_cert_chain(self.server_cert, self.key)

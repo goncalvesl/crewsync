@@ -1,0 +1,8 @@
+{
+  "basic_pilot_accepted": true,
+  "source": "Confirmação do usuário em 22/10/2026",
+  "extended_matrix_accepted": false,
+  "machines": [],
+  "results": [],
+  "notes": "Preencher após ensaio de falhas e medições nas duas máquinas; não inferir resultados do benchmark localhost."
+}

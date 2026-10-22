@@ -2,7 +2,7 @@
 
 A API Rust `crewsync_server::storage` é um núcleo local para Linux. A fachada autorizada e o serviço HTTPS do [piloto](PILOT.md) usam este núcleo;
 esta API de baixo nível não autentica clientes. Requer
-`/usr/bin/sha256sum` do GNU coreutils e filesystem local com suporte a `fsync`
+SHA-256 nativo (sha2) e filesystem local com suporte a `fsync`
 de diretórios e renomeação atômica.
 
 ## API
@@ -17,6 +17,8 @@ de diretórios e renomeação atômica.
 - `object(hash, size)`: verifica integridade e devolve `File` para leitura streaming.
 - `manifest(share)`: devolve o estado atual; compartilhamento sem manifesto é
   vazio. Isto não concede autorização nem expõe essa API a clientes remotos.
+- `history(share, path)`: lista versões disponíveis, incluindo o estado atual.
+- `restore(share, path, revision, base)`: publica conteúdo histórico como nova revisão.
 - `apply(share, path, base_revision, content)`: publica arquivo, diretório ou
   exclusão. O objeto deve estar publicado antes de referenciá-lo. Pais precisam
   existir como diretórios. Diretórios vazios são entradas explícitas.
@@ -35,6 +37,7 @@ root/                 # privado, 0700
   lock                # flock; arquivo permanece, bloqueio termina com o processo
   objects/<sha256>    # bytes originais, sem compactação
   manifests/<share>   # JSON formato 1
+  history/<share>/<sha256-do-caminho> # versões anteriores, JSON formato 1
   tmp/                # gravações ainda não confirmadas
   auth/               # hashes de convites/tokens e estado de dispositivos
 ```
@@ -62,8 +65,7 @@ limitações de durabilidade estão na [decisão 0002](decisions/0002-storage.md
 
 O manifesto inteiro é reescrito e seus objetos são verificados em cada mutação;
 a abertura também verifica os compartilhamentos. Esta escolha prioriza integridade
-e simplicidade; desempenho com dados reais ainda não foi medido. Não há histórico
-consultável, coleta de órfãos ou quotas totais. Esta API de baixo nível não aplica
+e simplicidade; desempenho com dados reais ainda não foi medido. Há [histórico consultável e restauração](HISTORY.md); há retenção configurável e coleta administrativa offline; não há quotas totais. Esta API de baixo nível não aplica
 ACLs; a fachada [AuthorizedStore](CONFIGURATION.md) aplica as permissões locais. Não usar como substituto de backup; validar o roteiro do piloto antes de qualquer
 uso real.
 
@@ -78,3 +80,6 @@ maior que o buffer, interrupções de leitura, hashes errados, corrupção, conf
 exclusões após reabertura, links e falhas simuladas em oito pontos de publicação.
 Eles não simulam a perda de caches do kernel nem substituem ensaios reais de
 queda de energia e disco cheio no piloto.
+
+A publicação agora preserva os metadados anteriores antes de substituir o manifesto.
+Detalhes, recuperação e compatibilidade: [decisão 0005](decisions/0005-history.md).

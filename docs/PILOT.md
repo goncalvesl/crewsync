@@ -11,11 +11,11 @@ incluídos nesta entrega.
 
 ## 1. Compilar e validar
 
-Pré-requisitos nas duas máquinas: Linux com kernel >= 5.6 e `/proc` montado,
-`/usr/bin/python3` >= 3.11 com `ssl` e `tomllib`, GNU coreutils com
-`/usr/bin/sha256sum`. Para compilar, Rust stable com rustfmt/Clippy. OpenSSL CLI
-é necessário na máquina 1 para criar os certificados e para os testes TLS.
-Sem pacotes Python externos. A ponte HTTPS está embarcada nos binários.
+Pré-requisitos runtime: Linux kernel >=5.6 com /proc e filesystem local.
+Os executáveis usam Rust nativo, sem Python, Cargo ou sha256sum no uso diário.
+Compilar exige Rust stable e compilador C; OpenSSL CLI gera certificados e
+Python padrão executa testes auxiliares. Pacotes musl estáticos dispensam glibc.
+Veja o [manual completo](MANUAL.md) e [distribuição](DISTRIBUTION.md).
 
 Copie o código para as máquinas ou use um checkout do mesmo estado. Na raiz:
 
@@ -37,9 +37,9 @@ scripts/check-pilot.sh
 
 Este comando inclui o teste HTTPS com servidor e dois clientes em processos
 separados. Inicialmente, o sandbox da sessão de implementação proibiu criar qualquer socket
-(`Operation not permitted`), inclusive local. Por isso os dois testes de rede
+(`Operation not permitted`), inclusive local. Por isso os cinco testes de rede
 estão marcados `ignored` por padrão e são executados explicitamente pelo script
-e pela CI. Após atualizar as permissões da sessão, os dois testes HTTPS passaram.
+e pela CI. Após atualizar as permissões da sessão, os testes HTTPS passaram.
 Também passaram os testes de disco, autenticação, worker em processo separado,
 reconciliação e TLS em memória. Execute a sequência nas máquinas do piloto antes
 de usar dados reais.
@@ -202,17 +202,17 @@ Em cada cliente, depois dos testes manuais:
 "$HOME/.local/bin/crewsync-client" watch "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras" 5
 ```
 
-O cliente reconcilia a cada 5 segundos. Erros transitórios usam atraso crescente
+O cliente reage a eventos locais e reconcilia pelo menos a cada 5 segundos. Erros transitórios usam atraso crescente
 limitado a 60 segundos; credencial revogada, certificado inválido e erros de
 configuração interrompem o processo. Ctrl-C encerra; temporários são recuperados
-na próxima execução. Há varredura periódica, sem observador de eventos ainda.
+na próxima execução. Eventos são agrupados em janela de 200 ms; a varredura periódica cobre eventos perdidos.
 Não execute duas instâncias para a mesma pasta.
 
 Exemplos opcionais de unidades de usuário estão em
 [config/systemd](../config/systemd/). Adapte os caminhos, copie as unidades para
 `$HOME/.config/systemd/user/` e use `systemctl --user daemon-reload` e
 `systemctl --user enable --now crewsync-server.service` (ou `crewsync-client.service`).
-As unidades limitam reinícios e encerram também os processos da ponte. Linger
+As unidades limitam reinícios e encerram também o servidor e seu worker. Linger
 e execução antes do login dependem da administração do computador; não são
 configurados automaticamente.
 
@@ -225,7 +225,7 @@ configurados automaticamente.
   `.crewsync/conflicts/` guarda as versões concorrentes. Os JSONs ao lado de cada
   cópia registram seu caminho original. Inspecione e copie o conteúdo desejado de
   volta com outro nome para sincronizar uma resolução. Não sincronizar os JSONs.
-- Não há limpeza automática dessas cópias nem de objetos órfãos do servidor:
+- As cópias locais não são limpas automaticamente. O servidor oferece coleta offline por `maintain`:
   acompanhe espaço livre. Disco cheio deve produzir erro; faça backup antes de
   qualquer limpeza manual. Não apagar objetos raw individualmente.
 - Para backup consistente inicial, pare o servidor e os clientes, copie a raiz
@@ -236,9 +236,15 @@ configurados automaticamente.
 - Links simbólicos e arquivos especiais abortam a reconciliação. Nomes precisam
   seguir as regras em [STORAGE.md](STORAGE.md); `.crewsync` no primeiro componente
   é reservado e a profundidade máxima é 128 componentes.
-- Não há histórico consultável/restauração pelo servidor, retenção configurável,
-  coleta de objetos, quotas totais, métricas ou retomada parcial de transferências.
-  A etapa 5 e o relatório real de desempenho/piloto continuam abertos.
+- Histórico, restauração, retenção, coleta offline e backup verificável estão no
+  [manual](MANUAL.md). Sem quotas totais ou retomada parcial. O relatório físico
+  ampliado e de desempenho entre máquinas continua aberto.
 - Não foi validado aqui comportamento real em disco cheio, queda de energia,
   duas máquinas físicas ou rede entre máquinas. Valide primeiro os cenários acima com dados
   descartáveis e registre distribuição, kernel, volume de arquivos e resultados.
+
+## Após o piloto básico
+
+O piloto básico foi confirmado pelo usuário. A próxima entrega acrescenta
+[histórico e recuperação](HISTORY.md), com atualização compatível do armazenamento.
+A matriz ampliada de falhas e as medições continuam pendentes.

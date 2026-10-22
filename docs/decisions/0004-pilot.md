@@ -1,5 +1,6 @@
 # 0004 — Piloto Linux com autenticação e HTTPS
 
+> Atualização: dependências temporárias e operação foram substituídas pela [decisão 0006](0006-operation-native-distribution.md). Este registro preserva o contexto histórico.
 ## Objetivo autorizado
 
 Prosseguir sequencialmente até servidor e dois clientes serem testáveis. O piloto

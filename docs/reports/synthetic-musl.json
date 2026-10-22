@@ -1,0 +1,36 @@
+{
+  "schema": 1,
+  "scope": "localhost; sintético; não representa duas máquinas físicas",
+  "recorded_at": "2026-10-22T15:21:08.140482+00:00",
+  "binary_version": "crewsync-client 0.1.0-dev",
+  "environment": {
+    "cpu_count": 12,
+    "cpu_model": "AMD Ryzen 5 8600G w/ Radeon 760M Graphics",
+    "kernel": "6.18.57-2-lts",
+    "architecture": "x86_64",
+    "distribution": "Arch Linux",
+    "cpu": "x86_64"
+  },
+  "files": 101,
+  "content_bytes": 4219904,
+  "initial_upload": {
+    "wall_seconds": 0.6161,
+    "cpu_seconds": 0.2007,
+    "peak_rss_kib": 28616
+  },
+  "initial_download": {
+    "wall_seconds": 0.78,
+    "cpu_seconds": 0.1947,
+    "peak_rss_kib": 28616
+  },
+  "idle_sync": {
+    "wall_seconds": 0.0139,
+    "cpu_seconds": 0.0081,
+    "peak_rss_kib": 28616
+  },
+  "manual_propagation_cycle_seconds": 0.0542,
+  "payload_bytes_each_initial_direction": 4219904,
+  "network_wire_bytes": null,
+  "result": "hashes iguais nos dois clientes",
+  "cli_output": "Sincronizado: 101 envios, 0 recebimentos, 0 conflitos preservados em .crewsync/conflicts."
+}
