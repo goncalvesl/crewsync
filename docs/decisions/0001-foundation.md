@@ -1,5 +1,6 @@
 # 0001 — Fundação do workspace
 
+> Atualização: GPL-3.0-only e o objetivo de simplicidade foram definidos pelo mantenedor na [decisão 0007](0007-license-and-simplicity.md). Pendências de licença abaixo são históricas.
 Status: adotado para a fundação; escolhas locais de implementação, revisáveis.
 
 ## Contexto

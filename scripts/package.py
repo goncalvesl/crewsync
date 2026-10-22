@@ -26,7 +26,7 @@ def main():
     files += [('config/' + name, ROOT / 'config' / name) for name in ['README.md', 'server.example.toml', 'systemd/crewsync-client.service', 'systemd/crewsync-server.service']]
     files += [(str(p.relative_to(ROOT)), p) for p in (ROOT / 'docs').rglob('*.md')]
     files += [(str(p.relative_to(ROOT)), p) for p in (ROOT / 'docs/reports').glob('*.json')]
-    files += [('LICENSE', ROOT / 'LICENSE')] if (ROOT / 'LICENSE').exists() else [('LICENSE-STATUS.md', ROOT / 'LICENSE-STATUS.md')]
+    files += [('LICENSE', ROOT / 'LICENSE')]
     with tarfile.open(archive, 'w:gz', format=tarfile.PAX_FORMAT) as tar:
         for relative, source in sorted(files):
             if source.is_symlink() or not source.is_file():
@@ -55,7 +55,7 @@ def main():
         info.mode = 0o644
         info.size = len(data)
         tar.addfile(info, io.BytesIO(data))
-        metadata = json.dumps(dict(version=version, target=args.target, kernel_minimum='5.6', runtime='Rust nativo; sem Python/Cargo; /proc e filesystem local necessários'), ensure_ascii=False).encode()
+        metadata = json.dumps(dict(version=version, license='GPL-3.0-only', target=args.target, kernel_minimum='5.6', runtime='Rust nativo; sem Python/Cargo; /proc e filesystem local necessários'), ensure_ascii=False).encode()
         info = tarfile.TarInfo(name + '/package.json')
         info.mode = 0o644
         info.size = len(metadata)

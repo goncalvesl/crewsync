@@ -89,7 +89,9 @@ ambíguos, duplicados, chunked e cabeçalhos acima do limite.
 
 Site: `python3 scripts/build-site.py` e `python3 tests/site/check.py target/site`.
 Navegador: tests/site/browser.cjs, 390/768/1440px, console, overflow, links e âncoras.
-Pacotes: scripts/check-package.py valida checksum, extração segura, instalação em
+Instalador: tests/packaging/test_install.py cobre cliente/servidor/ambos, caminhos
+com espaços, reinstalação, configuração preservada e pacote incompleto recusado.
+Pacotes: scripts/check-package.py valida GPL e metadados, checksum, extração segura, instalação em
 prefixo temporário e comandos básicos. Nenhum teste acessa dados reais.
 
 Benchmark: `python3 scripts/benchmark.py --report target/benchmark.json`.

@@ -1,5 +1,6 @@
 # 0006 — Operação, runtime Rust e distribuição Linux
 
+> Atualização: GPL-3.0-only e o objetivo de simplicidade foram definidos pelo mantenedor na [decisão 0007](0007-license-and-simplicity.md). Pendências de licença abaixo são históricas.
 ## Contexto
 
 O usuário autorizou executar todas as etapas restantes sem paradas intermediárias.

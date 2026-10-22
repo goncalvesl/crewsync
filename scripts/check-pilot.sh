@@ -13,3 +13,5 @@ timeout 180s cargo test -p crewsync-server --test pilot --locked -- --ignored
 python3 scripts/build-site.py
 python3 tests/site/check.py target/site
 python3 tests/site/test_build.py
+
+python3 tests/packaging/test_install.py

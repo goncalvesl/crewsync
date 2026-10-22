@@ -11,6 +11,7 @@ legado recebe prazo de graça. Não rebaixar servidor após a atualização.
 
 Limitações: rede privada, servidor serial, Linux kernel >=5.6 com `/proc`,
 filesystem local, sem quotas totais/retomada parcial/limpeza das cópias locais.
-Windows/Android/interface gráfica são posteriores. Ensaios físicos ampliados e
-licença ainda são condições de lançamento; esta nota não declara uma release
-publicada. Consulte STATUS.md e os relatórios.
+Windows/Android/interface gráfica são posteriores. O aceite dos ensaios físicos ampliados
+ainda é condição de lançamento; esta nota não declara uma release
+publicada. Licença GPL-3.0-only definida. Instalação por função com --client/--server,
+manual simples e aprofundamento técnico na seção final. Consulte STATUS.md e os relatórios.

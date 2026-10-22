@@ -17,5 +17,12 @@ class Manual(unittest.TestCase):
         self.assertIn('href="#operacao"', toc)
         self.assertIn('echo &quot;$HOME&quot; &lt; file', content)
 
+    def test_technical_subheadings_stay_in_last_section(self):
+        content, toc = build.render('# Manual\n\n## Instalar\n\nPassos simples.\n\n## Detalhes técnicos\n\n### Arquitetura\n\nDetalhes.\n')
+        self.assertIn('<h3>Arquitetura</h3>', content)
+        self.assertNotIn('<p>###', content)
+        self.assertNotIn('Arquitetura', toc)
+        self.assertLess(content.index('Passos simples.'), content.index('id="detalhes-tecnicos"'))
+
 if __name__ == '__main__':
     unittest.main()

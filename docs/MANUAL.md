@@ -1,168 +1,235 @@
 # Manual do CrewSync
 
-CrewSync sincroniza pastas entre computadores Linux usando um servidor central próprio. Esta versão é de desenvolvimento para rede privada. Comece com dados sintéticos e mantenha backup separado.
+O CrewSync mantém uma pasta atualizada entre seus computadores. Seu objetivo é ser simples de instalar, manter e usar, além de rápido.
+
+Para começar como usuário, siga Instalar, Dispositivos e Sincronizar. A preparação do servidor é feita uma vez pelo administrador. A explicação técnica fica na última seção.
+
+Esta é uma versão de teste para Linux em rede privada. Use primeiro arquivos de teste e mantenha backup separado.
 
 ## Instalar
 
-Os executáveis são Rust nativo: não exigem Cargo, Python, OpenSSL instalado ou `sha256sum` para funcionar. Linux kernel 5.6 ou superior, `/proc` montado e filesystem local com `fsync` e renomeação atômica são necessários. Não usar NFS como raiz interna.
+Baixe o pacote para seu computador: `x86_64` para Intel/AMD ou `aarch64` para ARM64. Consulte [versões publicadas](https://github.com/goncalvesl/crewsync/releases). Enquanto não houver release, os [pacotes de teste](https://github.com/goncalvesl/crewsync/actions/workflows/release.yml) ficam nos artefatos das execuções concluídas do GitHub.
 
-Consulte os pacotes efetivamente publicados em [GitHub Releases](https://github.com/goncalvesl/crewsync/releases). Pacotes musl estáticos dispensam uma versão específica de glibc. x86_64 é validado localmente; ARM64 passa pela matriz de distribuição. Não execute binários de arquitetura diferente.
-
-Depois de baixar o pacote e seu arquivo `.sha256` para o mesmo diretório:
+Extraia o pacote e, dentro da pasta extraída, execute:
 
 ```bash
-sha256sum -c crewsync-VERSAO-ALVO.tar.gz.sha256
-tar -xzf crewsync-VERSAO-ALVO.tar.gz
-cd crewsync-VERSAO-ALVO
-./install.sh
-export PATH="$HOME/.local/bin:$PATH"
+./install.sh --client
 ```
 
-O instalador coloca os binários em `$HOME/.local/bin` por padrão. Ajuste `PREFIX` se necessário. Não altera sua configuração ou inicia serviços. Para compilar do código, instale Rust stable e um compilador C, clone o repositório e execute:
+Pronto: o cliente está em `$HOME/.local/bin`. Não precisa instalar Rust, Cargo ou Python, nem usar sudo. Os comandos deste manual usam o caminho completo; não é necessário configurar o PATH.
+
+No computador que vai servir os arquivos, use `./install.sh --server`. Se quiser os dois programas na mesma máquina, execute apenas `./install.sh`. O instalador também guarda o manual em `$HOME/.local/share/crewsync/MANUAL.md`.
+
+## Dispositivos
+
+Peça ao administrador três coisas: o endereço do servidor, o arquivo `ca.crt` e um convite de ativação próprio para este computador.
+
+Crie a pasta de configuração e uma pasta nova para seus arquivos:
 
 ```bash
-git clone https://github.com/goncalvesl/crewsync.git
-cd crewsync
-cargo build --release --workspace --locked
-mkdir -p "$HOME/.local/bin"
-install -m 755 target/release/crewsync-server target/release/crewsync-client "$HOME/.local/bin/"
-export PATH="$HOME/.local/bin:$PATH"
+mkdir -p "$HOME/.config/crewsync" "$HOME/CrewSync-Obras"
+chmod 700 "$HOME/.config/crewsync"
 ```
+
+Salve `ca.crt` em `$HOME/.config/crewsync/`. Ative o computador usando o endereço recebido; abaixo, troque `192.168.1.10` pelo IP correto:
+
+```bash
+"$HOME/.local/bin/crewsync-client" activate https://192.168.1.10:8443 "$HOME/.config/crewsync/ca.crt" "$HOME/.config/crewsync/session.json" pc1
+```
+
+Cole o convite e pressione Enter. Em outro computador, use outro convite e outro nome, como `pc2`. Não copie `session.json` entre computadores ou para dentro da pasta sincronizada.
+
+## Sincronizar
+
+Para sincronizar uma vez:
+
+```bash
+"$HOME/.local/bin/crewsync-client" sync "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras"
+```
+
+Para continuar acompanhando as mudanças:
+
+```bash
+"$HOME/.local/bin/crewsync-client" watch "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras" 5
+```
+
+Deixe o comando aberto; Ctrl-C encerra. Faça isso nos dois computadores. Troque `Obras` e a pasta local se o administrador indicar outros nomes. Não execute dois clientes ao mesmo tempo na mesma pasta.
+
+Para conferir quais pastas você pode acessar:
+
+```bash
+"$HOME/.local/bin/crewsync-client" shares "$HOME/.config/crewsync/session.json"
+```
+
+## Conflitos
+
+Se duas pessoas alterarem o mesmo arquivo, o CrewSync preserva a cópia concorrente em `.crewsync/conflicts/`. Confira as versões e copie o conteúdo que deseja manter de volta à pasta, de preferência com outro nome.
+
+Arquivos locais substituídos ou excluídos podem ser encontrados em `.crewsync/trash/`. Essas cópias não são limpas automaticamente. Não apague ou edite os outros arquivos de controle em `.crewsync/`.
+
+## Historico
+
+Para ver as versões de um arquivo:
+
+```bash
+"$HOME/.local/bin/crewsync-client" history "$HOME/.config/crewsync/session.json" Obras planta.txt
+```
+
+A última linha mostra o estado atual. Para recuperar uma versão, informe o número desejado e o número atual. Exemplo: recuperar a versão 1 quando a atual é 3:
+
+```bash
+"$HOME/.local/bin/crewsync-client" restore "$HOME/.config/crewsync/session.json" Obras planta.txt 1 3
+```
+
+Use os números reais da consulta. Depois execute `sync` nos dois computadores ou aguarde `watch`. É preciso ter permissão de escrita. Se outra pessoa já mudou o arquivo, consulte o histórico novamente antes de repetir.
 
 ## Configurar
 
-Na máquina do servidor, crie uma pasta privada para configuração e copie `config/server.example.toml`. Adapte `storage_root` para um caminho absoluto privado, separado das pastas dos clientes. O pai precisa existir. A raiz interna exige permissão 0700 e é criada pelo serviço quando ausente.
-
-```toml
-version = 1
-[server]
-storage_root = "/home/SEU_USUARIO/crewsync-pilot/store"
-max_upload_bytes = 1073741824
-[server.retention]
-history_days = 30
-previous_versions = 10
-trash_days = 30
-[users.ana]
-enabled = true
-[users.bruno]
-enabled = true
-[shares.Obras.permissions]
-ana = "write"
-bruno = "read"
-```
-
-Somente pastas de primeiro nível são compartilhamentos. Subpastas herdam o acesso. `read` permite consultar e baixar; `write` inclui criar, alterar, restaurar e excluir. Usuários ausentes, desativados ou sem permissão não têm acesso. A recarga acontece antes de cada requisição; erro mantém a última configuração válida. Trocar `storage_root` exige reiniciar.
+Esta parte é para o administrador do servidor. Instale com `./install.sh --server` e prepare a configuração:
 
 ```bash
-crewsync-server check-config "$HOME/crewsync-pilot/server.toml"
+mkdir -p "$HOME/crewsync-pilot"
+cp "$HOME/.local/share/crewsync/server.example.toml" "$HOME/crewsync-pilot/server.toml"
+```
+
+Edite `server.toml`. Em `storage_root`, coloque um caminho absoluto como `/home/SEU_USUARIO/crewsync-pilot/store`. Essa é uma pasta interna do serviço, separada das pastas dos clientes; o servidor a cria quando necessário.
+
+O exemplo permite que `ana` altere a pasta `Obras` e que `bruno` apenas leia. Ajuste os nomes e as permissões da equipe: `read` para leitura, `write` para leitura e alteração. Usuários com `enabled = false` ficam bloqueados.
+
+Confira a configuração:
+
+```bash
+"$HOME/.local/bin/crewsync-server" check-config "$HOME/crewsync-pilot/server.toml"
 ```
 
 ## HTTPS e rede
 
-Descubra o IP do servidor e reserve esse endereço na sua rede. Gere uma CA privada e um certificado com o script fornecido, que exige OpenSSL CLI somente para a geração:
+Descubra o IP do servidor na rede e mantenha esse endereço fixo. O comando abaixo prepara os certificados e exige OpenSSL instalado apenas nessa preparação. Troque o IP pelo real:
 
 ```bash
-scripts/pilot-cert.sh "$HOME/crewsync-pilot/tls" 192.168.1.10
-crewsync-server serve "$HOME/crewsync-pilot/server.toml" 0.0.0.0 8443 "$HOME/crewsync-pilot/tls/server.crt" "$HOME/crewsync-pilot/tls/server.key"
+"$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/crewsync-pilot/tls" 192.168.1.10
+"$HOME/.local/bin/crewsync-server" serve "$HOME/crewsync-pilot/server.toml" 0.0.0.0 8443 "$HOME/crewsync-pilot/tls/server.crt" "$HOME/crewsync-pilot/tls/server.key"
 ```
 
-Substitua o IP pelo real. Aguarde `CrewSync HTTPS ready 8443`. Copie apenas `ca.crt` para os clientes por um meio confiável; mantenha `server.key` e `ca.key` privados. O certificado do servidor vence em 90 dias. Renove antes do vencimento e reinicie; mantendo a CA, os clientes não precisam trocar sua cópia.
+Aguarde `CrewSync HTTPS ready 8443`. Entregue aos clientes somente o arquivo `ca.crt`. Mantenha os arquivos `.key` privados no servidor. O certificado vence em 90 dias; renove antes disso.
 
-O endereço usado pelo cliente precisa constar no certificado. Não existe opção de ignorar validação TLS. `0.0.0.0` é endereço de escuta, nunca o endereço usado pelos clientes. Se usar UFW, permita a porta TCP apenas da rede local real:
+Se usar UFW, permita a porta TCP do servidor para a rede local correta. Exemplo para `192.168.1.0/24`:
 
 ```bash
 sudo ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 ```
 
-Não é necessário abrir portas nos clientes. O servidor é serializado, com timeout de conexão de 30 segundos, para um piloto em rede privada.
+Não é necessário abrir portas nos clientes. O endereço que eles usam deve ser o IP real, nunca `0.0.0.0`.
 
-## Dispositivos
-
-Cada computador recebe seu próprio convite de ativação. No servidor:
+Para gerar um convite válido por dez minutos:
 
 ```bash
-crewsync-server invite "$HOME/crewsync-pilot/server.toml" ana 600
+"$HOME/.local/bin/crewsync-server" invite "$HOME/crewsync-pilot/server.toml" ana 600
 ```
 
-O convite é secreto, temporário e de uso único. No cliente, coloque a CA confiável em `$HOME/.config/crewsync/ca.crt` e crie uma pasta de sincronização nova:
+Para listar ou bloquear um dispositivo:
 
 ```bash
-mkdir -p "$HOME/.config/crewsync" "$HOME/CrewSync-Obras"
-chmod 700 "$HOME/.config/crewsync"
-crewsync-client activate https://192.168.1.10:8443 "$HOME/.config/crewsync/ca.crt" "$HOME/.config/crewsync/session.json" pc1
+"$HOME/.local/bin/crewsync-server" devices "$HOME/crewsync-pilot/server.toml"
+"$HOME/.local/bin/crewsync-server" revoke "$HOME/crewsync-pilot/server.toml" ID_DO_DISPOSITIVO
 ```
 
-Cole o convite e pressione Enter. A sessão fica privada (0600), fora da pasta sincronizada. Não copie a sessão para outro computador: gere outro convite. Se a ativação perder a resposta depois de consumir o convite, emita um novo.
-
-```bash
-crewsync-client shares "$HOME/.config/crewsync/session.json"
-crewsync-server devices "$HOME/crewsync-pilot/server.toml"
-crewsync-server revoke "$HOME/crewsync-pilot/server.toml" ID_DO_DISPOSITIVO
-```
-
-Revogar um dispositivo bloqueia sua próxima operação. Desativar o usuário bloqueia todos os seus dispositivos.
-
-## Sincronizar
-
-```bash
-crewsync-client sync "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras"
-crewsync-client watch "$HOME/.config/crewsync/session.json" Obras "$HOME/CrewSync-Obras" 5
-```
-
-`sync` executa uma reconciliação. `watch` reage a eventos locais e reconcilia pelo menos a cada cinco segundos, cobrindo eventos perdidos e mudanças remotas. Eventos têm uma janela de 200 ms para agrupar gravações. Se o observador falhar, permanece a reconciliação periódica. Falhas transitórias usam atraso limitado; falhas permanentes encerram o processo. Ctrl-C encerra.
-
-Não execute duas instâncias para a mesma pasta. Movimentações são exclusão/criação, reaproveitando conteúdo igual. Arquivos são transferidos em streaming, verificados por SHA-256 e publicados por temporários e renomeação. Não há retomada parcial.
-
-## Conflitos
-
-Mudanças concorrentes nunca devem sobrescrever silenciosamente uma versão local. O conteúdo remoto ocupa o caminho sincronizado e a versão local concorrente fica em `.crewsync/conflicts/`, acompanhada de JSON com o caminho original. Inspecione e copie o conteúdo desejado de volta com outro nome para resolver.
-
-`.crewsync/trash/` preserva cópias locais substituídas ou excluídas. Essas cópias locais não são limpas automaticamente. Não remova `state.json`: ele registra o que cada cliente confirmou, incluindo exclusões. Não edite a identidade da sessão para apontar um cliente antigo para outro servidor.
-
-## Historico
-
-```bash
-crewsync-client history "$HOME/.config/crewsync/session.json" Obras planta.txt
-crewsync-client restore "$HOME/.config/crewsync/session.json" Obras planta.txt 1 3
-```
-
-A lista está em ordem crescente e inclui o estado atual. No exemplo, 1 é a revisão desejada e 3 é a revisão atual do caminho. Use os números reais da consulta. A restauração cria uma nova revisão; execute `sync` em ambos os computadores ou aguarde `watch`. Base obsoleta é recusada: consulte novamente e revise a alteração concorrente.
-
-Somente `write` restaura. Escolha uma versão de arquivo ou diretório, nunca uma revisão de exclusão. Recuperação de árvore é individual: pais primeiro, filhos depois. Versões já sobrescritas antes da implementação do histórico não podem ser reconstruídas. Rename mantém versões no caminho antigo.
+Cada convite vale para uma ativação. Se perder a resposta da ativação, gere outro. Desativar um usuário na configuração bloqueia todos os seus dispositivos.
 
 ## Manutencao
 
-Com o servidor parado, simule a política configurada e confira o espaço recuperável:
+A configuração de exemplo mantém até dez versões anteriores por até trinta dias; o último conteúdo de um arquivo excluído fica recuperável por trinta dias. Você pode mudar esses valores em `[server.retention]`.
+
+Antes de limpar, faça backup e pare o servidor. Primeiro veja o que seria removido:
 
 ```bash
-crewsync-server maintain "$HOME/crewsync-pilot/server.toml"
-crewsync-server maintain "$HOME/crewsync-pilot/server.toml" --apply
+"$HOME/.local/bin/crewsync-server" maintain "$HOME/crewsync-pilot/server.toml"
 ```
 
-Sem `--apply`, nenhum histórico ou objeto é removido. O relatório informa objetos, bytes, versões a podar e espaço recuperável. `--apply` aplica a retenção e remove somente objetos sem referências em todos os compartilhamentos, inclusive os retirados da configuração. O bloqueio exclusivo impede executar durante transferências ou outro processo de armazenamento.
+Se concordar com o relatório, aplique a limpeza e inicie o servidor novamente:
 
-Por padrão são conservadas até dez versões anteriores com menos de trinta dias desde que foram arquivadas. A última versão de arquivo excluído fica recuperável na lixeira do servidor por trinta dias, mesmo se a janela de histórico for menor. A versão atual e os registros de exclusão continuam no manifesto. Histórico legado sem data recebe prazo de graça na primeira manutenção aplicada. Relógio que recua não acelera exclusões.
+```bash
+"$HOME/.local/bin/crewsync-server" maintain "$HOME/crewsync-pilot/server.toml" --apply
+```
 
-A coleta publica primeiro os metadados podados de forma durável; só depois remove objetos. Falha parcial pode deixar órfãos, que uma nova manutenção resolve. Acompanhe espaço livre e faça backup antes de aplicar. As cópias locais em `trash` e `conflicts` não participam dessa coleta.
+Sem `--apply`, nada é removido. A limpeza não apaga a versão atual nem as cópias locais em `conflicts` e `trash`. Nunca apague manualmente os arquivos internos do servidor.
 
 ## Backup
 
-Pare o servidor e use um destino novo fora da raiz interna:
+Com o servidor parado, crie uma cópia em uma pasta nova, preferencialmente em outra mídia:
 
 ```bash
-crewsync-server backup "$HOME/crewsync-pilot/server.toml" /caminho/backup-novo
-crewsync-server restore /caminho/backup-novo /caminho/restauracao-nova
+"$HOME/.local/bin/crewsync-server" backup "$HOME/crewsync-pilot/server.toml" /caminho/backup-novo
 ```
 
-O backup bloqueia armazenamento e autenticação, copia configuração e estado completo, valida as referências e grava `backup.json` por último. Ausência desse marcador indica cópia incompleta. Restauração exige destino novo e produz `restauracao-nova/store`; não sobrescreve um servidor existente. Valide a configuração e aponte `storage_root` para essa raiz antes de iniciar.
+Copie também a pasta de certificados separadamente e proteja as chaves. Para ensaiar a recuperação, use outra pasta nova:
 
-Certificados e chaves TLS ficam fora da raiz interna: copie-os separadamente, junto das cópias locais de conflitos que desejar conservar. Armazene o backup em outra mídia, protegendo as credenciais. Faça um ensaio de restauração com dados sintéticos.
+```bash
+"$HOME/.local/bin/crewsync-server" restore /caminho/backup-novo /caminho/restauracao-nova
+```
 
-Um backup antigo pode ter menos revisões que os clientes. Para recuperação de desastre, pare todos os clientes, preserve suas pastas e metadados para inspeção, configure novas pastas locais e ative novos dispositivos. Não conecte automaticamente clientes antigos ao servidor restaurado; isso pode interromper a reconciliação por recuo de revisão. O histórico não substitui backup.
+A raiz recuperada fica em `/caminho/restauracao-nova/store`. Ajuste `storage_root` em uma cópia da configuração e confira antes de iniciar. Um backup antigo exige cuidado: preserve as pastas dos clientes e use pastas novas e novos convites ao recuperar o serviço. Os detalhes estão no final deste manual.
 
 ## Servicos e atualizacao
 
-Os exemplos `config/systemd/crewsync-server.service` e `crewsync-client.service` são unidades de usuário. Adapte os caminhos, copie para `$HOME/.config/systemd/user/` e execute:
+Para atualizar, pare os programas, faça backup e execute o instalador do novo pacote. Depois inicie o servidor e os clientes. Não apague suas configurações ou pastas. Não volte a uma versão antiga que desconheça o formato do histórico atual.
+
+Para iniciar automaticamente, o pacote inclui exemplos de serviços em `config/systemd/`. A instalação e os comandos estão na seção técnica. O instalador não inicia serviços sozinho.
+
+## Diagnostico
+
+- Não conecta: confira se o servidor está aberto, o endereço está correto e a porta está liberada.
+- Erro de certificado: confira o arquivo `ca.crt`, o IP, a data dos computadores e a validade do certificado.
+- Acesso negado: peça ao administrador para conferir seu usuário, dispositivo e permissão na pasta.
+- Conflito de revisão: sincronize ou consulte o histórico novamente antes de tentar recuperar uma versão.
+- Armazenamento em uso: encerre a outra instância. Não apague o arquivo `lock`.
+- Disco cheio: pare novas gravações e libere espaço fora da pasta interna. Faça backup antes de limpar versões.
+
+## Limites
+
+O piloto básico em dois computadores foi concluído. A validação física ampliada continua pendente e ainda não há versão estável publicada. Windows, interface gráfica e Android são etapas futuras. O histórico não substitui backup.
+
+## Licenca
+
+CrewSync é software livre sob a GNU GPL versão 3 somente (`GPL-3.0-only`). O texto integral está no arquivo `LICENSE` do pacote e no [repositório](https://github.com/goncalvesl/crewsync/blob/main/LICENSE). Dependências mantêm suas próprias licenças e avisos.
+
+## Detalhes tecnicos
+
+Esta seção é opcional. Ela explica o funcionamento e reúne procedimentos avançados para administração e desenvolvimento.
+
+### Arquitetura e sincronização
+
+O servidor central ordena as revisões de cada compartilhamento. Os clientes comparam o conteúdo local, o estado remoto e a última revisão confirmada. Alterações concorrentes são preservadas como conflitos; registros de exclusão impedem que clientes antigos recriem arquivos apagados. Mover um arquivo é tratado como exclusão e criação, com reaproveitamento de conteúdo igual.
+
+`watch` reage a eventos locais, agrupa gravações em uma janela de 200 ms e faz uma reconciliação completa pelo menos a cada intervalo configurado. A verificação periódica cobre eventos perdidos e alterações remotas. Falhas transitórias usam atraso crescente limitado; erros permanentes encerram o processo.
+
+### Integridade e armazenamento
+
+Arquivos são identificados por SHA-256, recebidos em streaming e armazenados sem compactação. Conteúdo igual compartilha um objeto, inclusive entre compartilhamentos. Publicação usa temporários, verificação de hash, renomeação e sincronização em disco antes da confirmação.
+
+A raiz interna exige permissão 0700. Ela contém `objects`, `manifests`, `history`, `auth` e `tmp`. Não a edite externamente. `state.json` no cliente é o registro das revisões confirmadas, vinculado à identidade do servidor e ao compartilhamento; não o remova para tentar resolver um erro.
+
+Linux kernel 5.6 ou superior, `/proc` montado e filesystem local com suporte a `fsync` e renomeação atômica são necessários. Não usar NFS como raiz interna. Links simbólicos e arquivos especiais são recusados. Caminhos têm até 4096 bytes e 128 componentes. Manifestos e histórico por caminho têm limite de 16 MiB; manifestos aceitam até cem mil entradas. Exceder os limites recusa a alteração.
+
+### Segurança e configuração
+
+HTTPS usa rustls com TLS 1.2/1.3, CA explícita e validação do endereço; não existe opção de ignorar o certificado. O servidor atende uma operação por vez, com timeout de conexão de 30 segundos, para rede privada. Tokens são individuais por dispositivo e somente seus hashes ficam no servidor.
+
+Somente pastas de primeiro nível são compartilhamentos; subpastas herdam o acesso. Ausência de permissão nega acesso. A configuração TOML é estrita e recarregada antes de cada requisição; recarga inválida mantém a última válida. Trocar a raiz exige reiniciar. `max_upload_bytes` limita cada envio, não o armazenamento total.
+
+### Histórico, retenção e recuperação
+
+Restaurar exige a revisão desejada e a revisão atual do caminho, criando uma nova revisão. Uma revisão de exclusão não é origem de restauração; escolha uma versão anterior. Para recuperar uma árvore, restaure os diretórios pais antes dos arquivos. Rename mantém versões no caminho antigo. Versões sobrescritas antes da implementação do histórico não podem ser reconstruídas.
+
+A idade de retenção começa quando a versão deixa de ser atual. Histórico legado sem data recebe prazo de graça na primeira manutenção aplicada. Recuo do relógio não acelera exclusões. A manutenção exige o lock exclusivo com o servidor parado, conserva referências de todos os compartilhamentos e publica metadados duráveis antes de remover objetos. Os registros atuais de exclusão permanecem para clientes offline.
+
+Backup bloqueia armazenamento e autenticação, valida a cópia e grava `backup.json` por último; sem esse marcador, a cópia está incompleta. Restauração exige destino novo e só grava `restored.json` após validar. Certificados e cópias locais de conflitos ficam fora desse backup e devem ser copiados separadamente.
+
+Restaurar um backup antigo pode recuar revisões. Nesse caso, pare todos os clientes, preserve suas pastas e metadados para inspeção e configure novas pastas locais e novos dispositivos. Não reconecte automaticamente clientes antigos a um servidor que perdeu revisões.
+
+### Serviços, logs e desinstalação
+
+Adapte os caminhos nos exemplos de `config/systemd/`, copie as unidades desejadas para `$HOME/.config/systemd/user/` e execute somente as correspondentes à função desta máquina:
 
 ```bash
 systemctl --user daemon-reload
@@ -171,31 +238,26 @@ systemctl --user enable --now crewsync-client.service
 journalctl --user -u crewsync-server.service -f
 ```
 
-Logs registram status e tamanho de respostas, sem token, convite, usuário, caminho ou conteúdo de documentos. Falhas esperadas retornam códigos de saída diferentes de zero. Não capture a saída do comando `invite` em logs públicos.
+Logs de requisição registram código e tamanho da resposta, sem tokens, convites, usuário, caminho ou conteúdo. Não capture a saída de `invite` em logs públicos. Para desinstalar, pare e desabilite os serviços e remova os binários e arquivos instalados. Preserve os dados e a configuração até conferir o backup.
 
-Para atualizar: pare os serviços, faça backup, instale os novos binários e confira `--version` e `check-config`; inicie o servidor e depois os clientes. Mantenha configuração, sessão e raiz interna. Não rebaixe para binários que não conhecem o formato de histórico atualizado. Se a nova versão falhar, preserve os dados e restaure uma cópia isolada do backup para diagnóstico.
+### Pacotes, compilação e contribuição
 
-Para desinstalar, pare/desabilite as unidades, remova os binários instalados e as unidades copiadas. Não remova a raiz interna ou as pastas locais sem backup e conferência.
+Os pacotes Linux musl estáticos dispensam glibc, Cargo, Python e OpenSSL no uso diário. OpenSSL CLI é necessário apenas para gerar certificados pelo script. `PREFIX` permite outro destino de instalação, como `PREFIX=/caminho/local ./install.sh --client`. O instalador não altera o PATH ou configurações existentes.
 
-## Diagnostico
+Para conferir o pacote baixado, coloque seu arquivo `.sha256` na mesma pasta e execute, substituindo o nome:
 
-- TLS recusado: confira CA, IP/hostname, relógio, validade e correspondência entre chave e certificado. Certificados usados como CA não devem ser usados como certificado final de servidor.
-- Falha antes de `HTTPS ready`: confira configuração, porta em uso, permissão 0700 da raiz e outro processo com lock. Não apague o arquivo de lock para contornar um servidor ativo.
-- HTTP 401/403: confira ativação/revogação, usuário habilitado e permissão no compartilhamento.
-- HTTP 409: outro cliente alterou a revisão; reconcilie ou revise a restauração antes de tentar novamente.
-- Disco cheio: interrompa novas gravações, libere espaço externo ao armazenamento, faça backup e só então considere manutenção. Nunca apague objetos raw manualmente.
-- Sem mudanças aparentes: confira compartilhamento, pasta local, credencial fora da pasta e saída do comando. Links e arquivos especiais são recusados.
+```bash
+sha256sum -c crewsync-VERSAO-ALVO.tar.gz.sha256
+```
 
-## Limites
+Para compilar, instale Rust stable e compilador C, clone o repositório e execute:
 
-Linux inicial; Windows, interface gráfica e Android são trabalho posterior. O piloto básico em dois computadores foi confirmado pelo usuário; testes físicos ampliados de queda de energia, disco cheio e medições entre máquinas ainda precisam ocorrer. Há relatórios sintéticos locais, sem promessa de desempenho para seus documentos.
+```bash
+git clone https://github.com/goncalvesl/crewsync.git
+cd crewsync
+cargo build --release --workspace --locked
+```
 
-Servidor serializado para rede privada. Sem quotas totais, compactação, retomada parcial ou limpeza automática das cópias locais. Manifestos e histórico por caminho têm limite de 16 MiB; manifestos aceitam até cem mil entradas. Raiz e arquivos internos não devem ser editados externamente. Não há lançamento estável anunciado.
+Os executáveis ficam em `target/release/`. Consulte o [repositório](https://github.com/goncalvesl/crewsync) para documentação de desenvolvimento, plano e testes. Leia `AGENTS.md` e `docs/WORKFLOW.md` antes de contribuir. Use dados sintéticos e execute `scripts/check-pilot.sh`; nunca inclua credenciais ou documentos reais.
 
-## Licenca
-
-A licença de distribuição aguarda definição do mantenedor. O repositório é público; a automação mantém a publicação de release condicionada à presença de uma licença. Consulte o repositório para o estado atualizado.
-
-## Contribuir
-
-[GitHub](https://github.com/goncalvesl/crewsync) reúne código, issues e plano. Leia `AGENTS.md` e `docs/WORKFLOW.md`, use dados sintéticos e execute `scripts/check-pilot.sh` antes de enviar alterações. Nunca inclua tokens, chaves ou documentos reais.
+Rapidez é um objetivo medido por ensaios reproduzíveis, sem promessa universal para os arquivos da equipe. Ainda não há quotas totais, compactação, retomada parcial ou limpeza automática das cópias locais. Resultados localhost não substituem medições físicas entre computadores.

@@ -3,13 +3,14 @@
 O usuário autorizou executar sequencialmente todas as etapas restantes. Implementação
 Linux, operação, site e automação avançaram; aceites externos continuam explícitos.
 Veja STATUS.md para evidências atuais. Não considerar release pública concluída
-sem licença e aceite físico ampliado.
+sem aceite físico ampliado. Licença GPL-3.0-only escolhida pelo mantenedor.
 
 ## 1. Fundação e decisões
 
 Workspace, arquitetura, testes e CI implementados. Distribuição definida para
-Linux musl x86_64/ARM64. **Licença aguarda decisão do mantenedor**, solicitada nesta
-sessão; não atribuir licença por suposição. Sem promessa de MSRV; CI usa stable.
+Linux musl x86_64/ARM64. **Licença GPL-3.0-only definida pelo mantenedor**.
+Objetivo: simples de instalar, manter e usar, além de rápido. Instalação mínima e
+manual do usuário direto, com detalhes técnicos apenas na seção final. Sem promessa de MSRV; CI usa stable.
 
 ## 2. Núcleo de armazenamento
 
@@ -50,7 +51,7 @@ Pendente externo: matriz ampliada e medições entre máquinas físicas (interru
 de rede/processo, conflitos, exclusões, revogação, disco cheio e energia), com
 hardware, kernel, volume e resultados. Não usar localhost como substituto. Registrar
 aceite em docs/reports/physical-acceptance.json somente após executar. Release
-0.1.0-alpha permanece condicionada a esses critérios e à licença.
+0.1.0-alpha permanece condicionada a esses critérios.
 
 ## 7. Manual e site
 
@@ -70,7 +71,7 @@ manual gera artefatos para ensaio. Tag correspondente publica prerelease somente
 com LICENSE e aceite físico ampliado. Pacote x86_64 validado localmente sem Python
 no container mínimo; ARM64 passou pela matriz CI, incluindo execução nativa de testes e instalação.
 
-Pendente de lançamento: licença, aceite externo, número publicável e tag. Nenhuma
+Pendente de lançamento: aceite externo, número publicável e tag. Nenhuma
 versão estável anunciada. Disponibilidade dos artefatos/CI em STATUS.md.
 
 ## Evolução posterior (fora da versão Linux atual)

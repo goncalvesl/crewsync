@@ -47,6 +47,9 @@ def render(source):
             if len(toc) > 1:
                 output.append('</section>')
             output.append(f'<section id="{slug}"><h2>{inline(label)}</h2>')
+        elif line.startswith('### '):
+            flush()
+            output.append('<h3>' + inline(line[4:]) + '</h3>')
         elif line.startswith('- '):
             flush()
             if not listing:

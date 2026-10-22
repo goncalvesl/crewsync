@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 //! Cliente Linux de piloto: ativação e reconciliação por revisão-base.
 pub mod sync;
 pub mod tree;

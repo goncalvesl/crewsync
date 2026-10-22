@@ -2,6 +2,9 @@
 
 Sincronização de pastas com servidor próprio, permissões por usuário e recuperação
 de versões. Implementação em Rust; primeira versão Linux para uma equipe pequena.
+O objetivo é ser **simples de instalar, manter e usar, além de rápido**, preservando
+a integridade dos arquivos. Instalação com o mínimo de passos e dependências;
+manual direto, com aprofundamento técnico apenas na seção final.
 Armazenamento raw, sem banco de dados externo. Windows e Android são posteriores.
 
 ## Usar
@@ -13,8 +16,8 @@ Armazenamento raw, sem banco de dados externo. Windows e Android são posteriore
 - [Operação](docs/OPERATIONS.md) e [recuperação de versões](docs/HISTORY.md).
 
 O piloto básico em duas máquinas foi confirmado pelo usuário. A matriz ampliada
-física e a licença continuam pendentes antes da release pública; não há versão
-estável anunciada. Site preparado para https://goncalvesl.github.io/crewsync/.
+física continua pendente antes da release pública; não há versão
+estável anunciada. Site publicado em https://goncalvesl.github.io/crewsync/.
 Consulte [STATUS.md](docs/STATUS.md) para publicação e resultados efetivos.
 
 ## Implementado
@@ -42,4 +45,4 @@ e [TESTING.md](docs/TESTING.md). Organização: crates/server, client e protocol
 config contém exemplos sem segredos; tests/e2e testa processos e HTTPS;
 site contém o site público; scripts contém ferramentas operacionais e de build.
 
-Licença em definição: [LICENSE-STATUS.md](LICENSE-STATUS.md).
+Licença: [GNU GPL versão 3 somente (GPL-3.0-only)](LICENSE). Avisos das dependências são preservados nos pacotes.

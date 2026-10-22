@@ -2,6 +2,15 @@
 
 Este guia orienta agentes e contribuidores. Aplicar os critérios à etapa em andamento, sem antecipar funcionalidades do roadmap. Documentação ajuda a manter decisões consistentes; a qualidade precisa ser demonstrada por revisão, testes e operação.
 
+## Experiência do usuário
+
+- Instalar, manter e usar com o mínimo de passos e dependências. Preferir padrões
+  úteis; novas opções precisam resolver uma necessidade real.
+- Documentar o caminho mais simples primeiro, em linguagem direta. Explicações
+  técnicas aprofundadas ficam no fim do manual, sem interromper o uso diário.
+- Tratar rapidez como objetivo mensurável. Não trocar integridade por atalhos nem
+  apresentar benchmarks sintéticos como promessa para os arquivos do usuário.
+
 ## Código e responsabilidades
 
 - Preferir a solução mais simples que preserve integridade, segurança e recuperação. Não criar frameworks internos, plugins ou abstrações para necessidades hipotéticas.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 //! Contratos da API HTTPS de piloto, versão 1.
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;

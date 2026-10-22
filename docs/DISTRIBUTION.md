@@ -17,7 +17,9 @@ python3 scripts/check-package.py target/packages/*.tar.gz
 Um pacote contém binários, install.sh, exemplos públicos de configuração/systemd,
 gerador de certificados e documentação. Nenhum dado privado é coletado da raiz
 do piloto. Inclui checksum SHA-256 e avisos das dependências. PREFIX controla a
-instalação; default ~/.local. Não há sudo nem inicialização automática.
+instalação; default ~/.local. `./install.sh --client` instala somente o cliente,
+`--server` instala servidor e auxiliares; sem opção, instala ambos. Manual e GPL
+ficam em share/crewsync. Não há sudo, ajustes de PATH ou inicialização automática.
 
 ## Automação
 
@@ -35,7 +37,7 @@ A matriz de desenvolvimento foi validada em x86_64 e ARM64 na execução
 com artefatos disponíveis na execução. Site publicado e verificado em
 https://goncalvesl.github.io/crewsync/.
 
-Publicação de release ainda depende de licença e aceite físico ampliado. Não há
+Licença GPL-3.0-only definida; publicação de release ainda depende do aceite físico ampliado. Não há
 binário fictício ligado no site. Notas devem indicar versão, testes, compatibilidade
 e limites. Não declarar versão estável com o piloto incompleto.
 

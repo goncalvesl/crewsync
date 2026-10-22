@@ -36,6 +36,7 @@ jobs:
       - run: python3 scripts/build-site.py
       - run: python3 tests/site/check.py target/site
       - run: python3 tests/site/test_build.py
+      - run: python3 tests/packaging/test_install.py
       - name: Browser QA
         run: |
           npm install --prefix /tmp/crewsync-browser playwright@1.64.1

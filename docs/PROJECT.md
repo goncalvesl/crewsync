@@ -2,6 +2,17 @@
 
 Este documento registra o escopo mais recente acordado. O `AGENTS.md` original permanece preservado; suas referências a Windows inicial e compactação não representam o escopo atual.
 
+## Objetivo principal
+
+Ser **simples de instalar, manter e usar, além de rápido**, preservando a integridade
+dos arquivos. Minimizar passos, dependências e escolhas na instalação. Preferir
+padrões úteis e reduzir a configuração manual. A documentação do usuário deve ser
+curta, direta e suficiente para começar; detalhes de arquitetura e funcionamento
+ficam em uma seção final opcional. Medir desempenho antes de prometer ou otimizar.
+
+Licença escolhida pelo mantenedor: **GNU GPL versão 3 somente (GPL-3.0-only)**,
+texto integral em [LICENSE](../LICENSE). Veja a decisão 0007.
+
 ## Requisitos definidos
 
 Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
@@ -26,7 +37,7 @@ Histórico com versões completas e deduplicação por hash. Retenção configur
 
 ## Decisões ainda abertas
 
-Licença e aceite físico ampliado para lançamento. Distribuição musl x86_64/ARM64, retenção e runtime Rust foram definidos na [decisão 0006](decisions/0006-operation-native-distribution.md). Protocolo v1 e ponte HTTPS do piloto definidos em [0004-pilot.md](decisions/0004-pilot.md). SHA-256 e persistência local JSON estão definidos em [0002-storage.md](decisions/0002-storage.md). Configuração TOML e ACLs locais estão definidos em [0003-config-authorization.md](decisions/0003-config-authorization.md); a autenticação por dispositivo e a ponte HTTPS foram adicionadas para o piloto (decisão 0004). Documentar escolhas antes de estabilizar contratos. A fundação Cargo, edição Rust e alvo inicial de CI estão registrados em [0001-foundation.md](decisions/0001-foundation.md). Compactação na transmissão é apenas uma otimização futura a avaliar; não é requisito da primeira versão.
+Aceite físico ampliado para lançamento. Licença GPL-3.0-only definida. Distribuição musl x86_64/ARM64, retenção e runtime Rust foram definidos na [decisão 0006](decisions/0006-operation-native-distribution.md). Protocolo v1 e ponte HTTPS do piloto definidos em [0004-pilot.md](decisions/0004-pilot.md). SHA-256 e persistência local JSON estão definidos em [0002-storage.md](decisions/0002-storage.md). Configuração TOML e ACLs locais estão definidos em [0003-config-authorization.md](decisions/0003-config-authorization.md); a autenticação por dispositivo e a ponte HTTPS foram adicionadas para o piloto (decisão 0004). Documentar escolhas antes de estabilizar contratos. A fundação Cargo, edição Rust e alvo inicial de CI estão registrados em [0001-foundation.md](decisions/0001-foundation.md). Compactação na transmissão é apenas uma otimização futura a avaliar; não é requisito da primeira versão.
 
 ## Limites de hospedagem
 

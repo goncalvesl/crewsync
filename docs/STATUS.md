@@ -5,8 +5,23 @@
 O usuário confirmou o piloto básico em dois computadores e autorizou executar
 todas as etapas restantes sem paradas. Implementação Linux e preparação de
 operação/site/distribuição foram realizadas. Windows/GUI/Android seguem como
-evolução posterior do escopo definido. Licença foi perguntada ao mantenedor;
-sem resposta até este registro, não foi atribuída por suposição.
+evolução posterior do escopo definido. O mantenedor escolheu GPL-3.0-only e
+reforçou o objetivo: simples de instalar, manter e usar, além de rápido. A instalação
+deve ter o mínimo de passos; o manual deve ser direto, com detalhes técnicos no fim.
+
+## Atualização: licença e simplicidade
+
+- GPL-3.0-only aplicada: LICENSE oficial, metadados nas três crates e pacotes;
+  LICENSE-STATUS removido. Decisão 0007 registra a autorização do mantenedor.
+- Objetivos explícitos em AGENTS/PROJECT/QUALITY/README e site: simples de instalar,
+  manter e usar, além de rápido; reduzir passos/dependências sem reduzir integridade.
+- Instalador com --client/--server, modo conjunto preservado, manual/licença e
+  auxiliares instalados em share/crewsync, caminhos completos sem ajuste de PATH.
+- Manual começa pelo uso diário, separa preparação do administrador e termina
+  com detalhes técnicos opcionais. Renderizador suporta subtítulos nesse apêndice.
+- scripts/check-pilot.sh passou: 72 Rust, 5 HTTPS, 3 TLS, 1 teste de entradas do
+  certificado, 2 testes de geração do manual e 4 testes de instalação; build,
+  formatação, Clippy e links do site passaram. QA local 390/768/1440px passou.
 
 ## Implementado
 
@@ -77,7 +92,7 @@ filtrar metadata pelo alvo corrigiu o erro, e a nova execução limpa comprova a
 regressão. Artefatos foram baixados para target/ci-packages/; o pacote x86_64 baixado
 teve checksum e instalação verificados novamente. Não equivalem a release pública.
 
-Faltam escolha da licença e matriz física ampliada/medições entre computadores.
+Falta a matriz física ampliada/medições entre computadores; GPL-3.0-only já definida.
 Esses dados não foram inventados; docs/reports/physical-acceptance.json conserva
 basic_pilot_accepted=true e extended_matrix_accepted=false. A automação impede
 publicar uma tag -dev ou release sem esses aceites. Não há versão estável.
