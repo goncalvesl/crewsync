@@ -9,7 +9,6 @@ case "${1:-}" in server|client) role=$1 ;; *) fail 'Uso: ./setup.sh server|clien
 package=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 for command in install sed mkdir chmod nohup realpath grep awk uname; do command -v "$command" >/dev/null || fail "Instale $command e tente novamente."; done
 if [ "$role" = server ]; then
-    command -v openssl >/dev/null || fail 'Instale OpenSSL e tente novamente (Arch: sudo pacman -S openssl; Debian/Ubuntu: sudo apt install openssl).'
     command -v curl >/dev/null || fail 'Instale curl e tente novamente.'
 fi
 ask() {
@@ -39,12 +38,35 @@ manager=background
 if command -v systemctl >/dev/null && systemctl --user show-environment >/dev/null 2>&1; then manager=systemd; fi
 if [ "$role" = server ]; then
     ask 'Diretório dos dados do servidor (novo)' "$HOME/.local/share/crewsync-server"; data=$(canonical "$answer"); new_path "$data"; separate "$config" "$data"
+    printf 'Conexão: 1 = HTTPS direto; 2 = HTTPS por proxy; 3 = HTTP para testes.\n' >&2
+    ask 'Modo de conexão' 1; mode=$answer
+    case "$mode" in 1|2|3) ;; *) fail 'Modo inválido; escolha 1, 2 ou 3.' ;; esac
     printf 'Informe o endereço usado pelos clientes: domínio (sync.empresa.com), IPv4 público ou IP de VPN.\n' >&2
-    ask 'Domínio ou IPv4 de acesso (sem https:// e sem porta)' ''; server_host=$answer
+    ask 'Domínio ou IPv4 de acesso (sem https:// e sem porta)' "$( [ "$mode" = 3 ] && printf 127.0.0.1 || true )"; server_host=$answer
     sh "$package/scripts/pilot-cert.sh" --check-address "$server_host"
-    ask 'Porta HTTPS' 8443; port=$answer
+    if [ "$mode" = 1 ]; then default_port=8443; else default_port=8080; fi
+    ask 'Porta do CrewSync (interna no modo proxy)' "$default_port"; port=$answer
     case "$port" in ''|*[!0-9]*) fail 'Porta inválida.' ;; esac
     [ "${#port}" -le 5 ] && [ "$port" -ge 1024 ] && [ "$port" -le 65535 ] || fail 'Use uma porta entre 1024 e 65535.'
+    bind=127.0.0.1
+    if [ "$mode" = 1 ]; then
+        bind=0.0.0.0
+        ask 'Certificado HTTPS existente (caminho absoluto) ou gerar CA privada' gerar; cert=$answer
+        if [ "$cert" = gerar ]; then
+            command -v openssl >/dev/null || fail 'Instale OpenSSL para gerar certificados, ou forneça um certificado existente.'
+        else
+            path "$cert"; [ -f "$cert" ] || fail 'Certificado não encontrado.'
+            ask 'Chave privada do certificado (caminho absoluto)' ''; key=$answer
+            path "$key"; [ -f "$key" ] || fail 'Chave privada não encontrada.'
+        fi
+    elif [ "$mode" = 3 ]; then
+        ask 'IPv4 de escuta (127.0.0.1 para testes locais)' 127.0.0.1; bind=$answer
+        sh "$package/scripts/pilot-cert.sh" --check-address "$bind"
+        case "$bind" in *[!0-9.]*) fail 'Use um IPv4 para a escuta HTTP.' ;; esac
+        printf 'HTTP envia convites, credenciais e arquivos sem criptografia.\n' >&2
+        ask 'Para habilitar HTTP sem criptografia, digite HTTP' nao
+        [ "$answer" = HTTP ] || fail 'HTTP não habilitado.'
+    fi
     ask 'Primeiro usuário (letras, números, _ ou -)' usuario; user=$answer
     printf '%s\n' "$user" | LC_ALL=C grep -Eq '^[a-zA-Z0-9_-]{1,64}$' || fail 'Nome de usuário inválido.'
     ask 'Nome da pasta compartilhada (letras, números, _ ou -)' Obras; share=$answer
@@ -52,10 +74,23 @@ if [ "$role" = server ]; then
 else
     ask 'Raiz local para as pastas compartilhadas' "$HOME/CrewSync"; [ ! -L "$answer" ] || fail 'A pasta local não pode ser um link simbólico.'; data=$(canonical "$answer"); separate "$config" "$data"
     [ ! -L "$data" ] || fail 'A pasta local não pode ser um link simbólico.'
-    ask 'Endereço HTTPS do servidor (ex.: https://sync.empresa.com:8443)' ''; url=$answer
-    case "$url" in https://*) ;; *) fail 'O endereço deve começar com https://.' ;; esac
-    ask 'Arquivo ca.crt recebido do administrador' "$HOME/Downloads/ca.crt"; ca=$answer; path "$ca"
-    [ -f "$ca" ] || fail 'Certificado não encontrado. Copie ca.crt do servidor por um meio confiável.'
+    ask 'Endereço do servidor (https:// ou http:// explícito para testes)' ''; url=$answer
+    case "$url" in
+        https://*)
+            ask 'CA privada (caminho absoluto) ou system para certificado público' system; ca=$answer
+            if [ "$ca" != system ]; then
+                path "$ca"
+                [ -f "$ca" ] || fail 'Certificado não encontrado. Copie ca.crt por um meio confiável.'
+            fi
+            ;;
+        http://*)
+            printf 'HTTP envia convites, credenciais e arquivos sem criptografia.\n' >&2
+            ask 'Para habilitar HTTP sem criptografia, digite HTTP' nao
+            [ "$answer" = HTTP ] || fail 'HTTP não habilitado.'
+            ca=insecure-http
+            ;;
+        *) fail 'O endereço deve começar com https:// ou http://.' ;;
+    esac
     ask 'Nome deste computador' "$(uname -n)"; device=$answer
 fi
 mkdir -p "$(dirname -- "$config")"
@@ -72,17 +107,37 @@ enabled = true
 $user = "write"
 CONFIG
     "$prefix/bin/crewsync-server" check-config "$config/server.toml"
-    sh "$package/scripts/pilot-cert.sh" "$config/tls" "$server_host"
-    set -- "$prefix/bin/crewsync-server" serve "$config/server.toml" 0.0.0.0 "$port" "$config/tls/server.crt" "$config/tls/server.key"
+    if [ "$mode" = 1 ]; then
+        if [ "$cert" = gerar ]; then
+            sh "$package/scripts/pilot-cert.sh" "$config/tls" "$server_host"
+            cert=$config/tls/server.crt; key=$config/tls/server.key
+            generated_ca=yes
+        else
+            generated_ca=no
+        fi
+        set -- "$prefix/bin/crewsync-server" serve "$config/server.toml" "$bind" "$port" "$cert" "$key"
+        public_url=https://$server_host:$port
+    else
+        set -- "$prefix/bin/crewsync-server" serve-http "$config/server.toml" "$bind" "$port"
+        if [ "$mode" = 2 ]; then
+            public_url=https://$server_host
+            printf '%s {\n    reverse_proxy 127.0.0.1:%s\n}\n' "$server_host" "$port" > "$config/Caddyfile"
+        else
+            public_url=http://$server_host:$port
+        fi
+    fi
 else
-    install -m 600 "$ca" "$config/ca.crt"
+    case "$ca" in
+        system|insecure-http) activation_ca=$ca ;;
+        *) install -m 600 "$ca" "$config/ca.crt"; activation_ca=$config/ca.crt ;;
+    esac
     saved_tty=
     if [ -t 0 ]; then saved_tty=$(stty -g); stty -echo; trap 'stty "$saved_tty"' EXIT HUP INT TERM; fi
     printf 'Convite de ativação (entrada oculta): ' >&2
     IFS= read -r invite || fail 'Convite não informado.'
     if [ -n "$saved_tty" ]; then stty "$saved_tty"; trap - EXIT HUP INT TERM; fi
     printf '\n' >&2
-    printf '%s\n' "$invite" | "$prefix/bin/crewsync-client" activate "$url" "$config/ca.crt" "$config/session.json" "$device"
+    printf '%s\n' "$invite" | "$prefix/bin/crewsync-client" activate "$url" "$activation_ca" "$config/session.json" "$device"
     unset invite
     mkdir -p "$data"
     "$prefix/bin/crewsync-client" sync-root "$config/session.json" "$data"
@@ -115,15 +170,39 @@ fi
 if [ "$role" = server ]; then
     ready=no
     for attempt in 1 2 3 4 5 6 7 8 9 10; do
-        if curl --noproxy '*' --cacert "$config/tls/ca.crt" -sS --connect-timeout 1 --max-time 2 "https://127.0.0.1:$port/" -o /dev/null 2>/dev/null; then ready=yes; break; fi
+        if [ "$mode" = 1 ]; then
+            if [ "$generated_ca" = yes ]; then readiness_ca=$config/tls/ca.crt; else readiness_ca=$cert; fi
+            # Certificado privado ou público existente: confiar na cadeia fornecida
+            # e verificar o nome de acesso, roteando somente este teste para loopback.
+            if curl --noproxy '*' --cacert "$readiness_ca" --resolve "$server_host:$port:127.0.0.1" -sS --connect-timeout 1 --max-time 2 "$public_url/" -o /dev/null 2>/dev/null; then ready=yes; break; fi
+        else
+            probe_host=$bind
+            [ "$probe_host" != 0.0.0.0 ] || probe_host=127.0.0.1
+            if curl --noproxy '*' -sS --connect-timeout 1 --max-time 2 "http://$probe_host:$port/" -o /dev/null 2>/dev/null; then ready=yes; break; fi
+        fi
         sleep 1
     done
     [ "$ready" = yes ] || fail "O servidor não iniciou. Consulte $( [ "$manager" = systemd ] && printf 'journalctl --user -u %s' "$service" || printf '%s/service.log' "$config" )."
-    printf '\nServidor pronto: https://%s:%s\nCopie apenas este certificado para os clientes: %s/tls/ca.crt\nConvite para o primeiro cliente (válido por 1 hora):\n' "$server_host" "$port" "$config"
+    if [ "$mode" = 2 ]; then
+        printf '\nBackend pronto: http://127.0.0.1:%s\nURL pública após configurar o proxy: %s\nExemplo Caddy: %s/Caddyfile\n' "$port" "$public_url" "$config"
+    else
+        printf '\nServidor pronto: %s\n' "$public_url"
+    fi
+    if [ "$mode" = 1 ] && [ "$generated_ca" = yes ]; then
+        printf 'Copie apenas este certificado para os clientes: %s/tls/ca.crt\n' "$config"
+    fi
+    admin_key=$("$prefix/bin/crewsync-server" admin-key "$config/server.toml" "$public_url")
+    printf 'Painel de administração: %s/\nChave administrativa (guarde em local seguro):\n%s\n' "$public_url" "$admin_key"
+    unset admin_key
+    printf 'Convite para o primeiro cliente (válido por 1 hora):\n'
     printf 'Pasta compartilhada: %s\n' "$share"
     "$prefix/bin/crewsync-server" invite "$config/server.toml" "$user" 3600
     printf 'Outro convite: "%s/bin/crewsync-server" invite "%s/server.toml" "%s" 3600\n' "$prefix" "$config" "$user"
-    printf 'Se houver firewall, libere TCP %s no servidor e no painel do provedor para os clientes.\n' "$port"
+    if [ "$mode" = 2 ]; then
+        printf 'Configure o proxy HTTPS; libere somente TCP 80/443 para ele. Mantenha a porta interna privada.\n'
+    elif [ "$mode" = 1 ] || [ "$bind" != 127.0.0.1 ]; then
+        printf 'Se houver firewall, libere TCP %s somente para os clientes desejados.\n' "$port"
+    fi
 else
     printf '\nCliente ativado e sincronizando: %s\n' "$data"
 fi

@@ -35,7 +35,7 @@ cargo test --workspace
 O workflow `.github/workflows/ci.yml` executa build, fmt, Clippy e testes com
 `--locked`. Também verifica dependências do sistema e roda os testes TLS e de rede.
 
-Nesta entrega há 72 testes Rust locais (incluindo integração de autenticação,
+Na implementação local há 82 testes Rust locais (incluindo integração de autenticação,
 worker em processo separado, cliente+armazenamento e falhas simuladas), além de
 cinco testes HTTPS e um ensaio ENOSPC marcados `ignored` por exigirem
 recursos externos (TCP e tmpfs isolado). O motivo é explícito:
@@ -138,8 +138,41 @@ perda de acesso com cópia local preservada, arquivos avulsos, links e layout le
 O teste real do assistente usa dois clientes e adiciona um compartilhamento durante
 watch, verificando descoberta sem reconfiguração e ausência da pasta sem acesso.
 
-O assistente tem sete cenários, incluindo HUP enviado antes de nohup executar e
+O assistente cobre HUP enviado antes de nohup executar e
 limpeza que encerra serviço e workers, aguardando pidfds antes de apagar o fixture.
 A regressão HUP foi conferida contra o script anterior (falha esperada) e o script
 corrigido. Os testes auxiliares exigem Linux com /proc e suporte a pidfd; isso não
 adiciona dependências aos binários distribuídos.
+
+## Três modos de transporte (implementação local)
+
+Os testes do assistente agora têm onze cenários: os anteriores, modo HTTP/proxy,
+recusa de HTTP antes de gravar, bind IPv4 específico e certificado existente/confiança do sistema sem
+ca.crt no cliente. Os testes Rust verificam opt-in de HTTP, URLs sem credenciais
+ou caminhos adicionais e leitura de sessões antigas sem mudar a confiança.
+
+Proxy real:
+
+```bash
+CREWSYNC_CADDY_BIN=/caminho/caddy python3 tests/e2e/proxy.py
+```
+
+O teste usa Caddy real, TLS com CA sintética e HTTP no backend, dois clientes,
+transferência de 1 MiB, rejeição de confiança incorreta e revogação. SSL_CERT_FILE
+e SSL_CERT_DIR são alterados somente nos subprocessos isolados; não instala CAs
+na conta real, não usa ACME e não depende de DNS externo/portas fixas. check-pilot
+executa esse teste quando CREWSYNC_CADDY_BIN está definido; a CI instala Caddy e
+o executa explicitamente. O teste não comprova emissão pública Let's Encrypt.
+
+## Painel administrativo
+
+`python3 tests/e2e/admin.py` cobre HTTP e HTTPS direto com cliente Rust real:
+login, usuários, compartilhamentos/ACL, convite, ativação, revogação, bloqueio,
+origem cruzada e formulário desatualizado. Com `PLAYWRIGHT_MODULE` apontando para
+o módulo Playwright, executa também o fluxo Chromium completo e verifica telas
+390/768/1440, console e overflow. Capturas em `target/admin-*.png`.
+
+Seis testes Rust do módulo admin cobrem hash/permissões/rotação da chave, sessão,
+CSRF, origem/expiração, escape HTML, limites, TOML inline/comentários, revisão e
+publicação privada. O teste Caddy também verifica login e cadastro pelo proxy,
+com cookie Secure derivado da origem pública HTTPS.

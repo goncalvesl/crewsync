@@ -1,4 +1,4 @@
-use crewsync_client::{Session, activate, read_code, sync};
+use crewsync_client::{Session, activate_with, read_code, sync};
 use std::env;
 use std::io;
 use std::path::Path;
@@ -9,7 +9,7 @@ fn main() -> ExitCode {
     if args.len() == 1 {
         if args[0] == "--help" {
             println!(
-                "crewsync-client — Cliente de sincronização (em desenvolvimento)\n\nUso: crewsync-client --help | --version\n  activate URL CA SESSION NOME (convite por stdin)\n  shares SESSION\n  history SESSION SHARE CAMINHO\n  restore SESSION SHARE CAMINHO REVISAO BASE\n  sync-root SESSION RAIZ\n  watch-root SESSION RAIZ [SEGUNDOS]\n  sync SESSION SHARE PASTA\n  watch SESSION SHARE PASTA [SEGUNDOS]\n\nCliente HTTPS para piloto Linux. Retenção automática ainda não implementada."
+                "crewsync-client — Cliente de sincronização (em desenvolvimento)\n\nUso: crewsync-client --help | --version\n  activate URL CA|system|insecure-http SESSION NOME (convite por stdin)\n  shares SESSION\n  history SESSION SHARE CAMINHO\n  restore SESSION SHARE CAMINHO REVISAO BASE\n  sync-root SESSION RAIZ\n  watch-root SESSION RAIZ [SEGUNDOS]\n  sync SESSION SHARE PASTA\n  watch SESSION SHARE PASTA [SEGUNDOS]\n\nCliente HTTP/HTTPS para piloto Linux. Retenção automática ainda não implementada."
             );
             return ExitCode::SUCCESS;
         }
@@ -22,10 +22,20 @@ fn main() -> ExitCode {
         Some("activate") if args.len() == 5 => Some((|| {
             eprintln!("Cole o código de convite e pressione Enter:");
             let code = read_code(io::stdin().lock())?;
-            eprintln!("Ativando dispositivo no servidor HTTPS...");
-            activate(
+            eprintln!("Ativando dispositivo no servidor...");
+            let trust = if args[2] == "system" {
+                crewsync_protocol::transport::Trust::System
+            } else if args[2] == "insecure-http" {
+                eprintln!(
+                    "HTTP sem criptografia: convites, credenciais e arquivos trafegam em texto claro."
+                );
+                crewsync_protocol::transport::Trust::PlainHttp
+            } else {
+                crewsync_protocol::transport::Trust::CustomCa(Path::new(&args[2]))
+            };
+            activate_with(
                 &args[1].to_string_lossy(),
-                Path::new(&args[2]),
+                trust,
                 Path::new(&args[3]),
                 &args[4].to_string_lossy(),
                 &code,

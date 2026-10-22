@@ -4,6 +4,7 @@ pub mod access;
 pub mod config;
 pub mod storage;
 
+pub mod admin;
 pub mod auth;
 pub mod network;
 

@@ -1,4 +1,4 @@
-//! HTTPS nativo, TLS 1.2/1.3, CA explícita e corpos delimitados em streaming.
+//! HTTP explícito ou HTTPS com CA privada/padrão do sistema, sempre em streaming.
 use crate::{Frame, MAX_FRAME, MAX_JSON, Request, invalid};
 use serde::de::DeserializeOwned;
 use std::io::{self, BufRead, BufReader, Read, Write};
@@ -60,6 +60,60 @@ pub fn content_length(headers: &[httparse::Header<'_>]) -> io::Result<u64> {
     length.ok_or_else(|| invalid("Content-Length ausente"))
 }
 
+/// HTTP precisa ser escolhido explicitamente; nunca há downgrade ou redirects.
+#[derive(Clone, Copy)]
+pub enum Trust<'a> {
+    CustomCa(&'a Path),
+    System,
+    PlainHttp,
+}
+
+pub fn validate_url(value: &str, trust: Trust<'_>) -> io::Result<url::Url> {
+    let url = url::Url::parse(value).map_err(|_| invalid("URL HTTP/HTTPS inválida"))?;
+    let expected = if matches!(trust, Trust::PlainHttp) {
+        "http"
+    } else {
+        "https"
+    };
+    if url.scheme() != expected
+        || !url.username().is_empty()
+        || url.password().is_some()
+        || url.query().is_some()
+        || url.fragment().is_some()
+        || url.path() != "/"
+        || url.host_str().is_none()
+    {
+        return Err(invalid(
+            "use URL HTTPS da raiz; HTTP requer modo insecure-http explícito; sem credenciais ou parâmetros",
+        ));
+    }
+    Ok(url)
+}
+
+fn root_store(trust: Trust<'_>) -> io::Result<rustls::RootCertStore> {
+    let certs = match trust {
+        Trust::CustomCa(path) => {
+            rustls_pemfile::certs(&mut BufReader::new(std::fs::File::open(path)?))
+                .collect::<Result<Vec<_>, _>>()?
+        }
+        Trust::System => rustls_native_certs::load_native_certs().certs,
+        Trust::PlainHttp => return Err(invalid("HTTP não usa certificados")),
+    };
+    if certs.is_empty() {
+        return Err(invalid(
+            "nenhuma CA disponível; confira ca.crt ou ca-certificates do sistema",
+        ));
+    }
+    let mut roots = rustls::RootCertStore::empty();
+    for cert in certs {
+        roots.add(cert).map_err(|_| invalid("CA inválida"))?;
+    }
+    Ok(roots)
+}
+
+trait Connection: Read + Write {}
+impl<T: Read + Write> Connection for T {}
+
 pub fn exchange(
     url: &str,
     ca: &Path,
@@ -69,37 +123,42 @@ pub fn exchange(
     output: &mut dyn Write,
     limit: u64,
 ) -> io::Result<()> {
-    let url = url::Url::parse(url).map_err(|_| invalid("URL HTTPS inválida"))?;
-    if url.scheme() != "https"
-        || !url.username().is_empty()
-        || url.password().is_some()
-        || url.query().is_some()
-        || url.fragment().is_some()
-        || url.path() != "/"
-    {
-        return Err(invalid(
-            "use URL HTTPS da raiz, sem credenciais ou parâmetros",
-        ));
-    }
+    exchange_with(
+        url,
+        Trust::CustomCa(ca),
+        request,
+        reader,
+        size,
+        output,
+        limit,
+    )
+}
+
+pub fn exchange_with(
+    url: &str,
+    trust: Trust<'_>,
+    request: Request,
+    reader: &mut dyn Read,
+    size: u64,
+    output: &mut dyn Write,
+    limit: u64,
+) -> io::Result<()> {
+    let url = validate_url(url, trust)?;
     let host = url.host_str().ok_or_else(|| invalid("host ausente"))?;
     let host = host.trim_start_matches('[').trim_end_matches(']');
-    let port = url.port().unwrap_or(443);
-    let certs = rustls_pemfile::certs(&mut BufReader::new(std::fs::File::open(ca)?))
-        .collect::<Result<Vec<_>, _>>()?;
-    if certs.is_empty() {
-        return Err(invalid("CA vazia"));
-    }
-    let mut roots = rustls::RootCertStore::empty();
-    for cert in certs {
-        roots.add(cert).map_err(|_| invalid("CA inválida"))?;
-    }
-    let config = rustls::ClientConfig::builder()
-        .with_root_certificates(roots)
-        .with_no_client_auth();
-    let name = rustls::pki_types::ServerName::try_from(host.to_owned())
-        .map_err(|_| invalid("host TLS inválido"))?;
-    let connection =
-        rustls::ClientConnection::new(Arc::new(config), name).map_err(io::Error::other)?;
+    let port = url
+        .port_or_known_default()
+        .ok_or_else(|| invalid("porta ausente"))?;
+    let tls = if matches!(trust, Trust::PlainHttp) {
+        None
+    } else {
+        let config = rustls::ClientConfig::builder()
+            .with_root_certificates(root_store(trust)?)
+            .with_no_client_auth();
+        let name = rustls::pki_types::ServerName::try_from(host.to_owned())
+            .map_err(|_| invalid("host TLS inválido"))?;
+        Some(rustls::ClientConnection::new(Arc::new(config), name).map_err(io::Error::other)?)
+    };
     let mut last = io::Error::new(io::ErrorKind::AddrNotAvailable, "host sem endereço");
     let mut connected = None;
     for address in (host, port).to_socket_addrs()? {
@@ -114,7 +173,10 @@ pub fn exchange(
     let tcp = connected.ok_or(last)?;
     tcp.set_read_timeout(Some(Duration::from_secs(30)))?;
     tcp.set_write_timeout(Some(Duration::from_secs(30)))?;
-    let mut tls = rustls::StreamOwned::new(connection, tcp);
+    let mut connection: Box<dyn Connection> = match tls {
+        Some(tls) => Box::new(rustls::StreamOwned::new(tls, tcp)),
+        None => Box::new(tcp),
+    };
     let mut line = serde_json::to_vec(&Frame {
         request,
         body_bytes: size,
@@ -128,16 +190,16 @@ pub fn exchange(
         .checked_add(line.len() as u64)
         .ok_or_else(|| invalid("corpo longo demais"))?;
     write!(
-        tls,
+        connection,
         "POST /v1/rpc HTTP/1.1\r\nHost: {}\r\nContent-Type: application/octet-stream\r\nConnection: close\r\nContent-Length: {total}\r\n\r\n",
         url.authority()
     )?;
-    tls.write_all(&line)?;
-    if io::copy(&mut reader.take(size), &mut tls)? != size {
+    connection.write_all(&line)?;
+    if io::copy(&mut reader.take(size), &mut connection)? != size {
         return Err(invalid("arquivo mudou durante envio"));
     }
-    tls.flush()?;
-    let mut input = BufReader::new(tls);
+    connection.flush()?;
+    let mut input = BufReader::new(connection);
     let head = read_http_head(&mut input)?;
     let mut headers = [httparse::EMPTY_HEADER; 64];
     let mut response = httparse::Response::new(&mut headers);
@@ -210,14 +272,49 @@ pub fn request_length(head: &[u8]) -> io::Result<u64> {
 }
 
 pub fn json<T: DeserializeOwned>(url: &str, ca: &Path, request: Request) -> io::Result<T> {
+    json_with(url, Trust::CustomCa(ca), request)
+}
+
+pub fn json_with<T: DeserializeOwned>(
+    url: &str,
+    trust: Trust<'_>,
+    request: Request,
+) -> io::Result<T> {
     let mut bytes = Vec::new();
-    exchange(url, ca, request, &mut io::empty(), 0, &mut bytes, MAX_JSON)?;
+    exchange_with(
+        url,
+        trust,
+        request,
+        &mut io::empty(),
+        0,
+        &mut bytes,
+        MAX_JSON,
+    )?;
     serde_json::from_slice(&bytes).map_err(|_| invalid("resposta JSON inválida"))
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn transport_mode_is_explicit_and_urls_cannot_inject_credentials_or_paths() {
+        for trust in [Trust::System, Trust::CustomCa(Path::new("unused"))] {
+            assert!(validate_url("https://sync.example.test:8443", trust).is_ok());
+            assert!(validate_url("http://127.0.0.1:8080", trust).is_err());
+        }
+        assert!(validate_url("http://127.0.0.1:8080", Trust::PlainHttp).is_ok());
+        assert!(validate_url("https://sync.example.test", Trust::PlainHttp).is_err());
+        for url in [
+            "https://user:password@sync.example.test",
+            "https://sync.example.test/path",
+            "https://sync.example.test/?token=secret",
+            "https://sync.example.test/#secret",
+            "ftp://sync.example.test",
+        ] {
+            assert!(validate_url(url, Trust::System).is_err());
+        }
+    }
+
     #[test]
     fn http_rejects_ambiguous_framing_and_bounded_headers() {
         for headers in [

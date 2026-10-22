@@ -1,5 +1,67 @@
 # Estado e retomada
 
+## Versão preparada para publicação — 0.1.0-alpha.7
+
+Inclui três modos de transporte e painel administrativo em Rust. Release notes,
+versão e links locais preparados. O painel gere usuários, compartilhamentos,
+ACLs, convites e dispositivos no mesmo listener; usa chave rotativa, sessões
+protegidas e edição atômica do TOML. Testes do painel HTTP/HTTPS, Chromium e
+proxy Caddy reais passaram. Check-pilot completo em alpha.7 está em execução;
+a versão pública continua alpha.6 até a CI de publicação terminar.
+
+## Implementação local — painel administrativo (não publicada)
+
+Painel em Rust/HTML/CSS no mesmo listener da sincronização: cadastro e bloqueio
+de usuários, criação de compartilhamentos, permissões, convites e dispositivos
+por usuário com revogação. Não importa caminhos existentes nem exclui dados.
+Instalador mostra chave administrativa; `admin-key CONFIG URL_PUBLICA` recupera
+acesso. Hash privado, sessão em memória, cookie HTTPS inclusive por proxy,
+CSRF/origem, escape HTML e revisão/edição atômica do TOML. Decisão 0012; manual,
+configuração, operações, plano, README e site local atualizados.
+
+Validação: check-pilot completo passou com Caddy real (build, fmt, Clippy,
+82 testes Rust, cinco HTTPS explícitos, seis TLS sem sockets, dois de entrada,
+onze cenários do assistente, HTTP/HTTPS do painel, proxy, site e release gates).
+Chromium passou no fluxo completo do painel em 390/768/1440px, sem erro de console
+ou overflow; capturas em target/admin-*.png. Cliente real comprova aplicação de
+ACLs e revogação. Corrigidos no teste real Origin de formulários com política de
+referrer e pattern HTML moderno; rejeição de origem consome corpo limitado para
+entregar HTTP 403 sem reset TCP. CI inclui testes do painel e navegador.
+
+A release pública continua alpha.6; não houve publicação, commit ou push desta
+etapa. Próxima ação de distribuição: seguir RELEASING.md quando solicitada nova
+release, incluindo musl x86_64/ARM64 e fonte offline. Nenhum serviço real alterado.
+
+## Implementação local — três modos de transporte (não publicada)
+
+Pedido atual implementado: HTTP explícito para testes, HTTPS por proxy e HTTPS
+direto (CA privada automática ou certificado/chave existentes). HTTPS permanece
+validado; cliente aceita CAs nativas do sistema ou CA privada. HTTP exige opt-in
+no assistente e na sessão; não há downgrade nem redirects. Sessões antigas com
+CA continuam válidas. Modo proxy usa backend em loopback e gera Caddyfile sem
+instalar proxy, alterar firewall ou declarar o endpoint público pronto.
+
+Decisão 0011, PROJECT/PLAN, manual, CONFIGURATION, README, exemplos e site local
+atualizados. Manual traz instalação/configuração simples de Caddy, reuso de
+Coolify, rede de containers, migração e renovação. O painel administrativo foi implementado na etapa seguinte, descrita acima.
+A alpha.6 dos downloads não inclui os três modos; não publicar esses binários
+como assets da tag existente nem mudar as versões antes de uma nova release.
+
+Validação local: CREWSYNC_CADDY_BIN=/tmp/crewsync-caddy-qa/caddy
+scripts/check-pilot.sh passou: build/fmt/Clippy, 76 Rust, cinco HTTPS, seis TLS
+sem sockets, dois testes de entrada, site, onze cenários do assistente e quatro
+gates de release. Caddy 2.11.7 real (arquivo oficial com SHA-512 conferido):
+backend HTTP privado, dois clientes HTTPS com confiança nativa, 1 MiB transferido,
+CA incorreta recusada e revogação. CI configurada para executar o teste com Caddy instalado.
+Não houve emissão ACME nem alteração de certificados, serviços ou dados reais.
+
+Pacote GNU local gerado/check-package passou checksum, instalação e onze cenários
+do assistente; não é pacote musl de distribuição. Musl x86_64/ARM64 e fonte offline
+precisam da CI na próxima release. Verificação do site: build/check, três testes
+do gerador, quatro de release e prepare-release --check passaram. Nenhuma nova
+release, tag, commit ou push foi feita. Chromium local passou
+em 390/768/1440px, sem problemas de navegação, âncoras, overflow ou console.
+
 ## Versão pública atual
 
 **0.1.0-alpha.6**, para testes, GPL-3.0-only:

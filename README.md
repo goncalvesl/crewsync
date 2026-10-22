@@ -36,12 +36,12 @@ usuário. Veja como [gerenciar pastas e permissões](docs/MANUAL.md#configurar) 
 ## Downloads
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.6 (alpha, para testes).
+Versão atual: 0.1.0-alpha.7 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-arm64.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.6) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.7) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-source.tar.gz)
 <!-- downloads:end -->
 
 ## Usar
@@ -65,6 +65,14 @@ conflitos preservados, exclusões persistentes, histórico/restauração, reten�
 configurável, coleta offline com simulação e backup verificável em destino novo.
 Não substitui backup independente. Servidor remoto ou local por HTTPS; veja limites no manual.
 
+## Servidor e conexão
+
+A alpha.7 adiciona o painel administrativo para usuários, pastas compartilhadas,
+permissões e dispositivos, no mesmo endereço da sincronização. Também oferece
+HTTPS direto, HTTPS por proxy e HTTP explícito para testes. Consulte o
+[manual](docs/MANUAL.md#painel-do-servidor) para configurar o proxy e administrar
+o servidor. É uma versão alpha para testes; mantenha backup independente.
+
 ## Desenvolver
 
 ```bash
@@ -83,3 +91,7 @@ config contém exemplos sem segredos; tests/e2e testa processos e HTTPS;
 site contém o site público; scripts contém ferramentas operacionais e de build.
 
 Licença: [GNU GPL versão 3 somente (GPL-3.0-only)](LICENSE). Avisos das dependências são preservados nos pacotes.
+
+O painel administrativo está disponível na alpha.7: usuários, pastas, permissões,
+convites e dispositivos no mesmo endereço do servidor. Veja [acesso e recuperação
+da chave](docs/MANUAL.md#painel-do-servidor).

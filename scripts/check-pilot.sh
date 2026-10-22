@@ -16,6 +16,12 @@ python3 tests/site/test_build.py
 
 python3 tests/packaging/test_install.py
 python3 tests/packaging/test_setup.py
+python3 tests/e2e/admin.py
+if [ -n "${CREWSYNC_CADDY_BIN:-}" ]; then
+    python3 tests/e2e/proxy.py
+else
+    printf 'Proxy real: execute CREWSYNC_CADDY_BIN=/caminho/caddy python3 tests/e2e/proxy.py (CI instala Caddy).\n'
+fi
 
 python3 -m unittest discover -s tests/release
 python3 scripts/prepare-release.py --check

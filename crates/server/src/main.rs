@@ -9,7 +9,7 @@ fn main() -> ExitCode {
     if args.len() == 1 {
         if args[0] == "--help" {
             println!(
-                "crewsync-server — Servidor central (em desenvolvimento)\n\nUso: crewsync-server --help | --version | check-config ARQUIVO\n  invite CONFIG USUARIO SEGUNDOS\n  devices CONFIG\n  revoke CONFIG DEVICE_ID\n  serve CONFIG HOST PORT CERT KEY\n  maintain CONFIG [--apply] (servidor parado)\n  backup CONFIG NOVO_DIRETORIO\n  restore BACKUP NOVO_DIRETORIO\n\nServidor HTTPS para piloto Linux. Histórico e retenção disponíveis; use maintain para simular a coleta."
+                "crewsync-server — Servidor central (em desenvolvimento)\n\nUso: crewsync-server --help | --version | check-config ARQUIVO\n  admin-key CONFIG URL_PUBLICA (gera/redefine chave do painel)\n  invite CONFIG USUARIO SEGUNDOS\n  devices CONFIG\n  revoke CONFIG DEVICE_ID\n  serve CONFIG HOST PORT CERT KEY\n  serve-http CONFIG HOST PORT (proxy/teste sem TLS)\n  maintain CONFIG [--apply] (servidor parado)\n  backup CONFIG NOVO_DIRETORIO\n  restore BACKUP NOVO_DIRETORIO\n\nServidor HTTP/HTTPS para piloto Linux. Histórico e retenção disponíveis; use maintain para simular a coleta."
             );
             return ExitCode::SUCCESS;
         }
@@ -63,6 +63,17 @@ fn main() -> ExitCode {
             Path::new(&args[4]),
             Path::new(&args[5]),
         )),
+        Some("serve-http") if args.len() == 4 => Some(network::serve_http(
+            Path::new(&args[1]),
+            &args[2].to_string_lossy(),
+            &args[3].to_string_lossy(),
+        )),
+        Some("admin-key") if args.len() == 3 => Some((|| {
+            let key =
+                crewsync_server::admin::reset_key(Path::new(&args[1]), &args[2].to_string_lossy())?;
+            println!("{key}");
+            Ok(())
+        })()),
         Some("invite" | "devices" | "revoke") => Some(admin(&args)),
         _ => None,
     };

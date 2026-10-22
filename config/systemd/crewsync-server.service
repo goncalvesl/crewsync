@@ -1,4 +1,7 @@
 # Exemplo: adaptar caminhos absolutos e instalar como unidade de usuário.
+# Próxima versão: para proxy no mesmo host, substitua ExecStart por:
+# ExecStart=%h/.local/bin/crewsync-server serve-http %h/crewsync-pilot/server.toml 127.0.0.1 8080
+# HTTPS termina no proxy; mantenha o backend privado.
 [Unit]
 StartLimitIntervalSec=300
 StartLimitBurst=3

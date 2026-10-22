@@ -38,6 +38,11 @@ jobs:
       - run: python3 tests/site/test_build.py
       - run: python3 tests/packaging/test_install.py
       - run: python3 tests/packaging/test_setup.py
+      - run: python3 tests/e2e/admin.py
+      - name: HTTPS reverse proxy
+        run: |
+          sudo apt-get update && sudo apt-get install -y caddy
+          CREWSYNC_CADDY_BIN=$(command -v caddy) python3 tests/e2e/proxy.py
       - run: python3 -m unittest discover -s tests/release
       - run: python3 scripts/prepare-release.py --check
       - name: Browser QA
@@ -49,3 +54,4 @@ jobs:
           site_pid=$!
           trap 'kill "$site_pid"' EXIT
           PLAYWRIGHT_MODULE=/tmp/crewsync-browser/node_modules/playwright node tests/site/browser.cjs
+          PLAYWRIGHT_MODULE=/tmp/crewsync-browser/node_modules/playwright python3 tests/e2e/admin.py

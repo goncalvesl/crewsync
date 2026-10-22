@@ -14,7 +14,10 @@ use std::path::{Path, PathBuf};
 #[serde(deny_unknown_fields)]
 pub struct Session {
     pub url: String,
-    pub ca: PathBuf,
+    #[serde(default)]
+    pub ca: Option<PathBuf>,
+    #[serde(default)]
+    pub allow_http: bool,
     token: String,
     pub device_id: String,
 }
@@ -33,7 +36,16 @@ impl Session {
         }
         let session: Self = disk::read_json(path, 64 * 1024)?;
         disk::validate_hash(&session.token)?;
+        transport::validate_url(&session.url, session.trust()?)?;
         Ok(session)
+    }
+    fn trust(&self) -> io::Result<transport::Trust<'_>> {
+        match (&self.ca, self.allow_http) {
+            (Some(ca), false) => Ok(transport::Trust::CustomCa(ca)),
+            (None, false) => Ok(transport::Trust::System),
+            (None, true) => Ok(transport::Trust::PlainHttp),
+            (Some(_), true) => Err(invalid("sessão combina HTTP com CA; configuração inválida")),
+        }
     }
     pub fn request(&self, operation: Operation) -> Request {
         Request {
@@ -42,11 +54,22 @@ impl Session {
         }
     }
     pub fn call<T: serde::de::DeserializeOwned>(&self, operation: Operation) -> io::Result<T> {
-        transport::json(&self.url, &self.ca, self.request(operation))
+        transport::json_with(&self.url, self.trust()?, self.request(operation))
     }
 }
 
 pub fn activate(url: &str, ca: &Path, output: &Path, name: &str, code: &str) -> io::Result<()> {
+    activate_with(url, transport::Trust::CustomCa(ca), output, name, code)
+}
+
+pub fn activate_with(
+    url: &str,
+    trust: transport::Trust<'_>,
+    output: &Path,
+    name: &str,
+    code: &str,
+) -> io::Result<()> {
+    transport::validate_url(url, trust)?;
     let absolute_output = std::path::absolute(output)?;
     let output = absolute_output.as_path();
     if output.try_exists()? {
@@ -62,10 +85,13 @@ pub fn activate(url: &str, ca: &Path, output: &Path, name: &str, code: &str) -> 
         .mode(0o600)
         .open(output)?;
     let result = (|| {
-        let ca = std::path::absolute(ca)?;
-        let response: Activation = transport::json(
+        let ca = match trust {
+            transport::Trust::CustomCa(ca) => Some(std::path::absolute(ca)?),
+            _ => None,
+        };
+        let response: Activation = transport::json_with(
             url,
-            &ca,
+            trust,
             Request {
                 token: None,
                 operation: Operation::Activate {
@@ -80,6 +106,7 @@ pub fn activate(url: &str, ca: &Path, output: &Path, name: &str, code: &str) -> 
             &Session {
                 url: url.to_owned(),
                 ca,
+                allow_http: matches!(trust, transport::Trust::PlainHttp),
                 token: response.token,
                 device_id: response.device_id,
             },
@@ -140,9 +167,9 @@ impl Remote for Session {
         output: &mut dyn std::io::Write,
         limit: u64,
     ) -> io::Result<()> {
-        transport::exchange(
+        transport::exchange_with(
             &self.url,
-            &self.ca,
+            self.trust()?,
             self.request(operation),
             input,
             size,
@@ -155,6 +182,23 @@ impl Remote for Session {
 #[cfg(test)]
 mod activation_input_tests {
     use super::*;
+    #[test]
+    fn legacy_sessions_keep_private_ca_and_http_requires_saved_opt_in() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("session.json");
+        let token = "a".repeat(64);
+        disk::atomic_json(&path, &serde_json::json!({"url":"https://localhost:8443", "ca":"/private/ca.crt", "token":token, "device_id":"device"})).unwrap();
+        let legacy = Session::load(&path).unwrap();
+        assert!(!legacy.allow_http);
+        assert_eq!(legacy.ca, Some(PathBuf::from("/private/ca.crt")));
+        for allow_http in [false, true] {
+            disk::atomic_json(&path, &serde_json::json!({"url":"http://localhost:8080", "ca":null, "allow_http":allow_http, "token":token, "device_id":"device"})).unwrap();
+            assert_eq!(Session::load(&path).is_ok(), allow_http);
+        }
+        disk::atomic_json(&path, &serde_json::json!({"url":"http://localhost:8080", "ca":"/private/ca.crt", "allow_http":true, "token":token, "device_id":"device"})).unwrap();
+        assert!(Session::load(&path).is_err());
+    }
+
     #[test]
     fn enter_confirms_without_waiting_for_eof() {
         struct LiveInput {

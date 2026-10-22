@@ -60,7 +60,8 @@ para a versão estável.
 O mantenedor ampliou o uso para servidor remoto por domínio ou IPv4 público.
 Assistente com endereço de acesso separado do bind, SAN DNS/IP, validação antes
 de gravar arquivos e teste HTTPS local independente do DNS externo. CA privada
-continua automática, sem exigir ACME/proxy. Documentar DNS, firewall do provedor,
+continua disponível; a decisão 0011 acrescenta HTTP de testes e proxy externo com
+certificados públicos geridos pelo operador. Documentar DNS, firewall do provedor,
 serviço sem login e validade do certificado. Decisão 0009; validação real de
 acesso externo depende da infraestrutura do operador.
 
@@ -98,3 +99,17 @@ Pedido do mantenedor: cliente escolhe somente uma raiz local e descobre os
 compartilhamentos autorizados, cada um em sua subpasta. Assistente passa a usar
 sync-root/watch-root; comandos individuais preservados. Migração explícita para
 instalações anteriores, sem mover ou apagar arquivos automaticamente.
+
+## Três modos de transporte e próxima interface do servidor
+
+Implementação local: HTTP explícito (teste ou backend de proxy), HTTPS direto com
+certificado existente/CA privada e HTTPS externo por proxy. Cliente aceita CAs
+nativas do sistema, sem cópia de ca.crt em certificados públicos. Sem downgrade ou
+TLS inseguro. Assistente gera exemplo Caddy; documentação traz proxy simples e
+reuso de infraestrutura existente. Decisão 0011; publicação ainda depende de release.
+
+Painel implementado localmente no mesmo listener: usuários, pastas, permissões,
+convites e dispositivos por usuário. HTML/CSS em Rust, sem runtime JavaScript,
+chave administrativa independente, sessão/CSRF e atualização atômica do TOML.
+Decisão 0012. Importação de diretórios existentes, exclusão de compartilhamentos
+e múltiplos administradores ficam fora desta etapa. Aguarda nova release.

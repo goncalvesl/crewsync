@@ -20,26 +20,68 @@ Nos outros computadores, execute:
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o domínio ou IPv4 de acesso, cria o certificado, configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No cliente, ativa o computador e inicia a sincronização.
+A alpha.7 inclui os três modos abaixo e o painel administrativo. A alpha.6 não os contém; atualize os programas pelo pacote alpha.7 antes de configurar HTTP ou proxy.
+
+O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o modo de conexão, domínio ou IPv4 e configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No modo direto pode gerar CA privada ou usar certificado existente; no modo proxy gera um exemplo Caddy. No cliente, ativa o computador e inicia a sincronização.
 
 Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não precisa de Rust, Cargo ou Python. Os comandos funcionam no terminal de uma sessão Linux, sem sudo. Os diretórios sugeridos podem ser alterados. Escolha diretórios novos para a configuração e os dados internos do servidor; instalações existentes são preservadas.
 
 Se preferir baixar e conferir o pacote manualmente:
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.6 (alpha, para testes).
+Versão atual: 0.1.0-alpha.7 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-linux-arm64.tar.gz.sha256)
+- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz.sha256)
+- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.6) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.6/crewsync-0.1.0-alpha.6-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.7) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-source.tar.gz)
 <!-- downloads:end -->
 
 Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.
 
+## Painel do servidor
+
+**Alpha.7.** Para atualizar uma instalação alpha.6, baixe a alpha.7 e substitua os programas mantendo a configuração e o armazenamento. Abra no navegador o endereço do
+servidor, por exemplo `https://sync.empresa.com/`. O instalador mostra a chave
+administrativa ao terminar; guarde-a em um gerenciador de senhas. Ela é separada
+dos convites e dos tokens dos dispositivos.
+
+No painel você pode:
+
+- Adicionar usuários e ativar ou bloquear seu acesso.
+- Criar pastas compartilhadas e dar acesso de leitura ou leitura e escrita por usuário.
+- Gerar convites de uso único para ativar cada computador.
+- Consultar dispositivos por usuário e revogar individualmente o acesso.
+
+As pastas são compartilhamentos gerenciados pelo CrewSync. O painel não importa
+um diretório arbitrário do disco. Clientes com raiz automática criam as pastas
+autorizadas dentro da raiz escolhida. Bloquear um usuário ou revogar um dispositivo
+interrompe seu acesso ao servidor; os arquivos já baixados permanecem no computador.
+
+Em instalações existentes, ou se perder a chave, execute no servidor com a conta
+do serviço e o caminho real da configuração:
+
+```sh
+crewsync-server admin-key /caminho/server.toml https://sync.empresa.com
+```
+
+O comando mostra uma nova chave e encerra as sessões administrativas anteriores.
+Não altera tokens dos dispositivos. Informe a URL pública exata, incluindo porta
+se houver: ela protege os formulários e define os cookies HTTPS mesmo atrás do
+proxy. Não compartilhe a chave com usuários comuns. Sair encerra a sessão atual;
+reiniciar o serviço também encerra sessões do painel.
+
+O exemplo de Caddy da seção de conexão já publica o painel junto da sincronização.
+Em HTTP de teste, chave e dados trafegam sem criptografia. Para uso real, escolha
+HTTPS direto ou pelo proxy. Nenhum passo adicional de frontend é necessário.
+
+O TOML continua disponível como alternativa. Se outra pessoa alterar a configuração
+enquanto um formulário estiver aberto, o painel recusa a gravação: recarregue a
+página e confira os novos valores antes de tentar novamente.
+
 ## Dispositivos
 
-Antes de instalar cada cliente, peça ao administrador o endereço HTTPS, o arquivo `ca.crt` e um convite próprio para este computador. Escolha uma raiz local; o cliente descobre as pastas autorizadas automaticamente. Transfira `ca.crt` por um meio confiável. Nunca copie as chaves `.key` nem a sessão de outro computador.
+Antes de instalar cada cliente, peça ao administrador o endereço do servidor e um convite próprio para este computador. Com HTTPS público, escolha `system` no campo de CA e não copie certificados. Com CA privada, peça também o arquivo `ca.crt`. HTTP de teste exige confirmar a palavra `HTTP` no assistente. Escolha uma raiz local; o cliente descobre as pastas autorizadas automaticamente. Transfira `ca.crt` por um meio confiável. Nunca copie as chaves `.key` nem a sessão de outro computador.
 
 ### Um convite por dispositivo
 
@@ -155,26 +197,67 @@ Coloque os arquivos nessas pastas pelo cliente. Não crie ou copie diretórios d
 
 Se o servidor foi instalado como `root`, `$HOME` nos comandos acima corresponde a `/root`. Execute os comandos de configuração e convite na conta usada para instalar o servidor. A configuração de exemplo instalada em `$HOME/.local/share/crewsync/server.example.toml` mostra outros casos.
 
-## HTTPS e rede
+## Conexão e rede
 
-O servidor já fica iniciado após o assistente. Quando ele perguntar o endereço, informe o domínio usado pelos clientes, como `sync.empresa.com`, ou o IPv4 público/VPN. Digite somente o nome ou IP, sem `https://`, porta ou caminho. A porta é perguntada separadamente; o padrão é 8443.
+No assistente do servidor, escolha um dos três modos:
 
-Em servidor remoto, siga estes passos:
+- `1` — HTTPS direto (padrão): usa certificado/chave existentes ou gera uma CA privada. Sem proxy; porta padrão 8443. Com CA privada, entregue somente `tls/ca.crt` aos clientes. Nunca compartilhe as chaves `.key`.
+- `2` — HTTPS por proxy: CrewSync atende HTTP em `127.0.0.1:8080` e gera um `Caddyfile`. O proxy fornece HTTPS público e cuida dos certificados; o cliente usa `https://sync.empresa.com` e `system`.
+- `3` — HTTP para testes: não gera certificado. Escuta em `127.0.0.1:8080` por padrão e exige confirmar `HTTP`. Convites, credenciais e arquivos trafegam sem criptografia; use dados sintéticos e ambiente isolado. Para duas máquinas de teste, escolha conscientemente um IPv4 de escuta acessível e restrinja a porta aos clientes.
 
-- Se usar domínio, aponte o registro DNS A para o IPv4 público do servidor.
-- Libere a porta TCP escolhida no firewall do Linux e nas regras de rede do provedor para os clientes.
-- Com systemd, execute `sudo loginctl enable-linger SEU_USUARIO` para manter o serviço funcionando sem uma sessão SSH aberta.
-- No cliente, informe `https://sync.empresa.com:8443`, usando o domínio e a porta reais.
+O cliente nunca troca HTTPS por HTTP automaticamente e não segue redirecionamentos. Informe a URL final da raiz do serviço, sem caminho adicional. Certificado inválido, nome incorreto ou CA não confiável causam erro. Para HTTPS público, o Linux precisa das CAs do sistema, normalmente fornecidas por `ca-certificates`. Para CA privada, informe o caminho absoluto de `ca.crt`.
 
-Não é necessário ter o DNS pronto para gerar o certificado e iniciar o servidor; ele precisa estar correto quando os clientes conectarem. Entregue aos clientes somente `ca.crt`, localizado na pasta `tls` da configuração. Mantenha os arquivos `.key` privados. O certificado vence em 90 dias; renove antes disso, conforme a seção técnica.
+### Adicionar um proxy com Caddy
 
-Se usar UFW, permita a porta para os endereços dos clientes ou da VPN. Exemplo para clientes na rede `192.168.1.0/24`:
+Se já usa Coolify ou outro proxy nas portas 80/443, aproveite esse proxy conforme a seção seguinte. Para uma máquina sem proxy, o caminho simples com Caddy é:
+
+- Instale o servidor CrewSync escolhendo `2`, informe `sync.empresa.com` e aceite a porta interna 8080. Ele mostra o caminho do exemplo `Caddyfile` e informa que a URL externa depende do proxy.
+- Aponte o DNS A do domínio ao IPv4 público. Se houver registro AAAA, ele também precisa alcançar o proxy. Libere TCP 80 e 443 no Linux e no provedor. Mantenha a porta interna 8080 privada.
+- Instale Caddy. Em Debian/Ubuntu com o pacote disponível, use os comandos abaixo; para outras distribuições ou o repositório oficial, consulte a [instalação do Caddy](https://caddyserver.com/docs/install).
+
+```bash
+sudo apt update
+sudo apt install caddy
+```
+
+Edite `/etc/caddy/Caddyfile` e adicione o bloco abaixo, substituindo o domínio e a porta pelos escolhidos. Preserve os outros sites existentes e não duplique um bloco para o mesmo domínio. O assistente também deixa esse exemplo em `$HOME/.config/crewsync-server/Caddyfile`.
+
+```bash
+sudo nano /etc/caddy/Caddyfile
+```
+
+```text
+sync.empresa.com {
+    reverse_proxy 127.0.0.1:8080
+}
+```
+
+Valide e recarregue:
+
+```bash
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy
+```
+
+O Caddy emite e renova o certificado automaticamente por ACME, usando autoridades como Let's Encrypt. DNS e conectividade pública precisam funcionar para isso. No cliente, use `https://sync.empresa.com` e aceite `system` para a CA. Não precisa copiar `ca.crt` nem abrir a porta do backend na Internet. Confira os logs do proxy se a emissão falhar: `sudo journalctl -u caddy -n 50 --no-pager`. Veja [HTTPS automático do Caddy](https://caddyserver.com/docs/automatic-https).
+
+### Usar o proxy existente ou Coolify
+
+Configure um domínio HTTPS dedicado no proxy existente e encaminhe todas as requisições, incluindo `/v1/rpc`, ao backend HTTP do CrewSync. Preserve método, corpo e `Content-Length`; desative compressão/buffering que altere o framing e ajuste limites de tamanho/tempo para os arquivos. O exemplo Caddy foi testado com transferência em streaming. Outros proxies precisam de validação equivalente.
+
+Se o proxy está no mesmo host, `127.0.0.1:8080` funciona. Se está em container, o localhost dele é outro: use uma rede privada ou endereço do host acessível apenas ao proxy e ajuste o bind do `serve-http` no script de início. Não exponha esse backend à Internet. Reinicie o serviço depois de alterar o bind. O domínio público deve apontar ao proxy, e o cliente continua usando HTTPS com `system`.
+
+### HTTPS direto e certificados existentes
+
+No modo `1`, informe os caminhos absolutos do certificado completo (fullchain) e da chave, ou aceite `gerar` para CA privada. Em certificado público, o cliente usa `system`; em CA privada, usa `ca.crt`. Emissão e renovação de certificados externos são responsabilidade do operador. Após renovar, reinicie o serviço CrewSync para carregar os novos arquivos. A CA privada gerada continua com certificado de servidor de 90 dias; a renovação está na seção técnica.
+
+Para acesso remoto direto, libere somente a porta TCP escolhida e aponte o DNS ao servidor. Em LAN/VPN com UFW, por exemplo:
 
 ```bash
 sudo ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 ```
 
-Não é necessário abrir portas nos clientes. O endereço que eles usam deve ser o domínio ou IP de acesso real, nunca `0.0.0.0`. Se o servidor remoto estiver atrás de roteador/NAT, encaminhe a porta até ele.
+Não é necessário abrir portas nos clientes. Eles usam o endereço real do servidor/proxy, nunca `0.0.0.0`. Com systemd de usuário, `sudo loginctl enable-linger SEU_USUARIO` permite funcionar sem login SSH. O instalador não instala proxy nem altera firewall automaticamente.
 
 ## Manutencao
 
@@ -255,7 +338,7 @@ Para renovar, pare o servidor e gere um conjunto novo em outro diretório com o 
 "$HOME/.local/share/crewsync/pilot-cert.sh" "$HOME/.config/crewsync-server/tls-novo" sync.empresa.com
 ```
 
-Para uma instalação sem o assistente, copie e edite o exemplo TOML, gere os certificados e execute `crewsync-server serve CONFIG 0.0.0.0 8443 CERT KEY`. No cliente, crie a pasta de configuração privada (0700) e a pasta local, copie `ca.crt`, execute `crewsync-client activate URL CA SESSION NOME` e cole o convite. Use `crewsync-client sync-root SESSION RAIZ` uma vez ou `crewsync-client watch-root SESSION RAIZ 5` continuamente. Os comandos individuais `sync SESSION PASTA DIRETORIO` e `watch SESSION PASTA DIRETORIO 5` continuam disponíveis. Não rode `sync` junto ao serviço watch na mesma pasta.
+Para uma instalação sem o assistente, copie e edite o exemplo TOML, gere os certificados e execute `crewsync-server serve CONFIG 0.0.0.0 8443 CERT KEY` para HTTPS direto ou `crewsync-server serve-http CONFIG 127.0.0.1 8080` para proxy/testes. No cliente, crie a pasta de configuração privada (0700) e a pasta local, copie `ca.crt`, execute `crewsync-client activate URL CA SESSION NOME` e cole o convite. Use o caminho de CA privada, `system` para HTTPS com confiança do sistema ou `insecure-http` para habilitar HTTP explicitamente. Use `crewsync-client sync-root SESSION RAIZ` uma vez ou `crewsync-client watch-root SESSION RAIZ 5` continuamente. Os comandos individuais `sync SESSION PASTA DIRETORIO` e `watch SESSION PASTA DIRETORIO 5` continuam disponíveis. Não rode `sync` junto ao serviço watch na mesma pasta.
 
 ### Arquitetura e sincronização
 
@@ -273,7 +356,7 @@ Linux kernel 5.6 ou superior, `/proc` montado e filesystem local com suporte a `
 
 ### Segurança e configuração
 
-HTTPS usa rustls com TLS 1.2/1.3, CA explícita e validação do endereço; não existe opção de ignorar o certificado. O servidor atende uma operação por vez, com timeout de conexão de 30 segundos, com acesso por domínio ou IPv4. Tokens são individuais por dispositivo e somente seus hashes ficam no servidor.
+HTTPS usa rustls com TLS 1.2/1.3, CA privada ou confiança nativa do sistema e validação do endereço; não existe opção de ignorar o certificado. O servidor atende uma operação por vez, com timeout de conexão de 30 segundos, com acesso por domínio ou IPv4. Tokens são individuais por dispositivo e somente seus hashes ficam no servidor.
 
 Somente pastas de primeiro nível são compartilhamentos; subpastas herdam o acesso. Ausência de permissão nega acesso. A configuração TOML é estrita e recarregada antes de cada requisição; recarga inválida mantém a última válida. Trocar a raiz exige reiniciar. `max_upload_bytes` limita cada envio, não o armazenamento total.
 
@@ -332,3 +415,21 @@ ocultos. Use o nome real do compartilhamento e preserve um backup. Altere o serv
 para `watch-root SESSION RAIZ 5`, recarregue o systemd e inicie novamente. Não rode
 os modos individual e raiz ao mesmo tempo. O cliente recusa mistura de layouts,
 links e raízes vinculadas a outro servidor.
+
+### Trocar o modo de uma instalação existente
+
+Pare o serviço e faça backup da configuração, estado e certificados. Atualize os
+programas para a versão com os três modos, sem executar setup sobre configuração
+existente. No servidor, ajuste `start.sh` para `serve` com certificado/chave ou
+`serve-http` com bind privado; mantenha o mesmo server.toml e armazenamento.
+Configure o proxy antes de conectar os clientes e reinicie o serviço.
+
+Se a URL pública mudar, preserve as pastas antigas e use uma nova sessão e raiz
+local com novo convite; os estados existentes são vinculados à URL. Não edite
+state.json ou session.json para contornar essa proteção. Se a URL/CA privada
+continuar igual, as sessões antigas seguem válidas. Remova a exposição da antiga
+porta pública no firewall depois de verificar o novo endpoint.
+
+O painel usa o mesmo endereço público e o mesmo proxy da sincronização, sem
+uma segunda porta. Se mudar o endereço público do painel, gere uma nova chave
+administrativa com a URL correta, como explicado na seção do painel.

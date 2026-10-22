@@ -246,9 +246,8 @@ impl WorkerProcess {
         }
         Ok(worker)
     }
-    fn respond(&mut self, client: &mut (impl BufRead + Write)) -> io::Result<()> {
-        let head = transport::read_http_head(client)?;
-        let length = transport::request_length(&head)?;
+    fn respond(&mut self, client: &mut (impl BufRead + Write), head: &[u8]) -> io::Result<()> {
+        let length = transport::request_length(head)?;
         if length > (1u64 << 40) + crewsync_protocol::MAX_FRAME {
             return Err(invalid("corpo longo demais"));
         }
@@ -315,24 +314,44 @@ pub fn serve(config: &Path, host: &str, port: &str, cert: &Path, key: &Path) -> 
             invalid("Falha ao iniciar HTTPS: certificado/chave TLS inválidos ou incompatíveis")
         }
     })?;
+    serve_transport(config, host, port, Some(tls))
+}
+
+/// Backend para proxy ou teste explícito; não interpreta cabeçalhos forwarded.
+pub fn serve_http(config: &Path, host: &str, port: &str) -> io::Result<()> {
+    eprintln!(
+        "HTTP sem criptografia; use loopback atrás de proxy HTTPS ou somente testes isolados."
+    );
+    serve_transport(config, host, port, None)
+}
+
+fn serve_transport(
+    config: &Path,
+    host: &str,
+    port: &str,
+    tls: Option<transport::TlsServer>,
+) -> io::Result<()> {
+    let scheme = if tls.is_some() { "HTTPS" } else { "HTTP" };
     let listener = TcpListener::bind(format!("{host}:{port}")).map_err(|e| {
         io::Error::new(
             e.kind(),
-            "Falha ao iniciar HTTPS: porta/endereço indisponível ou já está em uso",
+            format!("Falha ao iniciar {scheme}: porta/endereço indisponível ou já está em uso"),
         )
     })?;
     let mut worker = WorkerProcess::open(config)
-        .map_err(|e| invalid(&format!("Falha ao iniciar HTTPS: {e}")))?;
-    println!("CrewSync HTTPS ready {}", listener.local_addr()?.port());
+        .map_err(|e| invalid(&format!("Falha ao iniciar {scheme}: {e}")))?;
+    let mut admin = crate::admin::Admin::new(config)?;
+    println!("CrewSync {scheme} ready {}", listener.local_addr()?.port());
     io::stdout().flush()?;
     for tcp in listener.incoming() {
         let tcp = tcp?;
-        let mut client = Duplex(BufReader::new(tls.accept(tcp)?));
-        if worker.respond(&mut client).is_err() {
-            eprintln!("event=request_failed");
-            let _ = client
-                .write_all(b"HTTP/1.1 400 Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
-            let _ = client.flush();
+        tcp.set_read_timeout(Some(std::time::Duration::from_secs(30)))?;
+        tcp.set_write_timeout(Some(std::time::Duration::from_secs(30)))?;
+        let success = match &tls {
+            Some(tls) => respond(&mut worker, &mut admin, tls.accept(tcp)?),
+            None => respond(&mut worker, &mut admin, tcp),
+        };
+        if !success {
             // Um corpo truncado pode deixar o IPC desalinhado. Matar antes de
             // reabrir garante liberação do lock e recuperação de temporários.
             drop(worker);
@@ -340,4 +359,37 @@ pub fn serve(config: &Path, host: &str, port: &str, cert: &Path, key: &Path) -> 
         }
     }
     Ok(())
+}
+
+fn respond(
+    worker: &mut WorkerProcess,
+    admin: &mut crate::admin::Admin,
+    stream: impl Read + Write,
+) -> bool {
+    let mut client = Duplex(BufReader::new(stream));
+    let parsed = (|| {
+        let head = transport::read_http_head(&mut client)?;
+        let request = crate::admin::Request::parse(&head)?;
+        Ok::<_, io::Error>((head, request))
+    })();
+    let (head, request) = match parsed {
+        Ok(request) => request,
+        Err(_) => {
+            let _ = crate::admin::error(400, "Requisição HTTP inválida.").write(&mut client);
+            return true;
+        }
+    };
+    if request.target != "/v1/rpc" {
+        let response = admin.respond(&request, &mut client);
+        let _ = response.write(&mut client);
+        return true;
+    }
+    if worker.respond(&mut client, &head).is_ok() {
+        return true;
+    }
+    eprintln!("event=request_failed");
+    let _ =
+        client.write_all(b"HTTP/1.1 400 Error\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    let _ = client.flush();
+    false
 }

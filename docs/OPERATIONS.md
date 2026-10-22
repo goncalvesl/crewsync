@@ -21,3 +21,11 @@ credenciais locais não são incluídos pelo comando, pois ficam fora da raiz.
 A restauração entrega `DESTINO/store`; editar cópia da configuração para esse
 caminho e validar antes de servir. Destinos incompletos ficam para diagnóstico;
 ausência de backup.json/restored.json indica que a operação não terminou.
+
+## Recuperar acesso ao painel (próxima versão)
+
+Execute `crewsync-server admin-key CONFIG URL_PUBLICA` com a conta do servidor e
+guarde a nova chave. A rotação invalida sessões administrativas, preservando os
+dispositivos. O backup completo do armazenamento inclui `auth/admin.json` (hash e
+origem pública); nunca publique esse backup. Sessões não sobrevivem a reinícios.
+Se restaurar em outro endereço, gere nova chave com a URL pública correta.

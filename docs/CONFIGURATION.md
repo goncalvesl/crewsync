@@ -135,3 +135,27 @@ Os testes verificam o exemplo, esquema, erros sem conteúdo de configuração,
 read/write, subpastas, objetos isolados, uploads negados/conflitantes sem leitura,
 limites e mudanças/erros de recarga. Autenticação, expiração de convites, tokens, revogação por dispositivo e TLS têm
 testes adicionais descritos em [TESTING.md](TESTING.md).
+
+## Transporte (alpha.7)
+
+O TOML de usuários, pastas e armazenamento não muda. HTTPS direto usa
+`serve CONFIG HOST PORT CERT KEY`; HTTP explícito usa `serve-http CONFIG HOST PORT`.
+Para proxy no mesmo host, use bind `127.0.0.1`. Para rede de containers, restrinja
+bind e firewall ao proxy. Não confiar em cabeçalhos forwarded para autenticação.
+
+O cliente aceita CA privada, CAs do sistema (`system`) ou HTTP explicitamente
+habilitado (`insecure-http`). O novo campo de sessão `allow_http` é falso por
+padrão e a CA passa a ser opcional; sessões antigas com CA continuam válidas.
+Nunca editar tokens/sessões para mudar o modo; use ativação e migração do manual.
+O painel administrativo usa a mesma porta e mantém este TOML como fonte de
+usuários, compartilhamentos e permissões. As alterações preservam os demais
+campos, validam a configuração completa e publicam por renomeação atômica.
+Formulários com revisão antiga são recusados (HTTP 409); recarregue a página.
+Não altere o storage_root com o painel em execução.
+
+Ative ou recupere o acesso com `crewsync-server admin-key CONFIG URL_PUBLICA`.
+O hash da chave e a origem pública ficam em `auth/admin.json` no armazenamento,
+com permissões privadas. Somente o comando local troca a chave; tokens dos
+clientes não administram o servidor. Sessões ficam em memória e expiram em oito
+horas; a URL configurada, Origin, CSRF e cookie são verificados nas alterações.
+Não são usados cabeçalhos forwarded como prova de identidade.

@@ -18,7 +18,7 @@ texto integral em [LICENSE](../LICENSE). Veja a decisão 0007.
 Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
 
 - Implementação em Rust, simples de operar, rápida e com integridade dos arquivos.
-- Servidor remoto acessível por domínio ou IPv4, com instalação guiada e HTTPS validado; rede local/VPN também suportada (decisão 0009).
+- Três modos: HTTP explícito para testes isolados, HTTPS por proxy do operador e HTTPS direto (CA privada opcional ou certificado existente). HTTPS valida cadeia e nome, com CAs do sistema ou CA privada; rede local/VPN e servidor remoto suportados (decisões 0009 e 0011).
 - Servidor central e clientes; piloto inicial Linux em dois computadores, com aproximadamente cinco usuários no uso previsto.
 - Windows depois; Android no futuro, com acesso online sem exigir operação offline.
 - Apenas pastas de primeiro nível compartilhadas; subpastas herdam permissões. O cliente pergunta somente a raiz local e cria dentro dela todas as pastas autorizadas.
@@ -30,11 +30,13 @@ Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
 
 ## Arquitetura proposta para implementação
 
-Conteúdo identificado por hash e manifestos por compartilhamento, inspirados no Git, sem branches ou commits manuais. Tokens individuais por dispositivo vinculados ao usuário, ativados por códigos temporários de uso único; servidor guarda hashes dos tokens. HTTPS, autorização por operação, revogação individual e negação de acesso por padrão.
+Conteúdo identificado por hash e manifestos por compartilhamento, inspirados no Git, sem branches ou commits manuais. Tokens individuais por dispositivo vinculados ao usuário, ativados por códigos temporários de uso único; servidor guarda hashes dos tokens. HTTP explícito para testes ou HTTPS validado, autorização por operação, revogação individual e negação de acesso por padrão.
 
 Cliente inicial por CLI e serviço em segundo plano. Observação de arquivos com reconciliação periódica, streaming, limites de recursos, temporários e publicação atômica. Revisões ordenadas pelo servidor, preservação de conflitos e registros de exclusão. Links simbólicos e arquivos especiais não serão sincronizados inicialmente; caminhos não podem escapar do compartilhamento.
 
 Histórico com versões completas e deduplicação por hash. Retenção configurável, aplicada em manutenção offline: até 30 dias e no máximo 10 versões anteriores por arquivo; lixeira de 30 dias. A versão atual permanece. Restauração cria nova revisão. Limpeza só remove objetos sem referências e precisa respeitar transferências em andamento. Histórico não substitui backup.
+
+Painel administrativo implementado em Rust, com HTML renderizado no servidor, no mesmo endereço da sincronização. Gerencia usuários, pastas, permissões, convites e dispositivos. Chave administrativa separada dos tokens dos clientes, configuração TOML preservada e gravação atômica com controle de revisão (decisão 0012). Disponível na implementação local, aguardando publicação.
 
 ## Decisões ainda abertas
 

@@ -17,3 +17,9 @@ Unidades systemd de exemplo ficam em `systemd/`; precisam de adaptação local.
 O parser TOML agora é nativo em Rust. `[server.retention]` controla a manutenção
 administrativa offline (defaults 30 dias de histórico/lixeira e 10 versões).
 `maintain CONFIG` simula; `--apply` aplica com servidor parado. Consulte o manual.
+
+Na próxima versão, o assistente do servidor oferece HTTPS direto, proxy HTTPS e
+HTTP explícito para testes. O modo proxy gera Caddyfile com upstream em loopback;
+veja a receita e cuidados de rede no [manual](../docs/MANUAL.md#conexao-e-rede).
+Os três modos usam o mesmo TOML e não alteram permissões. Alpha.6 pública ainda
+não inclui os novos modos.

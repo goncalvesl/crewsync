@@ -37,6 +37,7 @@ class Setup(unittest.TestCase):
         for role in ['server', 'client']:
             source = Path(os.environ.get('CREWSYNC_BIN_DIR', ROOT / 'target/debug')) / ('crewsync-' + role)
             shutil.copyfile(source, self.package / 'bin' / source.name)
+            (self.package / 'bin' / source.name).chmod(0o755)
         if os.environ.get('CREWSYNC_PACKAGE_DIR'):
             self.package = Path(os.environ['CREWSYNC_PACKAGE_DIR'])
         self.configs = []
@@ -110,7 +111,11 @@ class Setup(unittest.TestCase):
         path.write_text(text)
         path.chmod(0o755)
 
-    def setup(self, role, answers):
+    def setup(self, role, answers, mode='1', tls_answers=None, http_answers=None):
+        answers = list(answers)
+        if role == 'server' and len(answers) >= 4:
+            extra = (tls_answers or ['gerar']) if mode == '1' else (http_answers or ['127.0.0.1', 'HTTP']) if mode == '3' else []
+            answers = answers[:3] + [mode] + answers[3:5] + extra + answers[5:]
         return subprocess.run(['sh', str(self.package / 'setup.sh'), role], input='\n'.join(map(str, answers)) + '\n', text=True, capture_output=True, env=self.env, timeout=45)
 
     def setup_terminal(self, role, answers, invite):
@@ -200,6 +205,97 @@ class Setup(unittest.TestCase):
                 break
             time.sleep(0.1)
         self.assertEqual((clients[1].parent / 'Plantas/second.txt').read_text(), 'another share')
+
+    def test_http_and_proxy_setup_require_explicit_http_and_keep_backend_private(self):
+        import json
+        self.executable('openssl', '#!/bin/sh\nexit 77\n')
+        for mode in ['2', '3']:
+            prefix = self.root / ('programs-' + mode)
+            config = self.root / ('server-' + mode)
+            self.configs.append(config)
+            with socket.socket() as sock:
+                sock.bind(('127.0.0.1', 0))
+                port = sock.getsockname()[1]
+            result = self.setup('server', [prefix, config, self.root / ('store-' + mode), '127.0.0.1', port, 'ana', 'Obras'], mode=mode)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            self.assertFalse((config / 'tls').exists())
+            self.assertIn("'127.0.0.1'", (config / 'start.sh').read_text())
+            if mode == '2':
+                self.assertIn(f'reverse_proxy 127.0.0.1:{port}', (config / 'Caddyfile').read_text())
+                self.assertIn('após configurar o proxy', result.stdout)
+            url = f'http://127.0.0.1:{port}'
+            invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
+            # HTTPS/system não faz downgrade nem consome o convite.
+            failed = subprocess.run([str(self.package / 'bin/crewsync-client'), 'activate', url, 'system', str(self.root / ('failed-' + mode)), 'pc'], input=invite + '\n', text=True, capture_output=True)
+            self.assertNotEqual(failed.returncode, 0)
+            cfg = self.root / ('client-' + mode)
+            folder = self.root / ('files-' + mode)
+            self.configs.append(cfg)
+            result = self.setup('client', [prefix, cfg, folder, url, 'HTTP', 'pc', invite])
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            session = json.loads((cfg / 'session.json').read_text())
+            self.assertTrue(session['allow_http'])
+            self.assertIsNone(session['ca'])
+            self.assertFalse((cfg / 'ca.crt').exists())
+            self.assertTrue((folder / 'Obras').is_dir())
+            denied_cfg = self.root / ('denied-' + mode)
+            result = self.setup('client', [prefix, denied_cfg, self.root / 'denied-files', url, 'nao'])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertFalse(denied_cfg.exists())
+
+    def test_existing_certificate_and_system_trust_without_client_ca_file(self):
+        import json
+        prefix = self.root / 'programs-existing'
+        config = self.root / 'server-existing'
+        self.configs.append(config)
+        tls = self.root / 'external-tls'
+        subprocess.run(['sh', str(ROOT / 'scripts/pilot-cert.sh'), str(tls), '127.0.0.1'], check=True, capture_output=True)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        result = self.setup('server', [prefix, config, self.root / 'store-existing', '127.0.0.1', port, 'ana', 'Obras'], tls_answers=[tls / 'server.crt', tls / 'server.key'])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertFalse((config / 'tls').exists())
+        invite = subprocess.check_output([str(prefix / 'bin/crewsync-server'), 'invite', str(config / 'server.toml'), 'ana', '3600'], text=True).strip()
+        url = f'https://localhost:{port}'
+        # A CA privada não deve ser aceita pelo modo público sem confiança explícita.
+        empty_ca = self.root / 'empty-ca'
+        empty_ca.write_text('')
+        empty_dir = self.root / 'empty-ca-dir'
+        empty_dir.mkdir()
+        self.env['SSL_CERT_DIR'] = str(empty_dir)
+        self.env['SSL_CERT_FILE'] = str(empty_ca)
+        failed = subprocess.run([str(self.package / 'bin/crewsync-client'), 'activate', url, 'system', str(self.root / 'failed-public-session'), 'pc'], input=invite + '\n', text=True, capture_output=True, env=self.env)
+        self.assertNotEqual(failed.returncode, 0)
+        self.env['SSL_CERT_FILE'] = str(tls / 'ca.crt')
+        cfg = self.root / 'client-public'
+        self.configs.append(cfg)
+        folder = self.root / 'files-public'
+        result = self.setup('client', [prefix, cfg, folder, url, 'system', 'pc', invite])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        session = json.loads((cfg / 'session.json').read_text())
+        self.assertIsNone(session['ca'])
+        self.assertFalse(session.get('allow_http', False))
+        self.assertFalse((cfg / 'ca.crt').exists())
+        self.assertTrue((folder / 'Obras').is_dir())
+
+    def test_http_can_bind_a_specific_local_ipv4(self):
+        config = self.root / 'specific-http'
+        self.configs.append(config)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.2', 0))
+            port = sock.getsockname()[1]
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.2', port, 'ana', 'Obras'], mode='3', http_answers=['127.0.0.2', 'HTTP'])
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        response = subprocess.run(['curl', '--noproxy', '*', '--max-time', '5', '-sS', f'http://127.0.0.2:{port}/'], capture_output=True)
+        self.assertEqual(response.returncode, 0, response.stderr)
+
+    def test_http_refusal_leaves_server_untouched(self):
+        config = self.root / 'server-refused'
+        result = self.setup('server', [self.root / 'prefix', config, self.root / 'store', '127.0.0.1', 8080, 'ana', 'Obras'], mode='3', http_answers=['127.0.0.1', 'nao'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(config.exists())
+        self.assertFalse((self.root / 'prefix').exists())
 
     def test_nohup_survives_hangup_before_exec(self):
         # Reproduz fechamento do terminal antes de nohup instalar seu handler.

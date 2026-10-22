@@ -182,6 +182,20 @@ impl Config {
         self.document.server.retention
     }
 
+    pub fn users(&self) -> impl Iterator<Item = (&str, bool)> {
+        self.document
+            .users
+            .iter()
+            .map(|(name, user)| (name.as_str(), user.enabled))
+    }
+
+    pub fn shares(&self) -> impl Iterator<Item = (&str, &BTreeMap<String, Permission>)> {
+        self.document
+            .shares
+            .iter()
+            .map(|(name, share)| (name.as_str(), &share.permissions))
+    }
+
     pub fn user_count(&self) -> usize {
         self.document.users.len()
     }
