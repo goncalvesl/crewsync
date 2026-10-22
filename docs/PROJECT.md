@@ -19,8 +19,8 @@ Nome público: **CrewSync**. Repositório e diretório local: `crewsync`.
 
 - Implementação em Rust, simples de operar, rápida e com integridade dos arquivos.
 - Três modos: HTTP explícito para testes isolados, HTTPS por proxy do operador e HTTPS direto (CA privada opcional ou certificado existente). HTTPS valida cadeia e nome, com CAs do sistema ou CA privada; rede local/VPN e servidor remoto suportados (decisões 0009 e 0011).
-- Servidor central e clientes; piloto inicial Linux em dois computadores, com aproximadamente cinco usuários no uso previsto.
-- Windows depois; Android no futuro, com acesso online sem exigir operação offline.
+- Servidor central executado somente em Linux; piloto inicial em dois computadores, com aproximadamente cinco usuários no uso previsto.
+- Clientes Linux no piloto; Windows depois e Android no futuro, com acesso online sem exigir operação offline.
 - Apenas pastas de primeiro nível compartilhadas; subpastas herdam permissões. O cliente pergunta somente a raiz local e cria dentro dela todas as pastas autorizadas.
 - Permissões por usuário em arquivo no servidor: leitura ou leitura e escrita.
 - Sem banco de dados externo; estado persistido em arquivos internos.
@@ -45,3 +45,19 @@ Aceite físico ampliado para lançamento estável. Alpha pública autorizada par
 ## Limites de hospedagem
 
 GitHub Pages hospeda apenas o site estático, em `https://USUARIO.github.io/REPOSITORIO/`. Documentos privados e o serviço de sincronização ficam na infraestrutura do operador. Nunca publicar dados reais, credenciais ou configurações privadas.
+
+## Distribuição do servidor Linux
+
+Direção registrada: oferecer pacotes nativos para Arch Linux, Debian e Fedora,
+além de um tar.gz upstream. Pacotes gerenciados pela distribuição devem seguir
+o layout dela e usar serviço systemd de sistema com usuário dedicado, sem exigir
+que o administrador mantenha o daemon na sessão/home pessoal. Layout candidato:
+executáveis em /usr/bin, configuração em /etc/crewsync e estado/armazenamento em
+/var/lib/crewsync.
+
+O tar.gz independente pode ser extraído em /opt/crewsync, permitido pelo FHS
+para software adicional; nesse formato, configuração em /etc/opt/crewsync e
+dados variáveis em /var/opt/crewsync. Essa distinção evita tratar /opt como o
+padrão de pacotes Debian/Fedora/Arch. Definir ownership, atualização, remoção sem
+perda de dados, primeira configuração e migração da instalação por usuário antes
+de implementar os pacotes. Ver decisão 0013.

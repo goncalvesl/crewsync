@@ -113,3 +113,14 @@ convites e dispositivos por usuário. HTML/CSS em Rust, sem runtime JavaScript,
 chave administrativa independente, sessão/CSRF e atualização atômica do TOML.
 Decisão 0012. Importação de diretórios existentes, exclusão de compartilhamentos
 e múltiplos administradores ficam fora desta etapa. Aguarda nova release.
+
+## Distribuição do servidor Linux
+
+Próxima etapa de instalação: manter o servidor Linux-only e planejar pacotes nativos
+para Arch (PKGBUILD), Debian (.deb) e Fedora (RPM), mais tar.gz upstream. Usar
+usuário de sistema sem login e unidade systemd de sistema; separar binário, TOML e
+estado persistente. Candidato para pacotes da distro: /usr/bin, /etc/crewsync,
+/var/lib/crewsync; tar.gz em /opt/crewsync com configuração /etc/opt/crewsync
+e estado /var/opt/crewsync. Ainda precisa especificar atualização/remoção,
+permissões, provisionamento TLS/URL/chave, migração do setup per-user e testes em
+VMs de cada distribuição. Decisão 0013.

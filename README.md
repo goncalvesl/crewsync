@@ -22,8 +22,9 @@ curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/se
 ```
 
 O assistente baixa a última release, pergunta os diretórios e inicia o serviço.
-No servidor, aceita domínio ou IPv4 público/VPN e cria configuração, certificado e convite. No cliente, pede endereço,
-certificado, convite e uma raiz local para ativar e sincronizar todas as pastas
+No servidor Linux, escolhe HTTPS direto, HTTPS por proxy ou HTTP para teste, cria
+configuração e mostra a chave do painel e o primeiro convite. No cliente, pede endereço,
+certificado ou CAs do sistema, convite e uma raiz local para ativar e sincronizar todas as pastas
 autorizadas, cada uma em sua subpasta. Requer curl/tar/sha256sum e,
 no servidor, OpenSSL; dispensa Rust/Cargo/Python. Veja o manual para firewall,
 início sem login, atualização e instalações existentes.

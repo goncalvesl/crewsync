@@ -1,38 +1,34 @@
 # Estado e retomada
 
-## Versão preparada para publicação — 0.1.0-alpha.7
+## Versão pública atual — 0.1.0-alpha.7
 
-Inclui três modos de transporte e painel administrativo em Rust. Release notes,
-versão e links locais preparados. O painel gere usuários, compartilhamentos,
-ACLs, convites e dispositivos no mesmo listener; usa chave rotativa, sessões
-protegidas e edição atômica do TOML. Testes do painel HTTP/HTTPS, Chromium e
-proxy Caddy reais passaram. Check-pilot completo em alpha.7 está em execução;
-a versão pública continua alpha.6 até a CI de publicação terminar.
+Release alpha para testes: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.7.
+Tag v0.1.0-alpha.7 aponta ao commit 732c0d7. A CI 39860997484 passou nos jobs
+de fonte offline, pacote musl x86_64 e ARM64 e publicação. Release não draft e
+prerelease, com oito assets. Pacotes, checksums, fonte e install.sh foram baixados;
+quatro checksums conferidos. check-package passou no tar.gz x86_64; ambos binários
+reportam 0.1.0-alpha.7. O site e README estão atualizados para alpha.7 neste commit.
 
-## Implementação local — painel administrativo (não publicada)
+A versão inclui painel administrativo Rust no mesmo listener, HTTP explícito para
+testes, HTTPS por proxy e HTTPS direto. Painel gerencia usuários, pastas virtuais,
+ACLs, convites e dispositivos. Chave administrativa independente, rotação local,
+sessões em memória, CSRF/origem e TOML validado com publicação atômica. Manual,
+configuração, README e release notes atualizados.
 
-Painel em Rust/HTML/CSS no mesmo listener da sincronização: cadastro e bloqueio
-de usuários, criação de compartilhamentos, permissões, convites e dispositivos
-por usuário com revogação. Não importa caminhos existentes nem exclui dados.
-Instalador mostra chave administrativa; `admin-key CONFIG URL_PUBLICA` recupera
-acesso. Hash privado, sessão em memória, cookie HTTPS inclusive por proxy,
-CSRF/origem, escape HTML e revisão/edição atômica do TOML. Decisão 0012; manual,
-configuração, operações, plano, README e site local atualizados.
+Validação local completa: check-pilot passou com build, fmt, Clippy, 82 testes
+Rust, cinco testes HTTPS explícitos, seis TLS MemoryBIO, dois testes de certificado,
+onze cenários do instalador, painel HTTP/HTTPS, Caddy real, site e gates. Chromium
+passou painel em 390/768/1440px sem overflow ou erros de console. Fonte da release
+compilou offline; ambos pacotes musl passaram a matriz CI, inclusive teste ENOSPC,
+HTTPS e instalação. Nenhum servidor de produção ou certificado real foi alterado.
 
-Validação: check-pilot completo passou com Caddy real (build, fmt, Clippy,
-82 testes Rust, cinco HTTPS explícitos, seis TLS sem sockets, dois de entrada,
-onze cenários do assistente, HTTP/HTTPS do painel, proxy, site e release gates).
-Chromium passou no fluxo completo do painel em 390/768/1440px, sem erro de console
-ou overflow; capturas em target/admin-*.png. Cliente real comprova aplicação de
-ACLs e revogação. Corrigidos no teste real Origin de formulários com política de
-referrer e pattern HTML moderno; rejeição de origem consome corpo limitado para
-entregar HTTP 403 sem reset TCP. CI inclui testes do painel e navegador.
+O mantenedor definiu o servidor Linux-only. Decisão 0013 registra o plano de
+pacotes Arch, Debian, Fedora e tar.gz independente; layout distro em /usr/bin,
+/etc/crewsync e /var/lib/crewsync, e tar em /opt/crewsync com /etc/opt e /var/opt.
+Isso é planejamento, ainda não implementado; migração do instalador por usuário
+precisa ser desenhada.
 
-A release pública continua alpha.6; não houve publicação, commit ou push desta
-etapa. Próxima ação de distribuição: seguir RELEASING.md quando solicitada nova
-release, incluindo musl x86_64/ARM64 e fonte offline. Nenhum serviço real alterado.
-
-## Implementação local — três modos de transporte (não publicada)
+## Histórico da implementação alpha.7 — transporte
 
 Pedido atual implementado: HTTP explícito para testes, HTTPS por proxy e HTTPS
 direto (CA privada automática ou certificado/chave existentes). HTTPS permanece
@@ -80,7 +76,7 @@ Seção Dispositivos reúne convite de uso único por computador (inclusive para
 mesmo usuário), validade, credencial persistente e revogação individual. Homepage
 e README apontam para os procedimentos. CONFIGURATION corrige referência histórica
 a Python: o parser distribuído é Rust nativo. Publicação apenas documental;
-versão dos programas e downloads continua alpha.6, sem alterar assets da release.
+essa etapa antecedeu a publicação alpha.7.
 
 Validação: build/check do site, três testes do gerador, quatro gates de release e
 prepare-release --check passaram. Exemplos TOML do manual foram validados pelo
