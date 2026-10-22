@@ -40,13 +40,44 @@ fn json(value: &impl serde::Serialize) -> io::Result<Payload> {
     ))
 }
 
+fn startup_context(stage: &str, error: io::Error) -> io::Error {
+    if stage == "armazenamento" && error.kind() == io::ErrorKind::WouldBlock {
+        return io::Error::new(
+            error.kind(),
+            "armazenamento já está em uso por outro processo",
+        );
+    }
+    io::Error::new(error.kind(), format!("{stage}: {error}"))
+}
+
+fn open_worker(path: &Path) -> io::Result<(AuthStore, AuthorizedStore)> {
+    let config = Config::load(path).map_err(|e| startup_context("configuração", e))?;
+    let auth = AuthStore::open(config.storage_root())
+        .map_err(|e| startup_context("raiz de armazenamento/autenticação", e))?;
+    auth.devices()
+        .map_err(|e| startup_context("estado de autenticação", e))?;
+    let store = AuthorizedStore::open(path).map_err(|e| startup_context("armazenamento", e))?;
+    Ok((auth, store))
+}
+
 pub fn worker(path: &Path) -> io::Result<()> {
-    let config = Config::load(path)?;
-    let auth = AuthStore::open(config.storage_root())?;
-    auth.devices()?;
-    let mut store = AuthorizedStore::open(path)?;
-    let mut input = BufReader::new(io::stdin().lock());
     let mut output = io::stdout().lock();
+    let (auth, mut store) = match open_worker(path) {
+        Ok(value) => value,
+        Err(error) => {
+            // Apenas erros locais sanitizados; nunca repassar stderr arbitrário
+            // ou conteúdo de configuração/credenciais pela ponte.
+            serde_json::to_writer(
+                &mut output,
+                &serde_json::json!({"startup_error": error.to_string()}),
+            )
+            .map_err(io::Error::other)?;
+            output.write_all(b"\n")?;
+            output.flush()?;
+            return Err(error);
+        }
+    };
+    let mut input = BufReader::new(io::stdin().lock());
     output.write_all(b"READY\n")?;
     output.flush()?;
     loop {

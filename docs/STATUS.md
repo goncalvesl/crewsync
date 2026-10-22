@@ -24,7 +24,7 @@
 Linux, Rust/Cargo 1.99.1, Python 3.14.8 e OpenSSL. Executados com sucesso:
 
 - `cargo build --workspace --locked --offline`
-- `cargo test --workspace --locked --offline`: **55 passaram, 2 ignorados**.
+- `cargo test --workspace --locked --offline`: **58 passaram, 3 ignorados**.
 - `cargo fmt --all -- --check`
 - `cargo clippy --workspace --all-targets --locked --offline -- -D warnings`
 - `/usr/bin/python3 -I tests/e2e/tls_memory.py`: **3 passaram**, incluindo gerador
@@ -38,13 +38,23 @@ Inicialmente o sandbox proibia sockets e escrita em `.git`. Após o usuário
 atualizar a sessão para acesso completo, foi executado com sucesso:
 
 - `cargo test -p crewsync-server --test pilot --locked --offline -- --ignored`:
-  **2 testes HTTPS passaram**, com servidor e dois clientes em processos separados.
+  **3 testes HTTPS passaram**, com servidor e dois clientes em processos separados.
   Cobrem convergência, conflitos, exclusões offline, reinício, permissões,
   revogação, symlinks e rejeição de TLS incorreto.
+
+A correção de diagnóstico transmite um erro local sanitizado no handshake do
+worker. Inicialização agora diferencia configuração/raiz/estado, TLS ausente ou
+inválido, porta ocupada e armazenamento em uso. O terceiro teste HTTPS cobre
+esses erros, incluindo raiz existente com modo 0755 (exige 0700), sem expor valores
+de configuração. A validação de esquema sozinha não verifica permissões em disco.
 
 Os testes permanecem `ignored` por padrão para suportar ambientes restritos;
 a CI e `scripts/check-pilot.sh` executam-nos explicitamente. Não houve teste em
 duas máquinas físicas nem execução da CI do GitHub nesta sessão.
+
+A ativação agora confirma o convite com Enter, sem aguardar EOF/Ctrl-D, e mostra
+progresso enquanto contata o servidor. Três regressões cobrem leitor ainda aberto,
+entrada limitada/CRLF/EOF e processo CLI com stdin mantido aberto, sem ecoar código.
 
 ## Próxima ação concreta
 

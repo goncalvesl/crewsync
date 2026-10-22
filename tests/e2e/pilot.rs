@@ -278,3 +278,88 @@ fn permissions_revocation_https_and_symlinks_fail_closed() {
     let raw = fs::read_to_string(pilot.root.join("store/auth/state.json")).unwrap();
     assert!(!raw.contains(data["token"].as_str().unwrap()));
 }
+
+#[test]
+#[ignore = "requer sockets TCP: executar com --ignored fora do sandbox; CI executa"]
+fn startup_errors_report_tls_port_configuration_and_private_storage() {
+    use std::net::TcpListener;
+    fn failure(pilot: &Pilot, cert: &Path, key: &Path, port: u16) -> String {
+        let child = Command::new(server_bin())
+            .arg("serve")
+            .arg(&pilot.config)
+            .arg("127.0.0.1")
+            .arg(port.to_string())
+            .arg(cert)
+            .arg(key)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .process_group(0)
+            .spawn()
+            .unwrap();
+        let id = child.id();
+        let (sender, receiver) = mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = sender.send(child.wait_with_output());
+        });
+        let result = match receiver.recv_timeout(Duration::from_secs(10)) {
+            Ok(result) => result.unwrap(),
+            Err(_) => {
+                let _ = Command::new("/bin/kill")
+                    .args(["-KILL", "--", &format!("-{id}")])
+                    .status();
+                panic!("falha de inicialização deve encerrar o processo em até 10s");
+            }
+        };
+        assert!(!result.status.success());
+        assert!(result.stdout.is_empty());
+        let diagnostic = String::from_utf8(result.stderr).unwrap();
+        assert!(
+            diagnostic.contains("Falha ao iniciar HTTPS:"),
+            "{diagnostic}"
+        );
+        assert!(
+            !diagnostic.contains("private-marker"),
+            "não expor valores da configuração"
+        );
+        diagnostic
+    }
+    let pilot = Pilot::new();
+    let absent = pilot.root.join("private-marker-missing.pem");
+    assert!(
+        failure(&pilot, &absent, &pilot.key, 0).contains("certificado ou chave TLS não encontrado")
+    );
+    let bad_key = pilot.root.join("bad-key.pem");
+    fs::write(&bad_key, b"private-marker-not-a-key").unwrap();
+    assert!(failure(&pilot, &pilot.cert, &bad_key, 0).contains("inválidos ou incompatíveis"));
+    let storage = pilot.root.join("store");
+    fs::create_dir(&storage).unwrap();
+    fs::set_permissions(&storage, fs::Permissions::from_mode(0o755)).unwrap();
+    let message = failure(&pilot, &pilot.cert, &pilot.key, 0);
+    assert!(
+        message.contains("0700") && message.contains("raiz de armazenamento"),
+        "{message}"
+    );
+    fs::set_permissions(&storage, fs::Permissions::from_mode(0o700)).unwrap();
+    let held_store = crewsync_server::access::AuthorizedStore::open(&pilot.config).unwrap();
+    assert!(
+        failure(&pilot, &pilot.cert, &pilot.key, 0)
+            .contains("armazenamento já está em uso por outro processo")
+    );
+    drop(held_store);
+    let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+    assert!(
+        failure(
+            &pilot,
+            &pilot.cert,
+            &pilot.key,
+            listener.local_addr().unwrap().port()
+        )
+        .contains("já está em uso")
+    );
+    fs::write(&pilot.config, "version = 'private-marker'").unwrap();
+    let message = failure(&pilot, &pilot.cert, &pilot.key, 0);
+    assert!(
+        message.contains("configuração") && message.contains("esquema"),
+        "{message}"
+    );
+}

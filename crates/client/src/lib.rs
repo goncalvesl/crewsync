@@ -4,7 +4,7 @@ pub mod tree;
 use crewsync_protocol::{Operation, Request, disk, invalid, transport};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, OpenOptions};
-use std::io::{self, Read};
+use std::io::{self, BufRead, BufReader, Read};
 use std::os::unix::fs::{OpenOptionsExt, PermissionsExt};
 use std::path::{Path, PathBuf};
 
@@ -90,11 +90,16 @@ pub fn activate(url: &str, ca: &Path, output: &Path, name: &str, code: &str) -> 
     result
 }
 
-pub fn read_code(mut input: impl Read) -> io::Result<String> {
+/// Lê uma única linha limitada: Enter confirma, EOF também funciona em pipes.
+pub fn read_code(input: impl Read) -> io::Result<String> {
     let mut data = String::new();
-    input.by_ref().take(128).read_to_string(&mut data)?;
+    BufReader::new(input).take(129).read_line(&mut data)?;
+    if data.len() > 128 {
+        return Err(invalid("código de convite longo demais"));
+    }
     let code = data.trim();
-    disk::validate_hash(code)?;
+    disk::validate_hash(code)
+        .map_err(|_| invalid("código de convite inválido; use o código gerado por invite"))?;
     Ok(code.to_owned())
 }
 
@@ -142,5 +147,52 @@ impl Remote for Session {
             output,
             limit,
         )
+    }
+}
+
+#[cfg(test)]
+mod activation_input_tests {
+    use super::*;
+    #[test]
+    fn enter_confirms_without_waiting_for_eof() {
+        struct LiveInput {
+            line: Option<Vec<u8>>,
+        }
+        impl Read for LiveInput {
+            fn read(&mut self, bytes: &mut [u8]) -> io::Result<usize> {
+                match self.line.take() {
+                    Some(line) => {
+                        bytes[..line.len()].copy_from_slice(&line);
+                        Ok(line.len())
+                    }
+                    None => Err(io::Error::other("não deveria esperar EOF depois de Enter")),
+                }
+            }
+        }
+        let code = "a".repeat(64);
+        let input = LiveInput {
+            line: Some(format!("{code}\n").into_bytes()),
+        };
+        assert_eq!(read_code(input).unwrap(), code);
+    }
+    #[test]
+    fn pipe_eof_crlf_limits_and_invalid_input_are_handled_without_echo() {
+        let code = "a".repeat(64);
+        for text in [
+            code.clone(),
+            format!("{code}\r\n"),
+            format!("{code}\nignored"),
+        ] {
+            assert_eq!(read_code(text.as_bytes()).unwrap(), code);
+        }
+        for text in [
+            String::new(),
+            "\n".into(),
+            "private-marker\n".into(),
+            "a".repeat(129),
+        ] {
+            let error = read_code(text.as_bytes()).unwrap_err();
+            assert!(!error.to_string().contains("private-marker"));
+        }
     }
 }

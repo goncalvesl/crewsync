@@ -1,4 +1,5 @@
 """Ponte TLS do piloto; regras e dados pertencem aos binários Rust."""
+import errno
 import http.client
 import http.server
 import json
@@ -10,6 +11,9 @@ import urllib.parse
 
 MAX_FRAME = 65536
 MAX_BODY = 1099511627776
+
+class StartupError(Exception):
+    """Diagnóstico local controlado; não contém dados de uma requisição."""
 
 def transfer(source, target, size):
     while size:
@@ -66,16 +70,31 @@ def client(url, ca):
 def serve(binary, config, host, port, cert, key):
     context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
     context.minimum_version = ssl.TLSVersion.TLSv1_2
-    context.load_cert_chain(cert, key)
+    try:
+        context.load_cert_chain(cert, key)
+    except FileNotFoundError:
+        raise StartupError('certificado ou chave TLS não encontrado; confira os arquivos CERT e KEY.') from None
+    except PermissionError:
+        raise StartupError('sem permissão para ler o certificado ou a chave TLS.') from None
+    except ssl.SSLError:
+        raise StartupError('certificado/chave TLS inválidos ou incompatíveis; confira o par de arquivos PEM.') from None
     class Server(http.server.HTTPServer):
         request_queue_size = 8
         def start_worker(self):
             self.worker = subprocess.Popen([binary, 'worker', config], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, bufsize=65536)
             # Worker só confirma após abrir e validar armazenamento e identidade.
-            if self.worker.stdout.readline(MAX_FRAME + 1) != b'READY\n':
+            line = self.worker.stdout.readline(MAX_FRAME + 1)
+            if line != b'READY\n':
                 self.worker.kill()
                 self.worker.wait()
-                raise OSError('worker indisponivel')
+                try:
+                    report = json.loads(line)
+                    message = report['startup_error']
+                    if not isinstance(message, str) or len(line) > MAX_FRAME:
+                        raise ValueError()
+                except Exception:
+                    message = 'worker indisponível; confira o binário e a configuração.'
+                raise StartupError(message)
         def reset_worker(self):
             self.worker.kill()
             self.worker.wait()
@@ -137,7 +156,22 @@ def serve(binary, config, host, port, cert, key):
                 # Reinício recupera temporários; nunca continua IPC dessincronizado.
                 self.server.reset_worker()
                 self.close_connection = True
-    server = Server((host, int(port)), Handler)
+    try:
+        number = int(port)
+        if not 0 <= number <= 65535:
+            raise ValueError()
+    except ValueError:
+        raise StartupError('porta inválida; use um número entre 0 e 65535.') from None
+    try:
+        server = Server((host, number), Handler)
+    except PermissionError:
+        raise StartupError('sem permissão para abrir a porta de escuta.') from None
+    except OSError as error:
+        if error.errno == errno.EADDRINUSE:
+            raise StartupError('porta de escuta já está em uso por outro processo.') from None
+        if error.errno == errno.EADDRNOTAVAIL:
+            raise StartupError('endereço de escuta não pertence a este computador.') from None
+        raise StartupError('não foi possível abrir o endereço/porta de escuta.') from None
     try:
         server.start_worker()
         print('CrewSync HTTPS ready ' + str(server.server_address[1]), flush=True)
@@ -164,7 +198,10 @@ def main():
                 sys.stdout.buffer.flush()
             except Exception:
                 pass
-        print('Falha no transporte HTTPS; verifique certificado, conexao e configuracao.', file=sys.stderr)
+        if len(sys.argv) > 1 and sys.argv[1] == 'serve' and isinstance(error, StartupError):
+            print('Falha ao iniciar HTTPS: ' + str(error), file=sys.stderr)
+        else:
+            print('Falha no transporte HTTPS; verifique certificado, conexao e configuracao.', file=sys.stderr)
         sys.exit(1)
 
 if __name__ == '__main__':

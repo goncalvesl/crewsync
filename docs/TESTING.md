@@ -35,11 +35,11 @@ cargo test --workspace
 O workflow `.github/workflows/ci.yml` executa build, fmt, Clippy e testes com
 `--locked`. Também verifica dependências do sistema e roda os testes TLS e de rede.
 
-Nesta entrega há 55 testes Rust locais (incluindo integração de autenticação,
+Nesta entrega há 58 testes Rust locais (incluindo integração de autenticação,
 worker em processo separado, cliente+armazenamento e falhas simuladas), além de
-dois testes HTTPS marcados `ignored` por exigirem sockets. O motivo é explícito:
+três testes HTTPS marcados `ignored` por exigirem sockets. O motivo é explícito:
 o ambiente de implementação retorna `Operation not permitted` ao criar sockets,
-inclusive localhost. Não suprimir esses dois testes na validação real/CI:
+inclusive localhost. Não suprimir esses testes na validação real/CI:
 
 ```bash
 cargo build --workspace --locked
@@ -50,7 +50,9 @@ O runner `tests/e2e/pilot.rs` está ligado ao Cargo do servidor por `[[test]]`.
 Ele executa servidor e dois clientes em processos separados, cria certificados
 sintéticos, usa porta efêmera e verifica convergência, conflitos, exclusões,
 rename/deduplicação, reinício, permissões, revogação, symlinks e recusa de TLS
-incorreto. Os binários de ambos os pacotes precisam estar compilados no mesmo
+incorreto. O terceiro cenário cobre diagnósticos de inicialização: TLS ausente ou
+inválido, porta/armazenamento em uso, raiz 0755 e configuração inválida sem ecoar
+seus valores. Os binários de ambos os pacotes precisam estar compilados no mesmo
 perfil/target; por isso o build do workspace antecede o teste. A CI limita a etapa
 a três minutos. `scripts/check-pilot.sh` executa a sequência completa, com timeout
 na etapa de rede.
@@ -71,6 +73,9 @@ TLS real pode ser testado sem sockets, via OpenSSL MemoryBIO:
 São três testes: CA confiável/hostname válido, CA não confiável e hostname
 incorreto. O setup usa o gerador real `scripts/pilot-cert.sh`, validando também a
 cadeia e permissões da chave. Esta verificação não testa TCP, firewall ou HTTP.
+
+A ativação tem regressões para confirmar com Enter mantendo stdin aberto, aceitar
+EOF em pipes/CRLF, limitar a entrada e não imprimir o convite.
 
 Pré-requisitos: `/usr/bin/sha256sum` (coreutils), `/usr/bin/python3` >= 3.11 com
 `tomllib`/`ssl`, OpenSSL CLI. O cliente exige Linux >= 5.6 com `/proc` montado para

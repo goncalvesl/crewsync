@@ -93,6 +93,20 @@ sudo ufw allow from 192.168.1.0/24 to any port 8443 proto tcp
 Adapte à rede e ao firewall reais. Essa regra não remove restrições de um
 sandbox de desenvolvimento. Não é necessário abrir porta nos clientes.
 
+### Diagnóstico de inicialização
+
+Se o servidor encerrar antes de mostrar `CrewSync HTTPS ready`, o diagnóstico
+indica certificado/chave ausentes ou inválidos, porta em uso ou falha do worker
+(configuração, raiz privada, estado de autenticação ou armazenamento).
+Não imprime conteúdo de configuração, tokens ou chaves.
+
+`check-config` valida o esquema, mas não as permissões da raiz. Uma pasta já
+existente usada como `storage_root` deve ser privada. Confira o caminho configurado
+e aplique `chmod 700 /caminho/da/raiz-interna` somente nessa raiz do serviço, sem
+alterar recursivamente pastas compartilhadas. O servidor não muda permissões
+existentes automaticamente. Se o armazenamento estiver em uso, não apague o
+arquivo `lock`: use a instância existente ou encerre-a antes de reiniciar.
+
 ## 3. Ativar cada cliente
 
 Em cada máquina, prepare a pasta privada de configuração e coloque a cópia
@@ -122,7 +136,10 @@ argumentos de comandos. Na máquina do cliente, execute:
 "$HOME/.local/bin/crewsync-client" activate https://192.168.1.10:8443 "$HOME/.config/crewsync/ca.crt" "$HOME/.config/crewsync/session.json" pc1
 ```
 
-Cole o código na entrada do programa, pressione Enter e finalize com Ctrl-D.
+Cole o código de convite na entrada do programa e pressione Enter. O cliente
+mostra `Ativando dispositivo no servidor HTTPS...` enquanto aguarda a resposta.
+Não é necessário Ctrl-D. Em binários antigos que ainda pedem Ctrl-D, finalize a
+entrada com Ctrl-D ou atualize o cliente.
 A credencial é salva em arquivo 0600 e não é impressa. Para a máquina 2, gere
 **outro convite** e repita a ativação, usando `pc2` como nome do dispositivo.
 Não copie `session.json` entre computadores. Se a ativação perder a resposta,

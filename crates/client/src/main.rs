@@ -20,8 +20,9 @@ fn main() -> ExitCode {
     }
     let result = match args.first().and_then(|a| a.to_str()) {
         Some("activate") if args.len() == 5 => Some((|| {
-            eprintln!("Informe o convite por stdin e finalize a entrada (Ctrl-D no terminal):");
+            eprintln!("Cole o código de convite e pressione Enter:");
             let code = read_code(io::stdin().lock())?;
+            eprintln!("Ativando dispositivo no servidor HTTPS...");
             activate(
                 &args[1].to_string_lossy(),
                 Path::new(&args[2]),
