@@ -59,7 +59,11 @@ README/manual/site têm comandos únicos e downloads versionados da alpha.4.
 Manual explica domínio/IPv4, DNS A, firewall/provedor, funcionamento sem SSH,
 certificado privado e renovação; detalhes técnicos ficam na última seção.
 https://goncalvesl.github.io/crewsync/manual.html#instalar.
-Assets conferidos antes de enviar main; verificar o deploy Pages após o push.
+Assets conferidos antes de enviar main. Pages passou na execução 39828921228:
+https://github.com/goncalvesl/crewsync/actions/runs/39828921228.
+Início/manual públicos retornaram HTTP 200 com alpha.4, downloads por arquitetura
+e instruções de domínio/DNS/firewall/linger. Chromium no site público passou em
+390/768/1440px (navegação, âncoras, overflow e console).
 
 ## Publicar novamente
 
