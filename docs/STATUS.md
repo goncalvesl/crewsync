@@ -67,9 +67,13 @@ totais/retomada parcial/compactação. Windows, GUI e Android futuros. Manter ba
 
 ## Manual, site e próxima publicação
 
-README/manual/site preparados com downloads versionados da alpha.6. Assets já
-conferidos antes de enviar main; falta conferir a publicação Pages e os links no
-site público: https://goncalvesl.github.io/crewsync/manual.html#instalar.
+README/manual/site públicos com downloads versionados da alpha.6. Assets foram
+conferidos antes de enviar main. Pages passou na execução 39849242000:
+https://github.com/goncalvesl/crewsync/actions/runs/39849242000.
+Início/manual retornaram HTTP 200 com alpha.6, downloads para ambas as arquiteturas
+e instruções de raiz automática. Chromium no site público passou em 390/768/1440px
+(navegação, âncoras, overflow e console).
+https://goncalvesl.github.io/crewsync/manual.html#instalar.
 
 Seguir docs/RELEASING.md até a release e documentação estarem públicas. Usar
 prepare-release.py; enviar tag antes de main. Não encerrar em commit/tag/workflow.
