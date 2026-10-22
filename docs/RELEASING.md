@@ -50,12 +50,15 @@ sem conferir a release no GitHub.
 ## Verificar e atualizar a documentação pública
 
 1. Conferir `gh release view vVERSAO --json url,isDraft,isPrerelease,assets`.
-   Devem existir os dois pacotes musl, seus checksums, fonte e checksum de fonte, além de install.sh e seu checksum.
+   Devem existir os tar.gz musl, `.deb` e `.rpm` para x86_64 e ARM64, o `.pkg.tar.zst`
+   Arch x86_64, checksums de cada arquivo, fonte e checksum de fonte, além de install.sh
+   e seu checksum.
    Os nomes públicos usam linux-x86_64/linux-arm64; os targets Rust permanecem no
    metadado do pacote. Testar também setup.sh e o bootstrap publicado.
-2. Baixar os assets publicados, conferir hashes e executar check-package no pacote
-   x86_64 (ARM64 é executado nativamente na CI). Conferir que --version corresponde
-   à tag. Não executar um binário ARM64 diretamente no host x86_64.
+2. Baixar os assets publicados, conferir hashes e executar check-package no tar.gz
+   x86_64 (ARM64 é executado nativamente na CI). Conferir os metadados dos três
+   pacotes de sistema com `scripts/check-system-packages.py` na CI e que `--version`
+   corresponde à tag. Não executar binário ARM64 diretamente no host x86_64.
 3. Conferir URLs reais de cada arquitetura, checksum e fonte. A última versão do
    projeto é docs/release.json; `prepare-release.py --check` deve passar.
 4. Só então `git push origin main`, publicando os links no site via Pages.

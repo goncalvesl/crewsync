@@ -1,0 +1,17 @@
+pkgname=crewsync
+pkgver=@PKGVER@
+pkgrel=1
+pkgdesc='CrewSync file synchronizer and Linux server'
+arch=('x86_64')
+url='https://github.com/goncalvesl/crewsync'
+license=('GPL-3.0-only')
+depends=('systemd' 'shadow' 'util-linux' 'openssl')
+install=crewsync.install
+source=('payload.tar.gz')
+sha256sums=('@SHA256@')
+options=('!strip')
+
+package() {
+  install -d "$pkgdir"
+  tar -xzf "$srcdir/payload.tar.gz" -C "$pkgdir"
+}

@@ -1,10 +1,33 @@
 {
-  "version": "0.1.0-alpha.7",
-  "tag": "v0.1.0-alpha.7",
+  "version": "0.1.0-alpha.8",
+  "tag": "v0.1.0-alpha.8",
   "prerelease": true,
   "repository": "https://github.com/goncalvesl/crewsync",
   "targets": [
     "x86_64-unknown-linux-musl",
     "aarch64-unknown-linux-musl"
-  ]
+  ],
+  "distributions": [
+    "arch",
+    "debian",
+    "fedora",
+    "tar.gz"
+  ],
+  "distribution_targets": {
+    "arch": [
+      "x86_64"
+    ],
+    "debian": [
+      "x86_64",
+      "aarch64"
+    ],
+    "fedora": [
+      "x86_64",
+      "aarch64"
+    ],
+    "tar.gz": [
+      "x86_64",
+      "aarch64"
+    ]
+  }
 }

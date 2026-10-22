@@ -1,25 +1,27 @@
-# CrewSync 0.1.0-alpha.7
+# CrewSync 0.1.0-alpha.8
 
-Esta versão de teste adiciona o painel administrativo do servidor e três modos de conexão: HTTP explícito para testes, HTTPS atrás de proxy e HTTPS direto. O painel fica no mesmo endereço da sincronização.
+Esta alpha acrescenta quatro formas de distribuição do servidor Linux: pacote
+Arch (`.pkg.tar.zst`, x86_64), Debian (`.deb`) e Fedora (`.rpm`) para x86_64 e
+ARM64, além do tar.gz independente para ambas as arquiteturas. O pacote Arch é
+gerado com `makepkg`; Arch Linux ARM não está incluído. Os pacotes nativos usam os caminhos do sistema, criam uma
+conta de serviço sem login e instalam um serviço systemd que só é habilitado
+depois da configuração inicial. O painel pode atualizar a configuração com o
+serviço em execução; TLS permanece sem escrita para o daemon. O tar.gz pode ser instalado em `/opt/crewsync`,
+com configuração em `/etc/opt/crewsync` e dados em `/var/opt/crewsync`.
 
-## Painel do servidor
+Para pacotes nativos, instale o arquivo da sua distribuição e execute
+`sudo crewsync-server-setup`. No tar.gz, extraia e execute
+`sudo ./install-system.sh`. O assistente configura HTTPS direto com CA privada ou
+backend HTTP local para proxy HTTPS, inicia o serviço e mostra a chave do painel e
+o convite inicial. O instalador por usuário continua disponível para pilotos e
+clientes existentes; esta release não migra automaticamente instalações antigas.
 
-O instalador mostra uma chave administrativa aleatória. Use o painel para cadastrar e bloquear usuários, criar pastas compartilhadas, conceder leitura ou escrita, criar convites por computador e consultar ou revogar dispositivos. A chave não é um convite e não substitui os tokens dos clientes. Para recuperar acesso, execute localmente `crewsync-server admin-key CONFIG URL_PUBLICA`; isso troca a chave e encerra sessões administrativas anteriores.
+Configuração e dados sobrevivem à atualização e remoção normal do pacote. Ainda
+não publicamos repositórios apt/pacman/dnf. Antes da versão estável, falta ensaiar
+instalação, atualização, remoção/reinstalação e reboot em VMs Arch, Debian e Fedora.
+O piloto físico ampliado também continua pendente; esta é uma versão alpha para
+testes, não uma declaração de aceite operacional.
 
-O painel altera o TOML validando a configuração toda e grava por publicação atômica. Atualizações concorrentes são recusadas para revisão. Compartilhamentos são nomes virtuais geridos pelo CrewSync; o painel não importa caminhos arbitrários do disco nem remove conteúdo do armazenamento. Arquivos que já foram sincronizados continuam no computador após bloqueio ou revogação.
-
-## Conexão e proxy
-
-O HTTPS direto continua disponível, com CA própria ou certificado existente. HTTPS por proxy permite reutilizar Caddy, Coolify ou outro proxy. O backend HTTP deve ficar restrito ao proxy, normalmente em loopback ou numa rede privada de containers. O HTTP sem TLS é apenas para teste isolado. O cliente aceita certificados do sistema ou CA privada e não reduz o nível de segurança automaticamente.
-
-O manual descreve as opções e traz uma configuração mínima de Caddy. O painel usa o mesmo domínio/porta e a mesma configuração do proxy.
-
-## Instalação e compatibilidade
-
-Instale com o assistente publicado ou baixe o pacote para Linux x86_64 ou ARM64. A atualização substitui os binários; mantenha a configuração, o armazenamento e certificados atuais. Não execute o assistente sobre diretórios de configuração existentes sem revisar as perguntas. Sessões administrativas são encerradas ao reiniciar o servidor. Clientes já ativados continuam usando os seus tokens individuais.
-
-A alpha.7 é uma versão de testes Linux. Não é uma versão estável e não representa o aceite físico ampliado. Faça backup independente antes de uso com dados importantes.
-
-## Verificações
-
-Passaram build, fmt, Clippy, 82 testes Rust, cinco cenários HTTPS explícitos, seis ensaios TLS MemoryBIO, dois testes de entrada do certificado, onze cenários do instalador, testes do painel HTTP/HTTPS com clientes reais, fluxo Chromium em 390/768/1440 pixels, teste ponta a ponta via Caddy e verificações do site e dos gates de release. O ensaio ENOSPC exige Docker/tmpfs e é executado separadamente na matriz de pacote. A CI de release também compila os pacotes musl x86_64 e ARM64 e valida fontes offline.
+O fluxo de release compila e testa os binários musl x86_64 e ARM64, testa HTTPS,
+ENOSPC e instalação e gera os quatro formatos com checksum SHA-256. A fonte da
+release inclui dependências vendorizadas e é compilada offline pela CI.

@@ -20,7 +20,7 @@ Nos outros computadores, execute:
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-A alpha.7 inclui os três modos abaixo e o painel administrativo. A alpha.6 não os contém; atualize os programas pelo pacote alpha.7 antes de configurar HTTP ou proxy.
+A alpha.8 mantém os três modos abaixo e o painel administrativo e acrescenta pacotes de sistema para o servidor Linux. Atualize programas anteriores pelo pacote alpha.8 antes de configurar HTTP ou proxy.
 
 O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o modo de conexão, domínio ou IPv4 e configura o primeiro usuário e compartilhamento, inicia o serviço e mostra um convite. No modo direto pode gerar CA privada ou usar certificado existente; no modo proxy gera um exemplo Caddy. No cliente, ativa o computador e inicia a sincronização.
 
@@ -29,19 +29,39 @@ Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não
 Se preferir baixar e conferir o pacote manualmente:
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.7 (alpha, para testes).
+Versão atual: 0.1.0-alpha.8 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz.sha256)
+- **Arch Linux:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0_alpha.8-1-x86_64.pkg.tar.zst) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0_alpha.8-1-x86_64.pkg.tar.zst.sha256)
+- **Debian/Ubuntu:** [amd64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_amd64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_amd64.deb.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_arm64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_arm64.deb.sha256)
+- **Fedora:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.x86_64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.x86_64.rpm.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.aarch64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.aarch64.rpm.sha256)
+- **Tar.gz independente:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-x86_64.tar.gz.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.7) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.8) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-source.tar.gz)
 <!-- downloads:end -->
 
 Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.
 
+### Servidor instalado pelo sistema
+
+Para operar o servidor como serviço Linux, instale o `.pkg.tar.zst` no Arch, o
+`.deb` no Debian/Ubuntu ou o `.rpm` no Fedora, e execute `sudo
+crewsync-server-setup`. O assistente cria uma conta de serviço sem login, configura
+o primeiro usuário e compartilhamento, instala o serviço systemd e mostra a chave
+administrativa e o convite. Os arquivos ficam em `/usr/bin`, `/etc/crewsync` e
+`/var/lib/crewsync`; a instalação do pacote não inicia o servidor antes desse
+passo.
+
+O tar.gz independente é a quarta opção: extraia-o e execute `sudo
+./install-system.sh` na pasta extraída. Ele instala o programa em `/opt/crewsync`,
+a configuração em `/etc/opt/crewsync` e os dados em `/var/opt/crewsync`. Arch está
+disponível para x86_64; os pacotes Debian/Fedora e o tar.gz estão disponíveis para
+x86_64 e ARM64 na seção de downloads. A remoção do programa não apaga os dados;
+mantenha backup antes de atualizar. Atualizações dos pacotes reiniciam o serviço;
+o tar.gz o interrompe durante a troca dos binários e o inicia novamente.
+
 ## Painel do servidor
 
-**Alpha.7.** Para atualizar uma instalação alpha.6, baixe a alpha.7 e substitua os programas mantendo a configuração e o armazenamento. Abra no navegador o endereço do
+**Alpha.8.** Para atualizar uma instalação alpha.7, baixe a alpha.8 e substitua os programas mantendo a configuração e o armazenamento. Abra no navegador o endereço do
 servidor, por exemplo `https://sync.empresa.com/`. O instalador mostra a chave
 administrativa ao terminar; guarde-a em um gerenciador de senhas. Ela é separada
 dos convites e dos tokens dos dispositivos.
@@ -64,6 +84,9 @@ do serviço e o caminho real da configuração:
 ```sh
 crewsync-server admin-key /caminho/server.toml https://sync.empresa.com
 ```
+
+No pacote de sistema, use: `sudo -u crewsync /usr/bin/crewsync-server admin-key
+/etc/crewsync/server.toml https://sync.empresa.com`.
 
 O comando mostra uma nova chave e encerra as sessões administrativas anteriores.
 Não altera tokens dos dispositivos. Informe a URL pública exata, incluindo porta
@@ -150,7 +173,15 @@ Use os números reais da consulta. Depois execute `sync` nos dois computadores o
 
 ## Configurar
 
-O assistente do servidor cria `$HOME/.config/crewsync-server/server.toml`. Os arquivos internos ficam, por padrão, em `$HOME/.local/share/crewsync-server`; essa pasta é separada da pasta dos clientes e não deve ser editada manualmente.
+Os exemplos desta seção usam a instalação por usuário: ela guarda a configuração
+em `$HOME/.config/crewsync-server/server.toml` e os arquivos internos em
+`$HOME/.local/share/crewsync-server`. Não edite o armazenamento interno.
+
+Em servidor instalado por pacote do sistema, a configuração é
+`/etc/crewsync/server.toml`, os dados ficam em `/var/lib/crewsync` e os comandos
+que alteram convites ou dispositivos devem rodar como a conta de serviço. Por
+exemplo: `sudo -u crewsync crewsync-server invite /etc/crewsync/server.toml ana 3600`.
+Prefira o painel administrativo para usuários, pastas e dispositivos.
 
 ### Adicionar um usuário
 

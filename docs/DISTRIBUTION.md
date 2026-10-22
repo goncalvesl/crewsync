@@ -14,7 +14,7 @@ python3 scripts/package.py --bin-dir target/x86_64-unknown-linux-musl/release --
 python3 scripts/check-package.py target/packages/*.tar.gz
 ```
 
-Um pacote contém binários, install.sh e setup.sh, exemplos públicos de configuração/systemd,
+O tar.gz contém binários, install.sh e setup.sh, exemplos públicos de configuração/systemd,
 gerador de certificados e documentação. Nenhum dado privado é coletado da raiz
 do piloto. Inclui checksum SHA-256 e avisos das dependências. PREFIX controla a
 instalação; default ~/.local. `./install.sh --client` instala somente o cliente,
@@ -23,13 +23,51 @@ ficam em share/crewsync. install.sh não inicia serviços. setup.sh server|clien
 é o assistente guiado que configura e inicia; setup-online.sh baixa a última
 release e valida o checksum antes de chamar esse assistente. Não há sudo ou
 ajustes de PATH. Serviços de usuário systemd, ou nohup quando indisponível.
-Os nomes públicos dos pacotes são linux-x86_64 e linux-arm64.
+O tar.gz também pode ser instalado como serviço de sistema por `install-system.sh`:
+ele coloca os arquivos estáticos em `/opt/crewsync`, configurações em
+`/etc/opt/crewsync` e dados em `/var/opt/crewsync`. `install.sh` continua adequado
+para cliente ou instalação manual por usuário.
+
+## Servidor em pacote de sistema
+
+Cada release Linux publica `.pkg.tar.zst` para Arch x86_64 e `.deb`, `.rpm` e
+tar.gz upstream para x86_64 e ARM64. O pacote Arch é construído com `makepkg`;
+Arch Linux ARM não está incluído nesta versão. Os pacotes da distribuição instalam
+em `/usr/bin`, `/usr/share/crewsync`, `/etc/crewsync` e
+`/var/lib/crewsync`. O daemon roda como usuário de sistema `crewsync`, sem login.
+A instalação do pacote não inicia nem habilita o serviço antes da configuração.
+O diretório da configuração é root-owned e gravável pelo grupo do serviço para
+permitir que o painel publique mudanças atomicamente; o subdiretório TLS é root-owned
+e sem escrita pelo daemon.
+
+Instale o arquivo correspondente (`pacman -U`, `apt install ./arquivo.deb` ou
+`dnf install ./arquivo.rpm`) e execute:
+
+```sh
+sudo crewsync-server-setup
+```
+
+O assistente cria a primeira conta e pasta compartilhada, configura HTTPS direto
+com CA privada ou backend HTTP em loopback para um proxy HTTPS, habilita
+`crewsync-server.service` e mostra a chave administrativa e o convite inicial.
+No tar.gz, extraia o arquivo e execute `sudo ./install-system.sh` na pasta
+extraída. A instalação por tar.gz precisa de systemd e OpenSSL; pacotes nativos
+declaram essas dependências para o gerenciador.
+
+Atualizações preservam configuração e dados e reiniciam o daemon para carregar o
+binário novo. O instalador tar.gz para o serviço antes de substituir executáveis.
+Remover o pacote não apaga
+`/etc/crewsync` nem `/var/lib/crewsync`; faça backup antes de atualizar. O tar.gz
+não remove automaticamente configuração ou dados. Os artefatos são arquivos
+instaláveis diretamente, com checksum SHA-256; ainda não há repositórios apt,
+pacman ou dnf.
 
 ## Automação
 
 - CI: build/fmt/Clippy/testes, HTTPS real e site.
 - Packages, workflow_dispatch: compila/testa x86_64 e ARM64 musl, executa HTTPS
-  com esses binários, empacota e testa instalação. Artefatos ficam na execução.
+  com esses binários e gera tar.gz, .deb, .rpm e .pkg.tar.zst com checksums.
+  Artefatos ficam na execução.
 - Packages, tag vVERSAO: só publica prerelease se o número corresponder ao Cargo,
   não terminar em -dev e existir LICENSE; versão estável exige aceite físico ampliado
   registrado em docs/reports/physical-acceptance.json. Não editar esse aceite

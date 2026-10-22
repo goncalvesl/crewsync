@@ -18,7 +18,7 @@ jobs:
     runs-on: ${{ matrix.runner }}
     steps:
       - uses: actions/checkout@v4
-      - run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: sudo apt-get update && sudo apt-get install -y musl-tools dpkg-dev rpm zstd
       - run: rustup toolchain install stable --profile minimal --component rustfmt --component clippy
       - run: rustup default stable && rustup target add ${{ matrix.target }}
       - run: cargo fmt --all -- --check
@@ -32,10 +32,58 @@ jobs:
       - run: python3 tests/packaging/test_install.py
       - run: python3 scripts/package.py --bin-dir target/${{ matrix.target }}/release --target ${{ matrix.target }}
       - run: python3 scripts/check-package.py target/packages/*.tar.gz
+      - name: Build Debian and Fedora packages
+        run: python3 scripts/package_system.py --bin-dir target/${{ matrix.target }}/release --arch ${{ startsWith(matrix.target, 'x86_64') && 'x86_64' || 'aarch64' }}
+      - name: Verify package archives
+        run: |
+          for package in target/packages/*.deb; do dpkg-deb --info "$package" >/dev/null; done
+          for package in target/packages/*.rpm; do rpm -qp --qf '%{NAME} %{VERSION} %{ARCH}\n' "$package"; done
+          python3 scripts/check-system-packages.py --directory target/packages --arch ${{ startsWith(matrix.target, 'x86_64') && 'x86_64' || 'aarch64' }}
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
           path: target/packages/*
+  arch:
+    needs: package
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: x86_64-unknown-linux-musl
+          path: target/packages
+      - name: Prepare Arch payload
+        run: |
+          mkdir target/arch-input
+          tar -xzf target/packages/*linux-x86_64.tar.gz -C target/arch-input
+          package_dir=$(find target/arch-input -mindepth 1 -maxdepth 1 -type d)
+          python3 scripts/package-arch.py --bin-dir "$package_dir/bin" --output target/arch-build
+      - name: Build and verify with makepkg
+        run: |
+          docker run --rm \
+            -v "$PWD/target/arch-build:/input:ro" \
+            -v "$PWD/target/packages:/output" \
+            -v "$PWD:/source:ro" \
+            archlinux:base-devel bash -euc '
+              pacman -Syu --noconfirm
+              for package in systemd shadow util-linux openssl; do pacman -Q "$package" >/dev/null; done
+              for tool in systemctl useradd runuser python3; do command -v "$tool" >/dev/null; done
+              useradd -m builder
+              mkdir /build
+              cp -a /input/. /build/
+              chown -R builder:builder /build
+              runuser -u builder -- bash -lc "cd /build && makepkg --noconfirm --cleanbuild"
+              install -m 644 /build/crewsync-*.pkg.tar.zst /output/
+              sha256sum /output/crewsync-*.pkg.tar.zst | sed "s|/output/||" > /tmp/crewsync-arch.sha256
+              install -m 644 /tmp/crewsync-arch.sha256 /output/crewsync-arch.sha256.tmp
+              package=$(find /output -maxdepth 1 -name "crewsync-*.pkg.tar.zst" -type f)
+              mv /output/crewsync-arch.sha256.tmp "$package.sha256"
+              python3 /source/scripts/check-arch-package.py "$package"
+            '
+      - uses: actions/upload-artifact@v4
+        with:
+          name: arch-x86_64
+          path: target/packages/crewsync-*.pkg.tar.zst*
   source:
     runs-on: ubuntu-24.04
     steps:
@@ -49,7 +97,7 @@ jobs:
           path: target/packages/*
   publish:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [package, source]
+    needs: [package, arch, source]
     runs-on: ubuntu-24.04
     permissions:
       contents: write

@@ -26,10 +26,28 @@ compilou offline; ambos pacotes musl passaram a matriz CI, inclusive teste ENOSP
 HTTPS e instalação. Nenhum servidor de produção ou certificado real foi alterado.
 
 O mantenedor definiu o servidor Linux-only. Decisão 0013 registra o plano de
-pacotes Arch, Debian, Fedora e tar.gz independente; layout distro em /usr/bin,
-/etc/crewsync e /var/lib/crewsync, e tar em /opt/crewsync com /etc/opt e /var/opt.
-Isso é planejamento, ainda não implementado; migração do instalador por usuário
-precisa ser desenhada.
+pacotes Arch, Debian, Fedora e tar.gz independente; o fluxo está implementado no
+candidato alpha.8 descrito abaixo. Layout distro em /usr/bin, /etc/crewsync e
+/var/lib/crewsync; tar em /opt/crewsync, /etc/opt e /var/opt.
+
+## Candidato 0.1.0-alpha.8 — publicação pendente
+
+Quatro formatos de servidor: Arch x86_64 via makepkg; `.deb` e `.rpm` para
+x86_64/ARM64; tar.gz para x86_64/ARM64, com instalador de sistema em /opt. O
+assistente cria usuário sem login, configuração e TLS; systemd executa como
+`crewsync`. Configuração pode ser atualizada pelo painel, TLS não é gravável pelo
+daemon. Remoção comum preserva estado. Instalador por usuário permanece intacto.
+
+Validação local: `scripts/check-pilot.sh` passou com build, fmt, Clippy, testes
+Rust, HTTPS, assistente, painel, proxy, site e gates. `scripts/check-package.py`
+passou no tar.gz x86_64 com os novos arquivos. O pacote Arch foi construído por
+makepkg e passou consultas pacman de metadados/layout e checksum. `.deb` e `.rpm`
+x86_64 foram gerados em Ubuntu 24.04; `check-system-packages.py` validou campos,
+layout, dependências e checksums. O fluxo da tag ainda recompila e repete isso com
+binários musl x86_64/ARM64. Chromium local passou em 390/768/1440px. Não foi
+instalado pacote em servidor real; VMs
+Arch/Debian/Fedora e ciclo reboot/upgrade/removal permanecem pendentes antes de
+estabilizar.
 
 ## Histórico da implementação alpha.7 — transporte
 

@@ -36,7 +36,7 @@ Cliente inicial por CLI e serviço em segundo plano. Observação de arquivos co
 
 Histórico com versões completas e deduplicação por hash. Retenção configurável, aplicada em manutenção offline: até 30 dias e no máximo 10 versões anteriores por arquivo; lixeira de 30 dias. A versão atual permanece. Restauração cria nova revisão. Limpeza só remove objetos sem referências e precisa respeitar transferências em andamento. Histórico não substitui backup.
 
-Painel administrativo implementado em Rust, com HTML renderizado no servidor, no mesmo endereço da sincronização. Gerencia usuários, pastas, permissões, convites e dispositivos. Chave administrativa separada dos tokens dos clientes, configuração TOML preservada e gravação atômica com controle de revisão (decisão 0012). Disponível na implementação local, aguardando publicação.
+Painel administrativo implementado em Rust, com HTML renderizado no servidor, no mesmo endereço da sincronização. Gerencia usuários, pastas, permissões, convites e dispositivos. Chave administrativa separada dos tokens dos clientes, configuração TOML preservada e gravação atômica com controle de revisão (decisão 0012). Publicado na alpha.7; esta atualização acrescenta formatos de instalação para servidor Linux.
 
 ## Decisões ainda abertas
 
@@ -48,16 +48,9 @@ GitHub Pages hospeda apenas o site estático, em `https://USUARIO.github.io/REPO
 
 ## Distribuição do servidor Linux
 
-Direção registrada: oferecer pacotes nativos para Arch Linux, Debian e Fedora,
-além de um tar.gz upstream. Pacotes gerenciados pela distribuição devem seguir
-o layout dela e usar serviço systemd de sistema com usuário dedicado, sem exigir
-que o administrador mantenha o daemon na sessão/home pessoal. Layout candidato:
-executáveis em /usr/bin, configuração em /etc/crewsync e estado/armazenamento em
-/var/lib/crewsync.
-
-O tar.gz independente pode ser extraído em /opt/crewsync, permitido pelo FHS
-para software adicional; nesse formato, configuração em /etc/opt/crewsync e
-dados variáveis em /var/opt/crewsync. Essa distinção evita tratar /opt como o
-padrão de pacotes Debian/Fedora/Arch. Definir ownership, atualização, remoção sem
-perda de dados, primeira configuração e migração da instalação por usuário antes
-de implementar os pacotes. Ver decisão 0013.
+Distribuição do servidor Linux: pacotes Arch `.pkg.tar.zst`, Debian `.deb` e
+Fedora `.rpm`, além de tar.gz upstream. Pacotes nativos usam `/usr/bin`,
+`/etc/crewsync` e `/var/lib/crewsync`, serviço systemd e usuário dedicado sem
+login. O tar.gz instala em `/opt/crewsync`, `/etc/opt/crewsync` e `/var/opt/crewsync`.
+O assistente `crewsync-server-setup` configura o servidor sem iniciar o daemon como
+root; detalhes e limites de validação em DISTRIBUTION.md e decisão 0013.

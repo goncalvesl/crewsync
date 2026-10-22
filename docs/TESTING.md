@@ -93,6 +93,12 @@ Instalador: tests/packaging/test_install.py cobre cliente/servidor/ambos, caminh
 com espaços, reinstalação, configuração preservada e pacote incompleto recusado.
 Pacotes: scripts/check-package.py valida GPL e metadados, checksum, extração segura, instalação em
 prefixo temporário e comandos básicos. Nenhum teste acessa dados reais.
+Pacotes Debian/Fedora: `scripts/package_system.py` constrói os dois formatos e
+`scripts/check-system-packages.py` confere versão, arquitetura, arquivos e checksum.
+O `.pkg.tar.zst` Arch é gerado por `makepkg` dentro de Arch Linux e validado por
+`scripts/check-arch-package.py`; a release oferece essa arquitetura somente para
+x86_64. A primeira configuração do serviço de sistema ainda precisa de validação
+de instalação/upgrade/reboot em VMs Arch, Debian e Fedora.
 
 Benchmark: `python3 scripts/benchmark.py --report target/benchmark.json`.
 Relatório contém wall/CPU/ru_maxrss por processo cliente e bytes de conteúdo, não

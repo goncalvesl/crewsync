@@ -1,0 +1,22 @@
+[Unit]
+Description=CrewSync server
+After=network-online.target
+Wants=network-online.target
+ConditionPathExists=/etc/crewsync/server.toml
+
+[Service]
+Type=simple
+User=crewsync
+Group=crewsync
+ExecStart=/usr/bin/crewsync-server serve /etc/crewsync/server.toml 0.0.0.0 8443 /etc/crewsync/tls/server.crt /etc/crewsync/tls/server.key
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/crewsync /etc/crewsync
+
+[Install]
+WantedBy=multi-user.target

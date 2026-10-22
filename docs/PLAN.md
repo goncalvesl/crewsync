@@ -83,6 +83,11 @@ manual gera artefatos para ensaio. Tag correspondente publica prerelease somente
 com LICENSE e metadados/downloads consistentes; estável exige aceite físico ampliado. Pacote x86_64 validado localmente sem Python
 no container mínimo; ARM64 passou pela matriz CI, incluindo execução nativa de testes e instalação.
 
+Distribuição do servidor Linux implementada na próxima alpha: `.pkg.tar.zst`, `.deb`,
+`.rpm` e tar.gz upstream para x86_64/ARM64, com serviço systemd e usuário dedicado.
+Validação em VMs Arch/Debian/Fedora e ensaios de upgrade, remoção e reboot ainda
+precisam ocorrer antes da versão estável.
+
 0.1.0-alpha.1 publicada por solicitação expressa; estável depende do aceite externo. Nenhuma
 versão estável anunciada. Disponibilidade dos artefatos/CI em STATUS.md.
 

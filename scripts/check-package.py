@@ -25,7 +25,7 @@ with tempfile.TemporaryDirectory(prefix='crewsync-package-') as root:
             path = pathlib.PurePosixPath(item.name)
             assert not path.is_absolute() and '..' not in path.parts and item.isfile()
             relative = '/'.join(path.parts[1:])
-            assert relative.startswith(('bin/', 'docs/', 'config/', 'scripts/')) or relative in ['README.md', 'LICENSE', 'install.sh', 'setup.sh', 'package.json', 'THIRD-PARTY-NOTICES.txt']
+            assert relative.startswith(('bin/', 'docs/', 'config/', 'scripts/')) or relative in ['README.md', 'LICENSE', 'install.sh', 'install-system.sh', 'setup.sh', 'package.json', 'THIRD-PARTY-NOTICES.txt']
             assert '.key' not in relative and 'session.json' not in relative
         archive.extractall(root, filter='data')
     package = root / next(iter(prefixes))
@@ -33,6 +33,8 @@ with tempfile.TemporaryDirectory(prefix='crewsync-package-') as root:
     metadata = json.loads((package / 'package.json').read_text())
     assert metadata['license'] == 'GPL-3.0-only'
     assert (package / 'setup.sh').is_file()
+    assert (package / 'install-system.sh').is_file()
+    assert (package / 'scripts/server-system-setup.sh').is_file()
     prefix = root / 'prefix'
     subprocess.run([str(package / 'install.sh')], env={**os.environ, 'PREFIX': str(prefix)}, check=True, capture_output=True)
     for binary in ['crewsync-client', 'crewsync-server']:

@@ -24,6 +24,7 @@ def main():
     archive = args.output / f'{name}.tar.gz'
     files = [('bin/' + n, args.bin_dir / n) for n in ['crewsync-client', 'crewsync-server']]
     files += [('setup.sh', ROOT / 'scripts/setup.sh')]
+    files += [('scripts/server-system-setup.sh', ROOT / 'scripts/server-system-setup.sh'), ('install-system.sh', ROOT / 'scripts/install-system-tar.sh')]
     files += [('README.md', ROOT / 'README.md'), ('install.sh', ROOT / 'scripts/install.sh'), ('scripts/pilot-cert.sh', ROOT / 'scripts/pilot-cert.sh')]
     files += [('config/' + name, ROOT / 'config' / name) for name in ['README.md', 'server.example.toml', 'systemd/crewsync-client.service', 'systemd/crewsync-server.service']]
     files += [(str(p.relative_to(ROOT)), p) for p in (ROOT / 'docs').rglob('*.md')]

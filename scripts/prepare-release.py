@@ -19,24 +19,46 @@ def validate_version(version):
 def metadata(version):
     validate_version(version)
     return dict(version=version, tag='v' + version, prerelease='-' in version,
-                repository=REPOSITORY, targets=TARGETS)
+                repository=REPOSITORY, targets=TARGETS,
+                distributions=['arch', 'debian', 'fedora', 'tar.gz'],
+                distribution_targets={'arch':['x86_64'], 'debian':['x86_64','aarch64'],
+                                      'fedora':['x86_64','aarch64'], 'tar.gz':['x86_64','aarch64']})
 
 def assets(version):
     return [(target, f'{REPOSITORY}/releases/download/v{version}/crewsync-{version}-{'linux-x86_64' if target.startswith('x86_64') else 'linux-arm64'}.tar.gz') for target in TARGETS]
 
 def markdown(version):
     lines = [f'Versão atual: {version}' + (' (alpha, para testes).' if '-' in version else '.'), '']
-    for target, url in assets(version):
-        label = 'Linux Intel/AMD (x86_64)' if target.startswith('x86_64') else 'Linux ARM64 (aarch64)'
-        lines += [f'- [{label} — baixar pacote]({url}) · [SHA-256]({url}.sha256)']
+    root = f'{REPOSITORY}/releases/download/v{version}/'
+    native_deb = version.replace('-alpha.', '~alpha.')
+    variants = [
+        ('Arch Linux', [('x86_64', f'crewsync-{version.replace("-alpha.", "_alpha.")}-1-x86_64.pkg.tar.zst')]),
+        ('Debian/Ubuntu', [('amd64', f'crewsync_{native_deb}-1_amd64.deb'), ('ARM64', f'crewsync_{native_deb}-1_arm64.deb')]),
+        ('Fedora', [('x86_64', f'crewsync-{native_deb}-1.x86_64.rpm'), ('ARM64', f'crewsync-{native_deb}-1.aarch64.rpm')]),
+        ('Tar.gz independente', [('x86_64', f'crewsync-{version}-linux-x86_64.tar.gz'), ('ARM64', f'crewsync-{version}-linux-arm64.tar.gz')]),
+    ]
+    for label, packages in variants:
+        downloads = []
+        for arch, filename in packages:
+            url = root + filename
+            downloads.append(f'[{arch}]({url}) · [SHA-256]({url}.sha256)')
+        lines.append(f'- **{label}:** ' + ' · '.join(downloads))
     lines += ['', f'[Notas da versão]({REPOSITORY}/releases/tag/v{version}) · [Código-fonte e dependências]({REPOSITORY}/releases/download/v{version}/crewsync-{version}-source.tar.gz)']
     return '\n'.join(lines)
 
 def html(version):
+    root = f'{REPOSITORY}/releases/download/v{version}/'
+    native_deb = version.replace('-alpha.', '~alpha.')
     links = []
-    for target, url in assets(version):
-        label = 'Linux x86_64' if target.startswith('x86_64') else 'Linux ARM64'
-        links.append(f'<p><a class="button" href="{url}">Baixar {label} ↓</a> <a href="{url}.sha256">SHA-256</a></p>')
+    variants = [
+        ('Arch Linux', [('x86_64', f'crewsync-{version.replace("-alpha.", "_alpha.")}-1-x86_64.pkg.tar.zst')]),
+        ('Debian/Ubuntu', [('amd64', f'crewsync_{native_deb}-1_amd64.deb'), ('ARM64', f'crewsync_{native_deb}-1_arm64.deb')]),
+        ('Fedora', [('x86_64', f'crewsync-{native_deb}-1.x86_64.rpm'), ('ARM64', f'crewsync-{native_deb}-1.aarch64.rpm')]),
+        ('Tar.gz independente', [('x86_64', f'crewsync-{version}-linux-x86_64.tar.gz'), ('ARM64', f'crewsync-{version}-linux-arm64.tar.gz')]),
+    ]
+    for label, packages in variants:
+        options = ' · '.join(f'<a href="{root+filename}">{arch}</a> · <a href="{root+filename}.sha256">SHA-256</a>' for arch, filename in packages)
+        links.append(f'<p><strong>{label}:</strong> {options}</p>')
     return f'<span class="status">{version}' + (' · alpha' if '-' in version else '') + '</span><h3 style="margin-top:24px">Baixe para seu computador</h3>' + ''.join(links) + f'<a href="manual.html#instalar">Como instalar →</a> · <a href="{REPOSITORY}/releases/tag/v{version}">Notas da versão</a>'
 
 def replace_block(text, name, content):

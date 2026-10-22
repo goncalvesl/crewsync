@@ -34,15 +34,21 @@ Cada computador precisa de um convite próprio, mesmo quando pertence ao mesmo
 usuário. Veja como [gerenciar pastas e permissões](docs/MANUAL.md#configurar) e
 [ativar ou revogar dispositivos](docs/MANUAL.md#dispositivos).
 
+Para o servidor em Linux, a release também fornece pacotes Arch, Debian e Fedora
+com serviço systemd e usuário dedicado, além de tar.gz instalável em `/opt`.
+Consulte [os formatos e comandos de instalação](docs/DISTRIBUTION.md#servidor-em-pacote-de-sistema).
+
 ## Downloads
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.7 (alpha, para testes).
+Versão atual: 0.1.0-alpha.8 (alpha, para testes).
 
-- [Linux Intel/AMD (x86_64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-x86_64.tar.gz.sha256)
-- [Linux ARM64 (aarch64) — baixar pacote](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-linux-arm64.tar.gz.sha256)
+- **Arch Linux:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0_alpha.8-1-x86_64.pkg.tar.zst) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0_alpha.8-1-x86_64.pkg.tar.zst.sha256)
+- **Debian/Ubuntu:** [amd64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_amd64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_amd64.deb.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_arm64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync_0.1.0~alpha.8-1_arm64.deb.sha256)
+- **Fedora:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.x86_64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.x86_64.rpm.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.aarch64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0~alpha.8-1.aarch64.rpm.sha256)
+- **Tar.gz independente:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-x86_64.tar.gz.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.7) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.7/crewsync-0.1.0-alpha.7-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.8) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.8/crewsync-0.1.0-alpha.8-source.tar.gz)
 <!-- downloads:end -->
 
 ## Usar
@@ -68,11 +74,11 @@ Não substitui backup independente. Servidor remoto ou local por HTTPS; veja lim
 
 ## Servidor e conexão
 
-A alpha.7 adiciona o painel administrativo para usuários, pastas compartilhadas,
-permissões e dispositivos, no mesmo endereço da sincronização. Também oferece
+A alpha.8 publica pacotes Arch, Debian, Fedora e tar.gz para instalar o servidor
+Linux como serviço systemd sob usuário dedicado. Mantém o painel administrativo,
 HTTPS direto, HTTPS por proxy e HTTP explícito para testes. Consulte o
-[manual](docs/MANUAL.md#painel-do-servidor) para configurar o proxy e administrar
-o servidor. É uma versão alpha para testes; mantenha backup independente.
+[manual de instalação](docs/MANUAL.md#instalar) e a [documentação dos pacotes](docs/DISTRIBUTION.md)
+para escolher o formato. É uma versão alpha para testes; mantenha backup independente.
 
 ## Desenvolver
 
@@ -83,7 +89,8 @@ scripts/check-pilot.sh
 
 Rust stable e compilador C para construir; Python padrão e OpenSSL CLI somente
 para ferramentas de build/testes/certificados. Runtime Linux kernel >=5.6 com /proc.
-Pacotes estáticos musl x86_64/ARM64; matriz CI verifica distribuição.
+Binários estáticos musl x86_64/ARM64; releases oferecem `.pkg.tar.zst`, `.deb`,
+`.rpm` e tar.gz para o servidor Linux.
 
 Leia [AGENTS.md](AGENTS.md), [PROJECT.md](docs/PROJECT.md), [STATUS.md](docs/STATUS.md),
 [PLAN.md](docs/PLAN.md), [QUALITY.md](docs/QUALITY.md), [WORKFLOW.md](docs/WORKFLOW.md)
