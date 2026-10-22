@@ -24,7 +24,11 @@ Validação: build/check do site, três testes do gerador, quatro gates de relea
 prepare-release --check passaram. Exemplos TOML do manual foram validados pelo
 binário real: um usuário e dois compartilhamentos, sem criar armazenamento.
 Chromium local passou em 390/768/1440px: navegação, âncoras, overflow e console.
-Aguardar deploy Pages e verificar conteúdo e navegação públicos antes de encerrar.
+Pages passou na execução 39851520560, commit db91f1a:
+https://github.com/goncalvesl/crewsync/actions/runs/39851520560.
+Início e manual públicos retornaram HTTP 200 com as novas orientações e downloads
+alpha.6. Chromium público passou em 390/768/1440px (navegação, âncoras, overflow e
+console). Nenhum programa ou asset de release foi alterado.
 
 ## Comportamento novo do cliente
 
