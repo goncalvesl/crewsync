@@ -1,38 +1,65 @@
 # Estado e retomada
 
-## Preparação da 0.1.0-alpha.3
+## Versão pública atual
 
-A alpha.2 foi publicada na tag 49e32d7, com Packages 39822819605 e Rust 39822819807
-bem-sucedidos, incluindo ARM64 nativo, fonte offline, ENOSPC, pacote e setup.
-Os quatro hashes públicos foram conferidos. No teste adicional do bootstrap
-publicado em terminal real, uma resposta imediata podia aparecer na tela porque
-o prompt vinha antes de stty -echo. A alpha.3 corrige essa ordem e inclui regressão
-PTY com resposta imediata; não mover ou sobrescrever a tag/arquivos da alpha.2.
+**0.1.0-alpha.3**, para testes, GPL-3.0-only:
+https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.3.
+Tag imutável no commit `e10693b`. Downloads linux-x86_64/linux-arm64, SHA-256,
+fonte vendorizado e bootstrap install.sh com checksum: oito URLs HTTP 200,
+quatro hashes públicos conferidos. ARM64 executado nativamente na CI.
 
-Instaladores guiados em scripts/setup-online.sh e scripts/setup.sh. Bootstrap
-identifica arquitetura, inclui alpha e verifica checksum. Servidor pergunta
-pastas/IP/porta/usuário/compartilhamento, cria HTTPS e inicia. Cliente pede CA,
-endereço e convite, ativa e inicia watch. systemd de usuário ou nohup; configurações
-existentes preservadas. Pacotes linux-x86_64/linux-arm64. install.sh troca binários
-atomicamente. Runtime sem Cargo/Python; OpenSSL só na preparação de certificados.
+Alpha.2 preservada e marcada como substituída nas notas. O teste adicional do
+bootstrap público detectou eco de convite em resposta imediata ao prompt; alpha.3
+desativa o eco antes do prompt e inclui regressão em terminal real. Não mover tags
+nem sobrescrever assets de versões já publicadas.
+
+## Instalação e operação
+
+scripts/setup-online.sh consulta a última release, inclusive alpha, detecta CPU,
+baixa e confere o pacote. scripts/setup.sh também vem no pacote. Servidor pergunta
+pastas/IP/porta/usuário/compartilhamento, cria configuração/certificados HTTPS,
+inicia e fornece convite. Cliente pede diretório/CA/endereço/convite e ativa watch.
+Sem Cargo/Python no runtime; OpenSSL só para gerar certificados. HTTPS permanece
+validado, convite oculto, configurações existentes preservadas e binários trocados
+atomicamente por install.sh. Atualização existente usa install.sh, com serviço
+parado e backup; o assistente é para configurações novas.
+
+systemd de usuário quando disponível; sem login exige enable-linger explícito.
+Fallback nohup informa PID/log/start.sh, sem autostart no reboot. Firewall e acesso
+entre computadores precisam permitir a porta TCP escolhida. Certificado de 90 dias;
+renovação documentada. Diretórios com espaços/aspas/%/$ testados.
 
 ## Validação
 
-Suíte local completa passou na preparação da alpha.2: build/fmt/Clippy, 72 Rust,
-5 HTTPS, 3 TLS, certificado, site e gates. Quatro testes de setup com HTTPS real,
-dois clientes, caminhos especiais, systemd-analyze, fallback nohup, configuração
-preservada e bootstrap alpha simulado/checksum errado. Fonte compilou offline com
-CARGO_HOME vazio. QA Chromium 390/768/1440px passou. Alpha.3 adiciona terminal real
-para a ativação; os quatro testes e scripts/check-pilot.sh passaram novamente.
-Publicar e verificar assets antes de atualizar o site conforme RELEASING.md.
-Nenhum serviço ou dado real foi alterado.
+- scripts/check-pilot.sh passou novamente na alpha.3: build/fmt/Clippy, 72 Rust,
+  5 HTTPS, 3 TLS, certificado, site, instalador e gates de release.
+- Quatro testes de setup: HTTPS real e dois clientes watch, ativação em PTY com
+  resposta imediata sem eco, configuração preservada, entradas inválidas,
+  systemd-analyze, nohup e bootstrap alpha simulado/checksum errado.
+- Rust da tag passou: https://github.com/goncalvesl/crewsync/actions/runs/39823475705.
+- Packages da tag: https://github.com/goncalvesl/crewsync/actions/runs/39823475726.
+  Matriz x86_64/ARM64, HTTPS, ENOSPC isolado, instalação do pacote e build offline
+  do fonte. Publicação após os três jobs de construção/testes bem-sucedidos.
+- Pacote x86_64 público passou checksum, --version, instalação e quatro testes de
+  setup. Bootstrap efetivamente baixado do GitHub instalou servidor e dois clientes
+  em PTYs isolados, validou HTTPS e sincronizou arquivo por watch; convite oculto.
+- Fonte local compilou offline com CARGO_HOME vazio; CI repete no fonte da tag.
+  QA Chromium local 390/768/1440px passou. Nenhum serviço ou dado real foi alterado.
+
+## Manual e site
+
+README/manual/site oferecem comandos únicos de servidor/cliente e downloads
+versionados da alpha.3. Detalhes técnicos na seção final do manual.
+https://goncalvesl.github.io/crewsync/manual.html#instalar.
+Assets verificados antes de enviar main; conferir o deploy Pages após esse push.
 
 ## Publicar novamente
 
 Tarefa recorrente em AGENTS.md e RELEASING.md: incrementar, testar, publicar e
 conferir release/downloads por arquitetura, manual/README/site. Não encerrar no
 commit/tag. prepare-release.py mantém versão/URLs sincronizados. Enviar tag antes
-de main; verificar os assets antes de expor seus links em Pages.
+de main; verificar os assets antes de expor seus links em Pages. Incluir bootstrap
+e checksum e validar o fluxo com terminal real.
 
 ## Pendências externas
 
