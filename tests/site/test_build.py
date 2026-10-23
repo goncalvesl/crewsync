@@ -30,5 +30,11 @@ class Manual(unittest.TestCase):
         self.assertNotIn('downloads:start', content)
         self.assertNotIn('&lt;!--', content)
 
+    def test_markdown_links_and_emphasis_render_as_html(self):
+        content, _ = build.render('Veja [a documentação](https://example.com/docs) e **Docker Image**.\n')
+        self.assertIn('<a href="https://example.com/docs">a documentação</a>', content)
+        self.assertIn('<strong>Docker Image</strong>', content)
+        self.assertNotIn('**Docker Image**', content)
+
 if __name__ == '__main__':
     unittest.main()

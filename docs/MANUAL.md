@@ -24,14 +24,14 @@ A alpha.10 mantém os três modos de conexão, o painel administrativo e os paco
 
 A imagem Docker publicada para Coolify está disponível em
 `ghcr.io/goncalvesl/crewsync-server:0.1.0-alpha.10` para amd64 e arm64. Siga o
-[deploy com Docker Image](DISTRIBUTION.md#docker-e-coolify); o Compose que compila
+[deploy com Docker Image](https://github.com/goncalvesl/crewsync/blob/main/docs/DISTRIBUTION.md#docker-e-coolify); o Compose que compila
 do código-fonte continua disponível como alternativa.
 
 O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o modo de conexão e o domínio ou IPv4, prepara a raiz de dados, inicia o serviço e mostra a chave administrativa. No painel, crie usuários e compartilhamentos, configure permissões e gere convites para os dispositivos. No modo direto pode gerar CA privada ou usar certificado existente; no modo proxy gera um exemplo Caddy. No cliente, ativa o computador e inicia a sincronização.
 
 Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não precisa de Rust, Cargo ou Python. Os comandos funcionam no terminal de uma sessão Linux, sem sudo. Os diretórios sugeridos podem ser alterados. Escolha diretórios novos para a configuração e os dados internos do servidor; instalações existentes são preservadas.
 
-No Coolify, siga o [deploy Docker Image com HTTPS e dados no host](DISTRIBUTION.md#docker-e-coolify). A imagem já compilada não exige copiar certificados para os clientes.
+No Coolify, siga o [deploy Docker Image com HTTPS e dados no host](https://github.com/goncalvesl/crewsync/blob/main/docs/DISTRIBUTION.md#docker-e-coolify). A imagem já compilada não exige copiar certificados para os clientes.
 
 Se preferir baixar e conferir o pacote manualmente:
 
