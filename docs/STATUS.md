@@ -14,7 +14,9 @@ tag flutuante `alpha`. Pull anônimo e manifestos `linux/amd64` e `linux/arm64`
 foram conferidos. O container publicado passou um smoke de pull, bootstrap de
 credencial e healthcheck. A imagem declara UID/GID 10001, filesystem persistente
 em `/var/lib/crewsync`, configuração em `/etc/crewsync` e HTTP interno na 8080.
-Documentação pronta; o push da branch main/publicação do Pages ainda está pendente.
+Documentação atualizada na branch `main`; o manual e o site estão publicados em
+https://goncalvesl.github.io/crewsync/ e a seção Docker/Coolify foi conferida no
+manual público. O workflow Packages foi corrigido para as próximas releases.
 Deploy real no Coolify e matriz física ampliada não foram executados.
 
 ## Validação local
