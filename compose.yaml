@@ -5,6 +5,9 @@ services:
       dockerfile: Dockerfile
     restart: unless-stopped
     init: true
+    environment:
+      CREWSYNC_ADMIN_PASSWORD: ${CREWSYNC_ADMIN_PASSWORD:?Defina um segredo aleatorio de 64 caracteres hexadecimais}
+      CREWSYNC_PUBLIC_URL: ${CREWSYNC_PUBLIC_URL:?Defina a URL publica do servidor}
     read_only: true
     tmpfs:
       - /tmp:rw,noexec,nosuid,size=16m

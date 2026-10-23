@@ -50,7 +50,7 @@ pub fn login(csrf: &str) -> String {
     page(
         "Entrar",
         &format!(
-            "<div class=\"login\"><div class=\"card\"><p class=\"eyebrow\">Acesso administrativo</p><h1>Seu servidor, organizado.</h1><p class=\"muted\">Gerencie as pessoas, pastas e computadores da equipe.</p><form id=\"login-form\" method=\"post\" action=\"/admin/login\">{}<label>Chave administrativa<input name=\"key\" type=\"password\" autocomplete=\"current-password\" required maxlength=\"64\" minlength=\"64\" autofocus></label><button>Entrar no painel</button></form><p><small>Use a chave mostrada na instalação do servidor. Os convites de dispositivos são usados somente nos clientes.</small></p></div></div>",
+            "<div class=\"login\"><div class=\"card\"><p class=\"eyebrow\">Acesso administrativo</p><h1>Seu servidor, organizado.</h1><p class=\"muted\">Gerencie as pessoas, pastas e computadores da equipe.</p><form id=\"login-form\" method=\"post\" action=\"/admin/login\">{}<label>Chave administrativa<input name=\"key\" type=\"password\" autocomplete=\"current-password\" required maxlength=\"64\" minlength=\"64\" autofocus></label><button>Entrar no painel</button></form><p><small>Use o segredo administrativo configurado no servidor. Os convites de dispositivos são usados somente nos clientes.</small></p></div></div>",
             hidden("csrf", csrf)
         ),
         None,

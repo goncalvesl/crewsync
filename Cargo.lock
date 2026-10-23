@@ -60,7 +60,7 @@ dependencies = [
 
 [[package]]
 name = "crewsync-client"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "crewsync-protocol",
  "notify",
@@ -72,7 +72,7 @@ dependencies = [
 
 [[package]]
 name = "crewsync-protocol"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "httparse",
  "rustix",
@@ -87,7 +87,7 @@ dependencies = [
 
 [[package]]
 name = "crewsync-server"
-version = "0.1.0-alpha.9"
+version = "0.1.0-alpha.10"
 dependencies = [
  "crewsync-client",
  "crewsync-protocol",

@@ -7,6 +7,8 @@ project=crewsync-docker-smoke-$$
 compose_file=compose.yaml
 data_dir=$(mktemp -d "${TMPDIR:-/tmp}/crewsync-compose-data.XXXXXX")
 export CREWSYNC_DATA_DIR=$data_dir
+export CREWSYNC_ADMIN_PASSWORD=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+export CREWSYNC_PUBLIC_URL=https://sync.test.example
 host_uid=$(id -u)
 host_gid=$(id -g)
 cleanup() {
@@ -52,8 +54,10 @@ docker compose -p "$project" -f "$compose_file" exec -T server sh -eu -c '
     ! grep -q "^\\[shares\\." /etc/crewsync/server.toml
     /usr/local/bin/crewsync-server check-config /etc/crewsync/server.toml
 '
-key=$(docker compose -p "$project" -f "$compose_file" exec -T server \
-    /usr/local/bin/crewsync-server admin-key /etc/crewsync/server.toml https://sync.test.example)
+docker compose -p "$project" -f "$compose_file" exec -T server sh -eu -c '
+    grep -q '"key_hash"' /var/lib/crewsync/auth/admin.json
+    ! grep -q "$CREWSYNC_ADMIN_PASSWORD" /var/lib/crewsync/auth/admin.json
+'
 docker compose -p "$project" -f "$compose_file" exec -T server sh -eu -c '
     cat >> /etc/crewsync/server.toml <<EOF
 [users.docker_smoke]
@@ -65,8 +69,10 @@ EOF
 '
 invite=$(docker compose -p "$project" -f "$compose_file" exec -T server \
     /usr/local/bin/crewsync-server invite /etc/crewsync/server.toml docker_smoke 3600)
-[ -n "$key" ] && [ -n "$invite" ]
+[ -n "$invite" ]
 
+credentials_before=$(docker compose -p "$project" -f "$compose_file" exec -T server \
+    sha256sum /var/lib/crewsync/auth/admin.json | cut -d ' ' -f 1)
 docker compose -p "$project" -f "$compose_file" restart server
 attempt=0
 while [ "$attempt" -lt 30 ]; do
@@ -78,4 +84,7 @@ done
 [ "$state" = healthy ] || { docker compose -p "$project" -f "$compose_file" logs; exit 1; }
 docker compose -p "$project" -f "$compose_file" exec -T server \
     test -s /var/lib/crewsync/auth/admin.json
+credentials_after=$(docker compose -p "$project" -f "$compose_file" exec -T server \
+    sha256sum /var/lib/crewsync/auth/admin.json | cut -d ' ' -f 1)
+[ "$credentials_before" = "$credentials_after" ]
 printf '%s\n' 'Docker Compose: private ports, persistent state, setup, health and restart OK.'

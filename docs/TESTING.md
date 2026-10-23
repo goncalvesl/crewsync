@@ -187,6 +187,7 @@ com cookie Secure derivado da origem pública HTTPS.
 
 `sh scripts/test-docker-compose.sh` constrói a imagem, confere que a porta não é
 publicada no host e que `/var/lib/crewsync` é bind mount, inicia como UID 10001
-com configuração vazia, cria a chave administrativa, simula cadastro de usuário
-e compartilhamento, emite convite, reinicia e verifica que o estado persiste. A
-CI executa esse smoke test com Docker Compose.
+com configuração vazia, inicializa a chave administrativa via ambiente e verifica
+que seu hash persiste sem alteração após reiniciar. Também simula cadastro de
+usuário/compartilhamento e emissão de convite. A CI executa esse smoke test com
+Docker Compose. A release constrói a imagem multiarch e publica tags no GHCR.

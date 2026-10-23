@@ -20,6 +20,8 @@ def metadata(version):
     validate_version(version)
     return dict(version=version, tag='v' + version, prerelease='-' in version,
                 repository=REPOSITORY, targets=TARGETS,
+                container={'image': f'ghcr.io/goncalvesl/crewsync-server:{version}',
+                           'platforms': ['linux/amd64', 'linux/arm64']},
                 distributions=['arch', 'debian', 'fedora', 'tar.gz'],
                 distribution_targets={'arch':['x86_64'], 'debian':['x86_64','aarch64'],
                                       'fedora':['x86_64','aarch64'], 'tar.gz':['x86_64','aarch64']})

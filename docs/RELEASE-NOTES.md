@@ -1,16 +1,22 @@
-# CrewSync 0.1.0-alpha.9
+# CrewSync 0.1.0-alpha.10
 
-Corrige a permissão da raiz de armazenamento do servidor Linux. O daemon exige
-que esse diretório seja privado (`0700`); a alpha.8 o criava como `0750`, então
-o serviço podia falhar durante a configuração inicial. O assistente agora cria
-a raiz como `0700`, e as atualizações Debian, Fedora, Arch e tar.gz também
-corrigem instalações existentes sem alterar os arquivos sincronizados.
+A instalação do servidor no Coolify agora pode usar uma imagem pré-compilada e
+pública do GHCR: `ghcr.io/goncalvesl/crewsync-server:0.1.0-alpha.10`. A imagem
+oferece `linux/amd64` e `linux/arm64`; também existe a tag móvel `alpha`. Não é
+necessário compilar Rust no Coolify. O deploy direto do código com Docker Compose
+continua disponível.
 
-Se a configuração alpha.8 já gravou `server.toml` antes de falhar, não execute o
-assistente novamente. O manual traz os comandos para ajustar a permissão,
-reiniciar o serviço e gerar a chave administrativa e o convite inicial.
+No primeiro boot, `CREWSYNC_ADMIN_PASSWORD` e `CREWSYNC_PUBLIC_URL` inicializam a
+credencial do painel automaticamente. Use um segredo hexadecimal aleatório de 64
+caracteres (`openssl rand -hex 32`). O servidor armazena somente o hash e não
+substitui a credencial em reinícios. A configuração inicial continua vazia:
+cadastre usuários, pastas e permissões no painel e crie convites por dispositivo.
 
-A distribuição continua em quatro formas: pacote Arch x86_64 via `makepkg`,
-pacotes Debian/Fedora x86_64 e ARM64, e tar.gz x86_64 e ARM64. Esta é uma versão
-alpha para testes; instalações e ciclos de atualização/reboot em VMs Arch,
-Debian e Fedora continuam pendentes antes de uma versão estável.
+A imagem atende HTTP na porta interna 8080; use o proxy do Coolify para HTTPS e
+monte persistentemente `/etc/crewsync` e `/var/lib/crewsync`. A documentação traz
+as permissões exigidas para o bind mount de dados, o domínio e o backup.
+
+Esta versão é alpha para testes. A instalação de Docker Image foi testada com o
+smoke Docker Compose e os testes locais do workspace; o deploy real no Coolify e
+a matriz física ampliada continuam pendentes. Os pacotes Arch, Debian, Fedora e
+tar.gz permanecem publicados junto com seus checksums e código-fonte.

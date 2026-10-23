@@ -30,4 +30,5 @@ if [ ! -f "$config_file" ] || [ -L "$config_file" ]; then
 fi
 chmod 0600 "$config_file"
 /usr/local/bin/crewsync-server check-config "$config_file"
+/usr/local/bin/crewsync-server bootstrap-admin "$config_file" "$CREWSYNC_PUBLIC_URL"
 exec /usr/local/bin/crewsync-server "$@"

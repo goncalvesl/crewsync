@@ -43,6 +43,8 @@ class Release(unittest.TestCase):
             self.assertIn('source.tar.gz', old)
             metadata = json.loads((root / 'docs/release.json').read_text())
             self.assertEqual(metadata['distributions'], ['arch', 'debian', 'fedora', 'tar.gz'])
+            self.assertEqual(metadata['container']['image'], 'ghcr.io/goncalvesl/crewsync-server:0.1.0-alpha.1')
+            self.assertEqual(metadata['container']['platforms'], ['linux/amd64', 'linux/arm64'])
             prepare.prepare(root, '0.1.0-alpha.2')
             self.assertNotIn('alpha.1', (root / 'README.md').read_text())
             self.assertIn('before', (root / 'README.md').read_text())

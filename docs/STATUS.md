@@ -1,17 +1,30 @@
 # Estado e retomada
 
-## Alterações locais após a alpha.9
+## Publicação alpha.10 em preparação
 
-O trabalho atual prepara um deploy Docker Compose/Coolify a partir do repositório:
-backend HTTP privado na porta 8080, TLS terminado pelo proxy Coolify e dados em
-bind mount explícito no host (UID/GID 10001, modo 0700). O volume de configuração
-é persistente. O primeiro deploy começa sem usuários e compartilhamentos; o painel
-faz o cadastro inicial. As alterações nos instaladores por pacote/tar seguem essa
-mesma regra. Passaram o smoke Docker Compose (bind mount, bootstrap vazio e
-reinício), os 11 cenários do assistente, painel HTTP/HTTPS, cinco testes HTTPS de
-rede, build/fmt/Clippy/testes Rust e build/check do site. O proxy Caddy e um deploy
-real no Coolify não foram executados neste ambiente. Essas alterações não fazem
-parte da release alpha.9 já publicada.
+A release adiciona imagem pública multiarch `ghcr.io/goncalvesl/crewsync-server`
+para Docker Image no Coolify, além do caminho Docker Compose que compila localmente.
+No primeiro boot, o Compose/imagem inicializa a chave administrativa com
+`CREWSYNC_ADMIN_PASSWORD` e a origem `CREWSYNC_PUBLIC_URL`; a credencial fica
+persistida por hash e sobrevive a reinícios. A configuração de usuários e pastas
+começa vazia e é feita pelo painel. Dados de sincronização residem em bind mount
+no host, configuração em volume persistente. A publicação em tag `v0.1.0-alpha.10`
+está pendente das verificações finais e dos workflows de Packages/GHCR.
+
+A versão pública continua sendo [0.1.0-alpha.9](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.9), no commit `62466bb`. Ela não inclui o Compose nem a imagem.
+
+## Validação
+
+Passaram os testes de workspace, `cargo fmt`, Clippy, `git diff --check`,
+`docker compose config` e o smoke test Docker Compose. O smoke iniciou o servidor
+como UID 10001, confirmou o hash administrativo, simulou usuário, compartilhamento e convite e verificou que o arquivo de credenciais não muda no restart. A imagem
+multiarch será verificada após a publicação no GHCR. Deploy em produção no Coolify
+e matriz física ampliada não foram executados neste ambiente.
+
+## Pendências históricas
+
+Consulte as seções abaixo para os detalhes da alpha.9, versões anteriores,
+limites, decisões e ensaios físicos pendentes.
 
 ## Versão pública atual — 0.1.0-alpha.9
 

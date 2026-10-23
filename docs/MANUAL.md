@@ -20,31 +20,30 @@ Nos outros computadores, execute:
 curl -fsSL https://raw.githubusercontent.com/goncalvesl/crewsync/main/scripts/setup-online.sh | sh -s -- client
 ```
 
-A alpha.9 mantém os três modos de conexão, o painel administrativo e os pacotes de sistema para o servidor Linux. Atualize programas anteriores antes de configurar HTTP ou proxy.
+A alpha.10 mantém os três modos de conexão, o painel administrativo e os pacotes de sistema para o servidor Linux. Atualize programas anteriores antes de configurar HTTP ou proxy.
 
-O procedimento de Docker/Coolify e o bootstrap vazio descritos abaixo estão no
-código atual do repositório. Os pacotes alpha.9 já publicados ainda criam o primeiro
-usuário e compartilhamento durante o setup; a mudança chegará aos pacotes numa
-próxima release. Enquanto isso, `setup-online.sh` continua usando o assistente
-incluído na alpha.9; use o Compose do repositório para instalar pelo Coolify.
+A imagem Docker publicada para Coolify está disponível em
+`ghcr.io/goncalvesl/crewsync-server:0.1.0-alpha.10` para amd64 e arm64. Siga o
+[deploy com Docker Image](DISTRIBUTION.md#docker-e-coolify); o Compose que compila
+do código-fonte continua disponível como alternativa.
 
 O assistente baixa a última release, identifica Intel/AMD ou ARM64 e pergunta onde instalar. No servidor, pergunta o modo de conexão e o domínio ou IPv4, prepara a raiz de dados, inicia o serviço e mostra a chave administrativa. No painel, crie usuários e compartilhamentos, configure permissões e gere convites para os dispositivos. No modo direto pode gerar CA privada ou usar certificado existente; no modo proxy gera um exemplo Caddy. No cliente, ativa o computador e inicia a sincronização.
 
 Tenha `curl`, `tar` e `sha256sum` instalados; no servidor, também OpenSSL. Não precisa de Rust, Cargo ou Python. Os comandos funcionam no terminal de uma sessão Linux, sem sudo. Os diretórios sugeridos podem ser alterados. Escolha diretórios novos para a configuração e os dados internos do servidor; instalações existentes são preservadas.
 
-Se usa Coolify, siga o [deploy Docker com HTTPS e dados no host](DISTRIBUTION.md#docker-e-coolify). Ele compila a versão do repositório e não exige copiar certificados para os clientes.
+No Coolify, siga o [deploy Docker Image com HTTPS e dados no host](DISTRIBUTION.md#docker-e-coolify). A imagem já compilada não exige copiar certificados para os clientes.
 
 Se preferir baixar e conferir o pacote manualmente:
 
 <!-- downloads:start -->
-Versão atual: 0.1.0-alpha.9 (alpha, para testes).
+Versão atual: 0.1.0-alpha.10 (alpha, para testes).
 
-- **Arch Linux:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0_alpha.9-1-x86_64.pkg.tar.zst) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0_alpha.9-1-x86_64.pkg.tar.zst.sha256)
-- **Debian/Ubuntu:** [amd64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_amd64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_amd64.deb.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_arm64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync_0.1.0.alpha.9-1_arm64.deb.sha256)
-- **Fedora:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.x86_64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.x86_64.rpm.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.aarch64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0.alpha.9-1.aarch64.rpm.sha256)
-- **Tar.gz independente:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-x86_64.tar.gz.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-linux-arm64.tar.gz.sha256)
+- **Arch Linux:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0_alpha.10-1-x86_64.pkg.tar.zst) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0_alpha.10-1-x86_64.pkg.tar.zst.sha256)
+- **Debian/Ubuntu:** [amd64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync_0.1.0.alpha.10-1_amd64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync_0.1.0.alpha.10-1_amd64.deb.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync_0.1.0.alpha.10-1_arm64.deb) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync_0.1.0.alpha.10-1_arm64.deb.sha256)
+- **Fedora:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0.alpha.10-1.x86_64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0.alpha.10-1.x86_64.rpm.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0.alpha.10-1.aarch64.rpm) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0.alpha.10-1.aarch64.rpm.sha256)
+- **Tar.gz independente:** [x86_64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0-alpha.10-linux-x86_64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0-alpha.10-linux-x86_64.tar.gz.sha256) · [ARM64](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0-alpha.10-linux-arm64.tar.gz) · [SHA-256](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0-alpha.10-linux-arm64.tar.gz.sha256)
 
-[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.9) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.9/crewsync-0.1.0-alpha.9-source.tar.gz)
+[Notas da versão](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.10) · [Código-fonte e dependências](https://github.com/goncalvesl/crewsync/releases/download/v0.1.0-alpha.10/crewsync-0.1.0-alpha.10-source.tar.gz)
 <!-- downloads:end -->
 
 Extraia o pacote e execute `./setup.sh server` ou `./setup.sh client` na pasta extraída. O resultado é o mesmo. `./install.sh --client` e `./install.sh --server` continuam disponíveis para instalar somente os programas, sem configurar ou iniciar serviços.

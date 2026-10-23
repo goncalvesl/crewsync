@@ -36,7 +36,10 @@ git tag -a vVERSAO -m 'CrewSync VERSAO'
 git push origin vVERSAO
 ```
 
-O workflow Packages da tag publica depois de todos os pacotes e fontes passarem.
+O workflow Packages publica a imagem multiarch `ghcr.io/goncalvesl/crewsync-server`
+(tags de versão e `alpha` para prereleases, `latest` para estáveis). Depois que
+imagem, pacotes e fontes passam, o workflow cria a release. O pacote é ligado ao
+repositório público pelo `GITHUB_TOKEN`; confira que o pull anônimo funciona.
 A fonte inclui o projeto, Cargo.lock, scripts e dependências em vendor/; o teste
 compila offline com CARGO_HOME vazio. Artefatos de release têm checksum e licença.
 O aceite físico continua exigido para versões estáveis, mas a autorização do
@@ -52,7 +55,9 @@ sem conferir a release no GitHub.
 1. Conferir `gh release view vVERSAO --json url,isDraft,isPrerelease,assets`.
    Devem existir os tar.gz musl, `.deb` e `.rpm` para x86_64 e ARM64, o `.pkg.tar.zst`
    Arch x86_64, checksums de cada arquivo, fonte e checksum de fonte, além de install.sh
-   e seu checksum.
+   e seu checksum. Para imagem, execute `docker buildx imagetools inspect
+   ghcr.io/goncalvesl/crewsync-server:VERSAO` e confirme manifestos linux/amd64 e
+   linux/arm64; teste pull sem autenticação e confirme tags versionada e `alpha`.
    Os nomes públicos usam linux-x86_64/linux-arm64; os targets Rust permanecem no
    metadado do pacote. Testar também setup.sh e o bootstrap publicado.
 2. Baixar os assets publicados, conferir hashes e executar check-package no tar.gz

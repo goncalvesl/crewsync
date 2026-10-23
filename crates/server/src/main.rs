@@ -9,7 +9,7 @@ fn main() -> ExitCode {
     if args.len() == 1 {
         if args[0] == "--help" {
             println!(
-                "crewsync-server — Servidor central (em desenvolvimento)\n\nUso: crewsync-server --help | --version | check-config ARQUIVO\n  admin-key CONFIG URL_PUBLICA (gera/redefine chave do painel)\n  invite CONFIG USUARIO SEGUNDOS\n  devices CONFIG\n  revoke CONFIG DEVICE_ID\n  serve CONFIG HOST PORT CERT KEY\n  serve-http CONFIG HOST PORT (proxy/teste sem TLS)\n  maintain CONFIG [--apply] (servidor parado)\n  backup CONFIG NOVO_DIRETORIO\n  restore BACKUP NOVO_DIRETORIO\n\nServidor HTTP/HTTPS para piloto Linux. Histórico e retenção disponíveis; use maintain para simular a coleta."
+                "crewsync-server — Servidor central (em desenvolvimento)\n\nUso: crewsync-server --help | --version | check-config ARQUIVO\n  admin-key CONFIG URL_PUBLICA (gera/redefine chave do painel)\n  bootstrap-admin CONFIG URL_PUBLICA (cria a chave inicial de CREWSYNC_ADMIN_PASSWORD)\n  invite CONFIG USUARIO SEGUNDOS\n  devices CONFIG\n  revoke CONFIG DEVICE_ID\n  serve CONFIG HOST PORT CERT KEY\n  serve-http CONFIG HOST PORT (proxy/teste sem TLS)\n  maintain CONFIG [--apply] (servidor parado)\n  backup CONFIG NOVO_DIRETORIO\n  restore BACKUP NOVO_DIRETORIO\n\nServidor HTTP/HTTPS para piloto Linux. Histórico e retenção disponíveis; use maintain para simular a coleta."
             );
             return ExitCode::SUCCESS;
         }
@@ -72,6 +72,24 @@ fn main() -> ExitCode {
             let key =
                 crewsync_server::admin::reset_key(Path::new(&args[1]), &args[2].to_string_lossy())?;
             println!("{key}");
+            Ok(())
+        })()),
+        Some("bootstrap-admin") if args.len() == 3 => Some((|| {
+            let key = env::var("CREWSYNC_ADMIN_PASSWORD")
+                .map_err(|_| std::io::Error::other("CREWSYNC_ADMIN_PASSWORD não definida"))?;
+            let created = crewsync_server::admin::bootstrap_key(
+                Path::new(&args[1]),
+                &args[2].to_string_lossy(),
+                &key,
+            )?;
+            println!(
+                "{}",
+                if created {
+                    "Chave administrativa inicial configurada."
+                } else {
+                    "Chave administrativa já configurada; nenhuma alteração feita."
+                }
+            );
             Ok(())
         })()),
         Some("invite" | "devices" | "revoke") => Some(admin(&args)),

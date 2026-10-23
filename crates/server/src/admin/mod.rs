@@ -79,6 +79,49 @@ pub fn reset_key(config: &Path, public_url: &str) -> io::Result<String> {
     Ok(key)
 }
 
+/// Inicializa a chave administrativa somente na primeira execução.
+/// A chave precisa ser um segredo aleatório de 256 bits em hexadecimal.
+pub fn bootstrap_key(config: &Path, public_url: &str, key: &str) -> io::Result<bool> {
+    let origin = origin(public_url)?;
+    let config = Config::load(config)?;
+    AuthStore::open(config.storage_root())?;
+    let path = config.storage_root().join("auth/admin.json");
+    let lock = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .mode(0o600)
+        .custom_flags(rustix::fs::OFlags::NOFOLLOW.bits() as i32)
+        .open(config.storage_root().join("auth/admin.lock"))?;
+    if !lock.metadata()?.is_file() {
+        return Err(invalid("lock administrativo inválido"));
+    }
+    rustix::fs::flock(&lock, rustix::fs::FlockOperation::LockExclusive)?;
+    match fs::symlink_metadata(&path) {
+        Ok(metadata) => {
+            if !metadata.is_file() || metadata.permissions().mode() & 0o077 != 0 {
+                return Err(invalid(
+                    "credencial administrativa deve ser arquivo privado",
+                ));
+            }
+            return Ok(false);
+        }
+        Err(error) if error.kind() == io::ErrorKind::NotFound => {}
+        Err(error) => return Err(error),
+    }
+    disk::validate_hash(key)?;
+    disk::atomic_json(
+        &path,
+        &Credentials {
+            format: 1,
+            key_hash: disk::hash_secret(key)?,
+            origin,
+        },
+    )?;
+    Ok(true)
+}
+
 pub(crate) struct Request {
     pub method: String,
     pub target: String,
@@ -551,6 +594,34 @@ mod tests {
         fs::write(&path, format!("# manter comentário\nversion=1\n[server]\nstorage_root='{}'\nmax_upload_bytes=12345\n[users.ana]\nenabled=true\n[shares.Obras.permissions]\nana='write'\n", dir.path().join("store").display())).unwrap();
         let key = reset_key(&path, "https://sync.example.test").unwrap();
         (dir, path, key)
+    }
+    #[test]
+    fn bootstrap_admin_is_private_hashed_and_does_not_rotate_on_restart() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("server.toml");
+        fs::write(
+            &path,
+            format!(
+                "version=1\n[server]\nstorage_root='{}'\n",
+                dir.path().join("store").display()
+            ),
+        )
+        .unwrap();
+        let key = "a".repeat(64);
+        assert!(bootstrap_key(&path, "https://sync.example.test", &key).unwrap());
+        assert!(!bootstrap_key(&path, "https://sync.example.test", &"b".repeat(64)).unwrap());
+        let contents = fs::read_to_string(dir.path().join("store/auth/admin.json")).unwrap();
+        assert!(!contents.contains(&key));
+        assert!(contents.contains(&disk::hash_secret(&key).unwrap()));
+        assert_eq!(
+            fs::metadata(dir.path().join("store/auth/admin.json"))
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
+        assert!(!bootstrap_key(&path, "https://sync.example.test", "senha-fraca").unwrap());
     }
     fn request(method: &str, target: &str, cookie: &str, body: &str, origin: &str) -> Request {
         let cookie = cookie.split(';').next().unwrap_or("");
