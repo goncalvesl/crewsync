@@ -1,30 +1,28 @@
-# Estado e retomada
+## Versão pública atual — 0.1.0-alpha.10
 
-## Publicação alpha.10 em preparação
+Release alpha: https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.10.
+Tag no commit `ab569b5`. Foram publicados 18 assets (pacotes, instalador e fonte
+com checksums), e os nove sidecars foram baixados da release e conferidos. O
+workflow Rust 39876938635 passou integralmente. Em Packages 39876938652, os jobs
+nativos x86_64/ARM64, Arch e imagem passaram; o job final falhou ao tentar baixar
+o artefato auxiliar `.dockerbuild`. A release foi criada manualmente a partir dos
+artefatos de pacote daquele workflow, já verificados, e o workflow foi corrigido
+para ignorar/desativar esse artefato nas próximas publicações.
 
-A release adiciona imagem pública multiarch `ghcr.io/goncalvesl/crewsync-server`
-para Docker Image no Coolify, além do caminho Docker Compose que compila localmente.
-No primeiro boot, o Compose/imagem inicializa a chave administrativa com
-`CREWSYNC_ADMIN_PASSWORD` e a origem `CREWSYNC_PUBLIC_URL`; a credencial fica
-persistida por hash e sobrevive a reinícios. A configuração de usuários e pastas
-começa vazia e é feita pelo painel. Dados de sincronização residem em bind mount
-no host, configuração em volume persistente. A publicação em tag `v0.1.0-alpha.10`
-está pendente das verificações finais e dos workflows de Packages/GHCR.
+Imagem pública multiarch: `ghcr.io/goncalvesl/crewsync-server:0.1.0-alpha.10` e
+tag flutuante `alpha`. Pull anônimo e manifestos `linux/amd64` e `linux/arm64`
+foram conferidos. O container publicado passou um smoke de pull, bootstrap de
+credencial e healthcheck. A imagem declara UID/GID 10001, filesystem persistente
+em `/var/lib/crewsync`, configuração em `/etc/crewsync` e HTTP interno na 8080.
+Documentação pronta; o push da branch main/publicação do Pages ainda está pendente.
+Deploy real no Coolify e matriz física ampliada não foram executados.
 
-A versão pública continua sendo [0.1.0-alpha.9](https://github.com/goncalvesl/crewsync/releases/tag/v0.1.0-alpha.9), no commit `62466bb`. Ela não inclui o Compose nem a imagem.
+## Validação local
 
-## Validação
-
-Passaram os testes de workspace, `cargo fmt`, Clippy, `git diff --check`,
-`docker compose config` e o smoke test Docker Compose. O smoke iniciou o servidor
-como UID 10001, confirmou o hash administrativo, simulou usuário, compartilhamento e convite e verificou que o arquivo de credenciais não muda no restart. A imagem
-multiarch será verificada após a publicação no GHCR. Deploy em produção no Coolify
-e matriz física ampliada não foram executados neste ambiente.
-
-## Pendências históricas
-
-Consulte as seções abaixo para os detalhes da alpha.9, versões anteriores,
-limites, decisões e ensaios físicos pendentes.
+Passaram `scripts/check-pilot.sh`, testes workspace, fmt, Clippy, site, proxy Caddy,
+instaladores, painel e smoke Docker Compose. O smoke do Compose confirmou bootstrap
+da chave via ambiente e preservação do hash após reiniciar. Os artefatos de release
+x86_64 foram verificados localmente; ARM64 foi testado em runner nativo no workflow.
 
 ## Versão pública atual — 0.1.0-alpha.9
 

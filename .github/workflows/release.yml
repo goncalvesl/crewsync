@@ -120,6 +120,8 @@ jobs:
             type=raw,value=alpha,enable=${{ contains(github.ref_name, '-alpha.') }}
             type=raw,value=latest,enable=${{ !contains(github.ref_name, '-alpha.') }}
       - uses: docker/build-push-action@v6
+        env:
+          DOCKER_BUILD_RECORD_UPLOAD: false
         with:
           context: .
           platforms: linux/amd64,linux/arm64
@@ -144,6 +146,7 @@ jobs:
           python3 scripts/check-release.py "$TAG"
       - uses: actions/download-artifact@v4
         with:
+          pattern: '!*.dockerbuild'
           path: target/packages
           merge-multiple: true
       - name: Publish prerelease
